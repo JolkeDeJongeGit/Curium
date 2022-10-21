@@ -22,6 +22,9 @@
     <Filter Include="Header Files\platform">
       <UniqueIdentifier>{c07f88a1-91d7-4992-be82-5813c2f66cd6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\platform\win32">
+      <UniqueIdentifier>{dd2f2200-56a3-46e1-a804-2ae97eea7b60}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\platform\win32\WinWindow.cpp">
@@ -37,6 +40,12 @@
     </ClInclude>
     <ClInclude Include="include\platform\Window.h">
       <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="include\platform\win32\WinWindow.h">
+      <Filter>Header Files\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="include\platform\win32\CustomWin.h">
+      <Filter>Header Files\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
