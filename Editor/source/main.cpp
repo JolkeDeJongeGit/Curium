@@ -5,11 +5,12 @@ int main()
 {
 	WinWindow win;
 	win.Create(1920, 1080);
-	win.SetTitle("Curium");
+	win.SetTitle(L"Curium");
 
 	while (win.IsActive())
 	{
-
+		win.Update();
 	}
+
 	return 0;
 }

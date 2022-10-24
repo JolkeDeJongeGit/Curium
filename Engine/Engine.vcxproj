@@ -141,14 +141,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\graphics\Mesh.cpp" />
+    <ClCompile Include="include\graphics\Renderer.cpp" />
+    <ClCompile Include="source\graphics\win32\WinMesh.cpp" />
+    <ClCompile Include="source\graphics\win32\WinRenderer.cpp" />
     <ClCompile Include="source\platform\win32\WinWindow.cpp" />
     <ClCompile Include="source\precomp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\graphics\Mesh.h" />
+    <ClInclude Include="include\graphics\Renderer.h" />
     <ClInclude Include="include\platform\win32\CustomWin.h" />
     <ClInclude Include="include\platform\win32\WinWindow.h" />
     <ClInclude Include="include\platform\Window.h" />
     <ClInclude Include="include\precomp.h" />
+    <ClInclude Include="incude\graphics\win32\WinCommandQueue.h" />
+    <ClInclude Include="incude\graphics\win32\WinDevice.h" />
+    <ClInclude Include="incude\graphics\win32\WinSwapchain.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
