@@ -48,8 +48,14 @@
     <ClCompile Include="source\graphics\win32\WinRenderer.cpp">
       <Filter>Source Files\graphics\win32</Filter>
     </ClCompile>
+    <ClCompile Include="include\graphics\Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="source\graphics\win32\WinMesh.cpp">
       <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="include\graphics\Mesh.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -141,6 +141,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\graphics\Mesh.cpp" />
+    <ClCompile Include="include\graphics\Renderer.cpp" />
     <ClCompile Include="source\graphics\win32\WinMesh.cpp" />
     <ClCompile Include="source\graphics\win32\WinRenderer.cpp" />
     <ClCompile Include="source\platform\win32\WinWindow.cpp" />
