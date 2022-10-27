@@ -1,5 +1,7 @@
 #pragma once
 #include "Mesh.h"
+class Device;
+
 class Renderer
 {
 public:
@@ -10,5 +12,8 @@ public:
 	void Draw(glm::mat4 _model, Mesh _data);
 
 	//void InstanceDraw();
+
+	void Terminate();
 private:
+	Device* m_device;
 };
