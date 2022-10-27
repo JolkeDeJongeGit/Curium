@@ -51,6 +51,15 @@
     <ClCompile Include="source\graphics\win32\WinMesh.cpp">
       <Filter>Source Files\graphics\win32</Filter>
     </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinCommandQueue.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinDevice.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinSwapchain.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\precomp.h">
@@ -71,13 +80,16 @@
     <ClInclude Include="include\graphics\Mesh.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="incude\graphics\win32\WinDevice.h">
+    <ClInclude Include="include\graphics\win32\WinCommandQueue.h">
       <Filter>Header Files\graphics\win32</Filter>
     </ClInclude>
-    <ClInclude Include="incude\graphics\win32\WinSwapchain.h">
+    <ClInclude Include="include\graphics\win32\WinDescriptorHeap.h">
       <Filter>Header Files\graphics\win32</Filter>
     </ClInclude>
-    <ClInclude Include="incude\graphics\win32\WinCommandQueue.h">
+    <ClInclude Include="include\graphics\win32\WinDevice.h">
+      <Filter>Header Files\graphics\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\WinSwapchain.h">
       <Filter>Header Files\graphics\win32</Filter>
     </ClInclude>
   </ItemGroup>
