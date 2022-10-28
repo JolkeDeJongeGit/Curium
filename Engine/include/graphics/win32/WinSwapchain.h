@@ -1,15 +1,15 @@
 #pragma once
-class SwapChain
+class Swapchain
 {
 public:
-	SwapChain();
-	~SwapChain();
+	Swapchain();
+	~Swapchain();
 
 	void Init(int _width, int _height);
 
-	static SwapChain& Get()
+	static Swapchain& Get()
 	{
-		static SwapChain instance;
+		static Swapchain instance;
 		return instance;
 	}
 
@@ -19,17 +19,21 @@ public:
 
 	void ResizeBuffer(int _width, int _height);
 
+	void Present();
+
 	void UpdateFenceValue(); 
 	void WaitForFenceValue(ComPtr<ID3D12CommandQueue>& _commandQueue);
 	ComPtr<ID3D12Fence>& GetFence();
 private:
 	void SetupSwapchain(int _width, int _height);
+	void SetupDepthBuffer(int _width, int _height);
 
-	static const uint32_t backbufferCount = 2;
+	static const uint32_t m_backbufferCount = 2;
 	uint32_t m_currentBuffer = 0;
 	 
 	ComPtr<ID3D12DescriptorHeap> m_renderTargetViewHeap = nullptr;
-	ComPtr <ID3D12Resource> m_renderTargets[backbufferCount];
+	ComPtr<ID3D12Resource> m_renderTargets[m_backbufferCount] {};
+	ComPtr<ID3D12Resource> m_depthBuffer = nullptr;
 
 	ComPtr<ID3D12Fence> m_fence = nullptr;
 

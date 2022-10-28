@@ -143,8 +143,12 @@
   <ItemGroup>
     <ClCompile Include="source\graphics\win32\WinCommandQueue.cpp" />
     <ClCompile Include="source\graphics\win32\WinDevice.cpp" />
+    <ClCompile Include="source\graphics\win32\WinDescriptorHeap.cpp" />
+    <ClCompile Include="source\graphics\win32\WinHeapHandler.cpp" />
     <ClCompile Include="source\graphics\win32\WinMesh.cpp" />
     <ClCompile Include="source\graphics\win32\WinRenderer.cpp" />
+    <ClCompile Include="source\graphics\win32\WinPipelineState.cpp" />
+    <ClCompile Include="source\graphics\win32\WinShaderManager.cpp" />
     <ClCompile Include="source\graphics\win32\WinSwapchain.cpp" />
     <ClCompile Include="source\platform\win32\WinWindow.cpp" />
     <ClCompile Include="source\precomp.cpp" />
@@ -152,6 +156,9 @@
   <ItemGroup>
     <ClInclude Include="include\graphics\Mesh.h" />
     <ClInclude Include="include\graphics\Renderer.h" />
+    <ClInclude Include="include\graphics\ShaderManager.h" />
+    <ClInclude Include="include\graphics\win32\WinHeapHandler.h" />
+    <ClInclude Include="include\graphics\win32\WinPipelineState.h" />
     <ClInclude Include="include\graphics\win32\WinCommandQueue.h" />
     <ClInclude Include="include\graphics\win32\WinDescriptorHeap.h" />
     <ClInclude Include="include\graphics\win32\WinDevice.h" />

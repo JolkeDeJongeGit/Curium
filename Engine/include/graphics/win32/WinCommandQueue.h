@@ -5,6 +5,12 @@ public:
 	CommandQueue();
 	~CommandQueue();
 
+	static CommandQueue& Get()
+	{
+		static CommandQueue instance;
+		return instance;
+	}
+
 	void ExecuteCommandList();
 
 	void UploadData(ComPtr<ID3D12Resource> resource, D3D12_SUBRESOURCE_DATA subresource);

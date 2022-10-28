@@ -60,6 +60,18 @@
     <ClCompile Include="source\graphics\win32\WinSwapchain.cpp">
       <Filter>Source Files\graphics\win32</Filter>
     </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinPipelineState.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinDescriptorHeap.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinHeapHandler.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinShaderManager.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\precomp.h">
@@ -91,6 +103,15 @@
     </ClInclude>
     <ClInclude Include="include\graphics\win32\WinSwapchain.h">
       <Filter>Header Files\graphics\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\WinPipelineState.h">
+      <Filter>Header Files\graphics\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\WinHeapHandler.h">
+      <Filter>Header Files\graphics\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\ShaderManager.h">
+      <Filter>Header Files\graphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

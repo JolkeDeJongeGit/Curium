@@ -5,6 +5,12 @@
 class WinWindow : public Window
 {
 public:
+	static WinWindow& Get()
+	{
+		static WinWindow instance;
+		return instance;
+	}
+
 	void Create(int _width, int _height) override;
 	void Update() override;
 	void Terminate() override;
