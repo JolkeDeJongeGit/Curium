@@ -37,6 +37,9 @@
     <Filter Include="Header Files\graphics\win32">
       <UniqueIdentifier>{c0175216-50d8-4476-bb30-7c2281de9f4d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{44ce4430-1080-41ee-86ad-9fc86a51bff3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\platform\win32\WinWindow.cpp">
@@ -113,5 +116,13 @@
     <ClInclude Include="include\graphics\ShaderManager.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="resources\shaders\basic.pixel.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\basic.vertex.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -8,6 +8,9 @@
 void Swapchain::Init(int _width, int _height)
 {
 	auto device = Device::Get().GetDevice();
+
+	HeapHandler::Get().CreateHeaps(m_backbufferCount);
+
 	SetupSwapchain(_width, _height);
 	SetupDepthBuffer(_width, _height);
 
@@ -17,8 +20,6 @@ void Swapchain::Init(int _width, int _height)
 
 	if (m_fenceEvent == nullptr)
 		ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-
-	HeapHandler::Get().CreateHeaps(m_backbufferCount);
 }
 
 Swapchain::Swapchain()
@@ -70,6 +71,16 @@ void Swapchain::WaitForFenceValue(ComPtr<ID3D12CommandQueue>& _commandQueue)
 ComPtr<ID3D12Fence>& Swapchain::GetFence()
 {
 	return m_fence;
+}
+
+ComPtr<ID3D12Resource>& Swapchain::GetCurrentRenderTarget(const uint32_t _index)
+{
+	return m_renderTargets[_index];
+}
+
+ComPtr<ID3D12Resource>& Swapchain::GetDepthBuffer()
+{
+	return m_depthBuffer;
 }
 
 void Swapchain::SetupSwapchain(int _width, int _height)
