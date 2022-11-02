@@ -23,7 +23,7 @@ ComPtr<IDXGIFactory4>& Device::GetFactory()
 
 void Device::SetupFactory()
 {
-	UINT dxgiFactoryFlags = 0;
+	uint32_t dxgiFactoryFlags = 0;
 
 #ifdef _DEBUG
 	ID3D12Debug* dc;

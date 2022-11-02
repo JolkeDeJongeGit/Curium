@@ -40,6 +40,12 @@
     <Filter Include="Resource Files\Shaders">
       <UniqueIdentifier>{44ce4430-1080-41ee-86ad-9fc86a51bff3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{9391ed3a-a574-4b0a-8343-199e9a5bd52a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{8d1b93d6-5581-4af8-a1c0-58d00d27e8d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\platform\win32\WinWindow.cpp">
@@ -115,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="include\graphics\ShaderManager.h">
       <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\common\Util.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

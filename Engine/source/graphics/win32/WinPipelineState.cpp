@@ -1,13 +1,13 @@
 #include "precomp.h"
-#include "graphics/win32/WinPipelineState.h"
 #include <graphics/ShaderManager.h>
 #include <graphics/win32/WinDevice.h>
+#include "graphics/win32/WinPipelineState.h"
 
 PipelineState::PipelineState(std::string _vertexName, std::string _pixelName, D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool _useDepth)
 {
 	auto shader = ShaderManager::Get();
-	shader.LoadShader(_vertexName.c_str(), std::string("resources/shaders/" + _vertexName).c_str());
-	shader.LoadShader(_vertexName.c_str(), std::string("resources/shaders/" + _pixelName).c_str());
+	shader.LoadShader(_vertexName.c_str(), std::string("resources/shaders/").c_str());
+	shader.LoadShader(_vertexName.c_str(), std::string("resources/shaders/").c_str());
 
 	m_vertexName = _vertexName.c_str();
 	m_pixelName = _pixelName.c_str();
@@ -41,7 +41,7 @@ void PipelineState::SetupRootSignature()
 	descRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0);
 
 	CD3DX12_ROOT_PARAMETER1 rootParameter[4];
-	rootParameter[0].InitAsConstants(sizeof(glm::mat4), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+	rootParameter[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 	rootParameter[1].InitAsConstants(5, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParameter[2].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParameter[3].InitAsConstants(3, 2, 0, D3D12_SHADER_VISIBILITY_PIXEL);

@@ -160,6 +160,7 @@
     <ClCompile Include="source\precomp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\common\Util.h" />
     <ClInclude Include="include\graphics\Mesh.h" />
     <ClInclude Include="include\graphics\Renderer.h" />
     <ClInclude Include="include\graphics\ShaderManager.h" />

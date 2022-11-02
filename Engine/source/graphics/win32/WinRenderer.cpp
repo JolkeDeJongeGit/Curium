@@ -13,7 +13,7 @@ void Renderer::Init(uint32_t _width, uint32_t _height)
 	m_device = &Device::Get();
 	m_commandQueue = &CommandQueue::Get();
 	m_swapchain = &Swapchain::Get();
-	m_pipelineState = new PipelineState("basic", "basic", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	m_pipelineState = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 
 	m_swapchain->Init(_width, _height);
 
