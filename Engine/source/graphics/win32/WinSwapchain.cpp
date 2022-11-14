@@ -50,6 +50,7 @@ void Swapchain::ResizeBuffer(int _width, int _height)
 void Swapchain::Present()
 {
 	m_swapchain->Present(1, 0);
+	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 }
 
 void Swapchain::UpdateFenceValue()

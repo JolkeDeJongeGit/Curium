@@ -60,14 +60,14 @@ void Renderer::Render()
 	commandList->SetGraphicsRootSignature(m_pipelineState->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
-	Draw();
-
 	D3D12_VIEWPORT viewport = { 0.f, 0.f, (float)m_viewportWidth, (float)m_viewportHeight, 0.01f, 500 };
 	D3D12_RECT rect = { (long)100, (long)100, (long)100 + (long)m_viewportWidth, (long)100 + (long)m_viewportHeight };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	Draw();
 
 	commandList->ResourceBarrier(1, &presentBarrier);
 
