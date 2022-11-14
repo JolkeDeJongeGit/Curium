@@ -81,6 +81,9 @@
     <ClCompile Include="source\graphics\win32\WinShaderManager.cpp">
       <Filter>Source Files\graphics\win32</Filter>
     </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinCommandList.cpp">
+      <Filter>Source Files\graphics\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\precomp.h">
@@ -124,6 +127,9 @@
     </ClInclude>
     <ClInclude Include="include\common\Util.h">
       <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\WinCommandList.h">
+      <Filter>Header Files\graphics\win32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

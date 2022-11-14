@@ -149,6 +149,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\graphics\win32\WinCommandList.cpp" />
     <ClCompile Include="source\graphics\win32\WinCommandQueue.cpp" />
     <ClCompile Include="source\graphics\win32\WinDevice.cpp" />
     <ClCompile Include="source\graphics\win32\WinDescriptorHeap.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="include\graphics\Mesh.h" />
     <ClInclude Include="include\graphics\Renderer.h" />
     <ClInclude Include="include\graphics\ShaderManager.h" />
+    <ClInclude Include="include\graphics\win32\WinCommandList.h" />
     <ClInclude Include="include\graphics\win32\WinHeapHandler.h" />
     <ClInclude Include="include\graphics\win32\WinPipelineState.h" />
     <ClInclude Include="include\graphics\win32\WinCommandQueue.h" />

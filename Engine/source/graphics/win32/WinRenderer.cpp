@@ -30,8 +30,8 @@ void Renderer::Init(uint32_t _width, uint32_t _height)
 
 void Renderer::Render()
 {
-	ComPtr<ID3D12CommandAllocator> commandAllocator = m_commandQueue->GetCommandAllocator();
-	ComPtr<ID3D12GraphicsCommandList> commandList = m_commandQueue->GetCommandList();
+	ComPtr<ID3D12CommandAllocator> commandAllocator = m_commandQueue->GetCommandList().GetAllocater();
+	ComPtr<ID3D12GraphicsCommandList> commandList = m_commandQueue->GetCommandList().GetList();
 
 	auto heapHandler = HeapHandler::Get();
 	// Reference of heaps
@@ -59,6 +59,7 @@ void Renderer::Render()
 	commandList->SetPipelineState(m_pipelineState->GetPipelineState().Get());
 	commandList->SetGraphicsRootSignature(m_pipelineState->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
+
 
 	D3D12_VIEWPORT viewport = { 0.f, 0.f, (float)m_viewportWidth, (float)m_viewportHeight, 0.01f, 500 };
 	D3D12_RECT rect = { (long)100, (long)100, (long)100 + (long)m_viewportWidth, (long)100 + (long)m_viewportHeight };

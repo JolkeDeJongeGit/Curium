@@ -1,8 +1,10 @@
 #pragma once
+#include "WinCommandList.h"
 class CommandQueue
 {
 public:
 	CommandQueue();
+	CommandQueue(D3D12_COMMAND_LIST_TYPE _type);
 	~CommandQueue();
 
 	static CommandQueue& Get()
@@ -13,13 +15,11 @@ public:
 
 	void ExecuteCommandList();
 
-	void UploadData(ComPtr<ID3D12Resource> resource, D3D12_SUBRESOURCE_DATA subresource);
+	void UploadData(ComPtr<ID3D12Resource> _resource, D3D12_SUBRESOURCE_DATA _subresource);
 
-	ComPtr<ID3D12CommandAllocator>& GetCommandAllocator();
-	ComPtr<ID3D12GraphicsCommandList>& GetCommandList();
+	CommandList& GetCommandList();
 	ComPtr<ID3D12CommandQueue>& GetCommandQueue();
 private:
-	ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-	ComPtr<ID3D12GraphicsCommandList> m_commandList;
+	CommandList m_commandList;
 	ComPtr<ID3D12CommandQueue> m_commandQueue;
 };
