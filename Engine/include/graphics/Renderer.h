@@ -33,5 +33,7 @@ private:
 	uint32_t m_viewportWidth = 1920;
 	uint32_t m_viewportHeight = 1080;
 
+	const FLOAT m_colorRGBA[4] = { 0.5f,0.1f,0.1f,1 };
+
 	uint32_t m_frames;
 };

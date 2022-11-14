@@ -18,6 +18,7 @@ void Renderer::Init(uint32_t _width, uint32_t _height)
 	m_swapchain->Init(_width, _height);
 
 	auto heapHandler = HeapHandler::Get();
+	heapHandler.CreateHeaps(Swapchain::BackBufferCount);
 	// Reference of heaps
 	m_cbvHeap = &heapHandler.GetCbvHeap();
 	m_rtvHeap = &heapHandler.GetRtvHeap();
@@ -31,6 +32,12 @@ void Renderer::Render()
 {
 	ComPtr<ID3D12CommandAllocator> commandAllocator = m_commandQueue->GetCommandAllocator();
 	ComPtr<ID3D12GraphicsCommandList> commandList = m_commandQueue->GetCommandList();
+
+	auto heapHandler = HeapHandler::Get();
+	// Reference of heaps
+	m_cbvHeap = &heapHandler.GetCbvHeap();
+	m_rtvHeap = &heapHandler.GetRtvHeap();
+	m_dsvHeap = &heapHandler.GetDsvHeap();
 
 	ID3D12DescriptorHeap* pDescriptorHeaps[] = { m_cbvHeap->GetDescriptorHeap().Get() };
 
@@ -46,27 +53,22 @@ void Renderer::Render()
 	ThrowIfFailed(commandAllocator->Reset());
 	ThrowIfFailed(commandList->Reset(commandAllocator.Get(), m_pipelineState->GetPipelineState().Get()));
 
-	// RECORD COMMANDS //
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
-	const FLOAT ColorRGBA[4] = { 0.1f,0.1f,0.1f,1 };
-	commandList->ClearRenderTargetView(rtvHandle, ColorRGBA, 0, nullptr);
+	commandList->ClearRenderTargetView(rtvHandle, m_colorRGBA, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	commandList->SetPipelineState(m_pipelineState->GetPipelineState().Get());
 	commandList->SetGraphicsRootSignature(m_pipelineState->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
+	Draw();
 
-	D3D12_VIEWPORT viewport = { 0.f, 0.f, (FLOAT)m_viewportWidth, (FLOAT)m_viewportHeight, 0.01f, 500 };
-	D3D12_RECT rect = { (LONG)100, (LONG)100, (LONG)100 + (LONG)m_viewportWidth, (LONG)100 + (LONG)m_viewportHeight };
+	D3D12_VIEWPORT viewport = { 0.f, 0.f, (float)m_viewportWidth, (float)m_viewportHeight, 0.01f, 500 };
+	D3D12_RECT rect = { (long)100, (long)100, (long)100 + (long)m_viewportWidth, (long)100 + (long)m_viewportHeight };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);
-	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//commandList->SetGraphicsRoot32BitConstants(1, 1, &m_Gamma, 3);
-	//commandList->SetGraphicsRoot32BitConstants(1, 1, &m_Exposure, 4);
-
-	// PRESENT // 
 	commandList->ResourceBarrier(1, &presentBarrier);
 
 	ThrowIfFailed(commandList->Close());

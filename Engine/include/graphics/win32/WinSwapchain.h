@@ -27,14 +27,14 @@ public:
 	ComPtr<ID3D12Fence>& GetFence();
 	ComPtr<ID3D12Resource>& GetCurrentRenderTarget(const uint32_t _index);
 	ComPtr<ID3D12Resource>& GetDepthBuffer();
+	static const uint32_t BackBufferCount = 2;
 private:
 	void SetupSwapchain(int _width, int _height);
 	void SetupDepthBuffer(int _width, int _height);
 
-	static const uint32_t m_backbufferCount = 2;
 	uint32_t m_currentBuffer = 0;
 	 
-	ComPtr<ID3D12Resource> m_renderTargets[m_backbufferCount] {};
+	ComPtr<ID3D12Resource> m_renderTargets[BackBufferCount] {};
 	ComPtr<ID3D12Resource> m_depthBuffer = nullptr;
 
 	ComPtr<ID3D12Fence> m_fence = nullptr;

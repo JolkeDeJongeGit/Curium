@@ -9,7 +9,7 @@ void Swapchain::Init(int _width, int _height)
 {
 	auto device = Device::Get().GetDevice();
 
-	HeapHandler::Get().CreateHeaps(m_backbufferCount);
+	HeapHandler::Get().CreateHeaps(BackBufferCount);
 
 	SetupSwapchain(_width, _height);
 	SetupDepthBuffer(_width, _height);
@@ -43,7 +43,7 @@ ComPtr<IDXGISwapChain4>& Swapchain::GetSwapchain()
 
 void Swapchain::ResizeBuffer(int _width, int _height)
 {
-	m_swapchain->ResizeBuffers(m_backbufferCount, _width, _height,
+	m_swapchain->ResizeBuffers(BackBufferCount, _width, _height,
 		DXGI_FORMAT_R8G8B8A8_UNORM, 0);
 }
 
@@ -93,7 +93,7 @@ void Swapchain::SetupSwapchain(int _width, int _height)
 	auto heap = HeapHandler::Get().GetRtvHeap();
 
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
-	swapchainDesc.BufferCount = m_backbufferCount;
+	swapchainDesc.BufferCount = BackBufferCount;
 	swapchainDesc.Width = _width;
 	swapchainDesc.Height = _height;
 	swapchainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -106,13 +106,11 @@ void Swapchain::SetupSwapchain(int _width, int _height)
 	ThrowIfFailed(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 	ThrowIfFailed(swapchain->QueryInterface(IID_PPV_ARGS(&m_swapchain)));
 
-	delete swapchain;
-
+	//delete swapchain;
 	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 
-
 	// This is setting up the render targets.
-	for (uint32_t i = 0; i < m_backbufferCount; i++)
+	for (uint32_t i = 0; i < BackBufferCount; i++)
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap.GetCPUHandleAt(heap.GetNextIndex());
 		ThrowIfFailed(m_swapchain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])));

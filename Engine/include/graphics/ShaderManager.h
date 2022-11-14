@@ -23,4 +23,5 @@ public:
 
 private:
 	std::unordered_map<const char*, Shader> m_shaderMap;
+	std::string m_basePath;
 };

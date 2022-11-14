@@ -4,7 +4,7 @@
 
 int main()
 {
-	WinWindow win;
+	auto& win = WinWindow::Get();
 	win.Create(1920, 1080);
 	win.SetTitle(L"Curium");
 

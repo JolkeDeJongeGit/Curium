@@ -5,9 +5,10 @@
 
 PipelineState::PipelineState(std::string _vertexName, std::string _pixelName, D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool _useDepth)
 {
-	auto shader = ShaderManager::Get();
+	auto& shader = ShaderManager::Get();
+	shader.Init();
 	shader.LoadShader(_vertexName.c_str(), std::string("resources/shaders/").c_str());
-	shader.LoadShader(_vertexName.c_str(), std::string("resources/shaders/").c_str());
+	shader.LoadShader(_pixelName.c_str(), std::string("resources/shaders/").c_str());
 
 	m_vertexName = _vertexName.c_str();
 	m_pixelName = _pixelName.c_str();
@@ -67,7 +68,7 @@ void PipelineState::SetupRootSignature()
 void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool _useDepth)
 {
 	ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
-	ShaderManager shader = ShaderManager::Get();
+	auto& shader = ShaderManager::Get();
 
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = 
 	{
@@ -111,7 +112,6 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool
 	pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	pipelineStateStream.RTVFormats = rtvFormats;
 	pipelineStateStream.Rasterizer = rasterizer;
-
 
 	D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
 		sizeof(PipelineStateStream), &pipelineStateStream

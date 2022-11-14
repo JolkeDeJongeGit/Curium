@@ -1,6 +1,7 @@
 #include <precomp.h>
 #include "graphics/win32/WinCommandQueue.h"
 #include <graphics/win32/WinDevice.h>
+#include <graphics/win32/WinSwapchain.h>
 
 CommandQueue::CommandQueue()
 {
@@ -23,6 +24,7 @@ void CommandQueue::ExecuteCommandList()
 {
 	ID3D12CommandList* const commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	Swapchain::Get().UpdateFenceValue();
 }
 
 void CommandQueue::UploadData(ComPtr<ID3D12Resource> resource, D3D12_SUBRESOURCE_DATA subresource)
@@ -55,7 +57,7 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> resource, D3D12_SUBRESOURCE
 	m_commandList->Close();
 
 	ExecuteCommandList();
-
+	Swapchain::Get().WaitForFenceValue(m_commandQueue);
 }
 
 ComPtr<ID3D12CommandAllocator>& CommandQueue::GetCommandAllocator()
