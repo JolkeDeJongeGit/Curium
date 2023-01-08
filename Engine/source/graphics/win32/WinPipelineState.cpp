@@ -3,6 +3,8 @@
 #include <graphics/win32/WinDevice.h>
 #include "graphics/win32/WinPipelineState.h"
 
+
+// This is a test comment
 PipelineState::PipelineState(std::string _vertexName, std::string _pixelName, D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool _useDepth)
 {
 	auto& shader = ShaderManager::Get();
