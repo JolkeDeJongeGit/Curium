@@ -200,7 +200,7 @@ void Debug::Init()
     ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-    io.DisplaySize = ImVec2(Engine::GetWindow()->GetWidth(), Engine::GetWindow()->GetHeight());
+    io.DisplaySize = ImVec2(static_cast<float>(Engine::GetWindow()->GetWidth()), static_cast<float>(Engine::GetWindow()->GetHeight()));
 
     float ys;
     float xs;
