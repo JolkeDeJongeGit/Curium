@@ -1,31 +1,45 @@
 #pragma once
-#include "CustomWin.h"
+#include "GLFW3/include/GLFW/glfw3.h"
 #include "platform/Window.h"
 
 class WinWindow : public Window
 {
 public:
-	static WinWindow& Get()
-	{
-		static WinWindow instance;
-		return instance;
-	}
+    WinWindow() = default;
+    ~WinWindow();
 
-	void Create(int _width, int _height) override;
-	void Update() override;
-	void Terminate() override;
-	void SetTitle(const std::wstring& _title) override;
+    void Create(int _width, int _height) override;
+    void Update() override;
+    void Shutdown() override;
 
-	const wchar_t* GetName() { return m_className.c_str();  }
+    void SetIcon(int count, const char* name);
 
-	HWND GetHwnd() { return m_hwnd; }
-	HINSTANCE GetInstance() { return m_instance; }
+    inline GLFWwindow* GetWindow() { return window; };
 
-protected:
-	static LRESULT CALLBACK EventHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+    static float MouseXOffset;
+    static float MouseYOffset;
 private:
-	HWND m_hwnd;
-	HINSTANCE m_instance;
+#pragma warning( push )
+#pragma warning( disable : 4100 )
+    static void mouse_callback(GLFWwindow* window, double xPos, double yPos)
+    {
 
-	std::wstring m_className = L"WinClass";
+        static bool firstMouse = true;
+        static float lastX = 0.0f;
+        static float lastY = 0.0f;
+        if (firstMouse) {
+            lastX = static_cast<float>(xPos);
+            lastY = static_cast<float>(yPos);
+            firstMouse = false;
+        }
+
+        MouseXOffset = static_cast<float>(xPos) - lastX;
+        MouseYOffset = lastY - static_cast<float>(yPos);
+        lastX = static_cast<float>(xPos);
+        lastY = static_cast<float>(yPos);
+
+    }
+#pragma warning( pop )
+    GLFWwindow* window = nullptr;
+    GLFWimage* windowIconImage = nullptr;
 };

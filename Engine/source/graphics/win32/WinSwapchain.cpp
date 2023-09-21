@@ -4,6 +4,11 @@
 #include <platform/win32/WinWindow.h>
 #include <graphics/win32/WinCommandQueue.h>
 #include <graphics/win32/WinHeapHandler.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#define GLFW_NATIVE_INCLUDE_NONE
+#include <GLFW3/include/GLFW/glfw3native.h>
+#include "Engine.h"
 
 void Swapchain::Init(int _width, int _height)
 {
@@ -89,7 +94,7 @@ void Swapchain::SetupSwapchain(int _width, int _height)
 	auto device = Device::Get();
 	auto devices = Device::Get().GetDevice();
 	auto factory = device.GetFactory();
-	auto hwnd = WinWindow::Get().GetHwnd();
+	auto hwnd = glfwGetWin32Window(Engine::GetWindow()->GetWindow());
 	auto command = CommandQueue::Get().GetCommandQueue();
 	auto heap = HeapHandler::Get().GetRtvHeap();
 

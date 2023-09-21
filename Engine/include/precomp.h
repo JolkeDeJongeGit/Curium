@@ -3,7 +3,13 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <set>
+#include <memory>
+#include <string>
+#include <cassert>
+#include <functional>
 #include "common/Util.h"
+#include "common/PerformanceManager.h"
 
 #pragma region DirectX12
 #include <wrl.h>

@@ -1,133 +1,61 @@
 #include "precomp.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-#include <fcntl.h>
-#include <io.h>
-#include <windowsx.h>
+
+#pragma warning( push )
+#pragma warning(push, 0)
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image/stb_image.h"
+#pragma warning( pop ) 
+
 #include "platform/win32/WinWindow.h"
+
+WinWindow::~WinWindow()
+{
+	Shutdown();
+}
 
 void WinWindow::Create(int _width, int _height)
 {
-	RECT wr;
-	wr.left = 100;
-	wr.right = _width + wr.left;
-	wr.top = 100;
-	wr.bottom = _height + wr.top;
+    SetWidth(_width);
+    SetHeight(_height);
 
-	m_instance = GetModuleHandle(nullptr);
-
-	WNDCLASSEX wc = { 0 };
-	wc.cbSize = sizeof(wc);
-	wc.style = CS_OWNDC;
-	wc.lpfnWndProc = EventHandler;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = GetInstance();
-	wc.hCursor = nullptr;
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wc.lpszMenuName = nullptr;
-	wc.lpszClassName = GetName();
-
-	wc.hIcon = static_cast<HICON>(LoadImage(
-		GetInstance(), MAKEINTRESOURCE(IDI_ICON1),
-		IMAGE_ICON, 32, 32, 0
-	));
-		wc.hIconSm = static_cast<HICON>(LoadImage(
-		GetInstance(), MAKEINTRESOURCE(IDI_ICON1),
-		IMAGE_ICON, 16, 16, 0
-	));
-
-	RegisterClassEx(&wc);
-	LPCWSTR value = (LPCWSTR)GetTitle().c_str();
-	m_hwnd = CreateWindow(
-		GetName(),
-		value,
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		wr.right - wr.left,
-		wr.bottom - wr.top,
-		nullptr,        // We have no parent window.
-		nullptr,        // We aren't using menus.
-		m_instance,
-		this);
-
-	assert(m_hwnd && "Failed to create window");
-
-	ShowWindow(m_hwnd, SW_NORMAL);
-
-	RAWINPUTDEVICE rid;
-	rid.usUsagePage = 0x01; // mouse page
-	rid.usUsage = 0x02; // mouse usage
-	rid.dwFlags = 0;
-	rid.hwndTarget = nullptr;
-	RegisterRawInputDevices(&rid, 1, sizeof(rid));
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    window = glfwCreateWindow(_width, _height, m_title.c_str(), nullptr, nullptr);
+    glfwMakeContextCurrent(window);
+    glfwSetCursorPosCallback(window, mouse_callback);
 }
 
 void WinWindow::Update()
 {
-	// Window Loop sends events.
-	MSG msg = {};
-	// Process any messages in the queue.
-	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+    SetActive(!glfwWindowShouldClose(window));
+
+    glfwSwapBuffers(window);
+    glfwPollEvents();
 }
 
-void WinWindow::Terminate()
+void WinWindow::Shutdown()
 {
-	UnregisterClass(GetName(), GetInstance());
+    glfwDestroyWindow(window);
+    glfwTerminate();
 }
 
-void WinWindow::SetTitle(const std::wstring& _title)
+void WinWindow::SetIcon(int count, const char* name)
 {
-	SetWindowText(m_hwnd, std::wstring(_title.begin(), _title.end()).c_str());
-	Window::SetTitle(_title);
-}
+    if (windowIconImage)
+    {
+        delete windowIconImage;
+        windowIconImage = nullptr;
+    }
 
-LRESULT WinWindow::EventHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message)
-	{
-	case WM_DESTROY:
-	{
-		//SetActive(false);
-		PostQuitMessage(0);
-		return 0;
-	}
-	case WM_SIZE:
-	{
-		RECT clientRect = {};
-		GetClientRect(hWnd, &clientRect);
+    windowIconImage = new GLFWimage();
+    int width, height, channels;
+    unsigned char* image_data = stbi_load(name, &width, &height, &channels, 0);
 
-		int width = clientRect.right - clientRect.left;
-		int height = clientRect.bottom - clientRect.top;
-
-		// Update width and height in the render
-
-		return 0;
-	}
-	// Keyboard Input
-	case WM_KEYDOWN: case WM_SYSKEYDOWN:
-		break;
-	case WM_KEYUP: case WM_SYSKEYUP:
-		break;
-		// Mouse Input
-	case WM_MOUSEMOVE:
-		break;
-	case WM_LBUTTONDOWN:
-		break;
-	case WM_RBUTTONDOWN:
-		break;
-	case WM_LBUTTONUP:
-		break;
-	case WM_RBUTTONUP:
-		break;
-	}
-
-	// Handle any messages the switch statement didn't.
-	return DefWindowProc(hWnd, message, wParam, lParam);
+    // Create a GLFW image structure
+    windowIconImage->width = width;
+    windowIconImage->height = height;
+    windowIconImage->pixels = image_data;
+    glfwSetWindowIcon(window, count, windowIconImage);
+    stbi_image_free(windowIconImage->pixels);
 }

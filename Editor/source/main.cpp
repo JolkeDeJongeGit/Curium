@@ -1,20 +1,16 @@
 #include "pch.h"
-#include <platform/win32/WinWindow.h>
-#include <graphics/Renderer.h>
+#include <Engine.h>
 
 int main()
 {
-	auto& win = WinWindow::Get();
-	win.Create(1920, 1080);
-	win.SetTitle(L"Curium");
-
-	Renderer ren;
-	ren.Init(1920, 1080);
-	while (win.IsActive())
-	{
-		win.Update();
-		ren.Render();
-	}
-
+    Engine::Init();
+    std::chrono::steady_clock::time_point previous_time = std::chrono::high_resolution_clock::now();
+    while (!Engine::ShouldQuit())
+    {
+        std::chrono::steady_clock::time_point current_time = std::chrono::high_resolution_clock::now();
+        float delta_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(current_time - previous_time).count()) * 0.001f;
+        previous_time = current_time;
+        Engine::Update(delta_time);
+    }
 	return 0;
 }
