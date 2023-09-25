@@ -5,6 +5,8 @@ struct VertexData
 	float Position[3]; // 4 * 3 = 12 bytes
 	float Normal[3];   // 4 * 3 = 12 bytes
 	float TexCoord[2]; // 4 * 2 = 8  bytes
+
+	VertexData(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& texCoord);
 };					   //         32 bytes
 
 class Texture
@@ -23,6 +25,13 @@ private:
 	std::string m_path;
 	glm::ivec2 m_imageSize;
 	ComPtr<ID3D12Resource> m_data;
+};
+
+struct BufferData
+{
+	ComPtr<ID3D12Resource> m_bufferResource;
+	D3D12_VERTEX_BUFFER_VIEW m_vertexView{};
+	D3D12_INDEX_BUFFER_VIEW m_indexView{};
 };
 
 class Mesh
@@ -46,9 +55,12 @@ public:
 	void CreateTexturesBuffer();
 
 	void SetupCube();
-	void Draw(glm::mat4 _matrix);
+	void Draw(glm::mat4 _matrix, ComPtr<ID3D12GraphicsCommandList>& commandList);
 private:
 	std::vector<VertexData> m_vertexData;
 	std::vector<uint32_t>   m_indexData;
 	std::vector<uint32_t>   m_textureData;
+
+	BufferData m_vertexBuffer;
+	BufferData m_indexBuffer;
 };

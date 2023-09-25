@@ -67,6 +67,14 @@ void Renderer::Render()
 	m_swapchain->WaitForFenceValue(m_commandQueue->GetCommandQueue());
 }
 
+struct Mat
+{
+	float** ModelMatrix;
+	float** ModelViewMatrix;
+	float** InverseTransposeModelViewMatrix;
+	float** ModelViewProjectionMatrix;
+};
+
 void Renderer::Update()
 {
 	PROFILE_FUNCTION();
