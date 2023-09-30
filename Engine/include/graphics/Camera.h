@@ -2,7 +2,7 @@
 class Camera
 {
 public:
-    Camera();
+    Camera() = default;
 
     [[nodiscard]] glm::vec3 GetPosition() const;
     [[nodiscard]] glm::vec3 Right() const;

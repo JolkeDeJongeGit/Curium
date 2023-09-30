@@ -2,7 +2,6 @@ struct Mat
 {
     matrix ModelMatrix;
     matrix ModelViewMatrix;
-    matrix InverseTransposeModelViewMatrix;
     matrix ModelViewProjectionMatrix;
 };
 
@@ -29,7 +28,7 @@ VertexShaderOutput main(VertexPositionNormalTexture IN)
 
     OUT.Position = mul( MatCB.ModelViewProjectionMatrix, float4(IN.Position, 1.0f));
     OUT.PositionVS = mul( MatCB.ModelViewMatrix, float4(IN.Position, 1.0f));
-    OUT.NormalVS = mul((float3x3)MatCB.InverseTransposeModelViewMatrix, IN.Normal);
+    OUT.NormalVS = mul((float3x3)MatCB.ModelViewMatrix, IN.Normal);
     OUT.TexCoord = IN.TexCoord;
 
     return OUT;

@@ -1,22 +1,16 @@
 #include "precomp.h"
 #include "graphics/Mesh.h"
-#include "graphics/win32/WinUtil.h"
 #include "graphics/win32/WinDevice.h"
-#include "graphics/win32/WinCommandQueue.h"
-#include "graphics/win32/WinCommandList.h"
 
-Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize)
-{
-}
-
-Texture::~Texture()
+Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize): m_descriptorIndex(0),
+	m_imageSize()
 {
 }
 
 glm::ivec2 Texture::GetSize() const
 { return m_imageSize; }
 
-uint32_t Texture::GetDiscriptorIndex()
+uint32_t Texture::GetDescriptorIndex() const
 {
 	return m_descriptorIndex;
 }
@@ -41,8 +35,8 @@ void Mesh::CreateVertexBuffer()
 {
 	const UINT bufferSize = static_cast<UINT>(m_vertexData.size() * sizeof(VertexData));
 
-	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
+	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	const D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
 
 	ThrowIfFailed(Device::Get().GetDevice().Get()->CreateCommittedResource(
 		&properties,
@@ -53,7 +47,7 @@ void Mesh::CreateVertexBuffer()
 		IID_PPV_ARGS(&m_vertexBuffer.m_bufferResource)));
 
 	UINT8* vertexData = nullptr;
-	D3D12_RANGE range{ 0, 0 };
+	const D3D12_RANGE range{ 0, 0 };
 
 	ThrowIfFailed(m_vertexBuffer.m_bufferResource->Map(0, &range, reinterpret_cast<void**>(&vertexData)));
 	memcpy(vertexData, &m_vertexData[0], bufferSize);
@@ -68,8 +62,8 @@ void Mesh::CreateIndexBuffer()
 {
 	const UINT bufferSize = static_cast<UINT>(m_indexData.size() * sizeof(uint16_t));
 
-	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
+	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	const D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
 
 	ThrowIfFailed(Device::Get().GetDevice().Get()->CreateCommittedResource(
 		&properties,
@@ -80,7 +74,7 @@ void Mesh::CreateIndexBuffer()
 		IID_PPV_ARGS(&m_indexBuffer.m_bufferResource)));
 
 	UINT8* indexData = nullptr;
-	D3D12_RANGE range{ 0, 0 };
+	const D3D12_RANGE range{ 0, 0 };
 
 	ThrowIfFailed(m_indexBuffer.m_bufferResource->Map(0, &range, reinterpret_cast<void**>(&indexData)));
 	memcpy(indexData, &m_indexData[0], bufferSize);
@@ -211,11 +205,15 @@ void Mesh::SetupCube()
 	{
 		m_vertexData.push_back(VertexData(vertices[i], normals[i], textureCoords[i]));
 	}
+	
+	CreateVertexBuffer();
+	CreateIndexBuffer();
+	CreateTexturesBuffer();
 }
 
 void Mesh::Draw(glm::mat4 inMatrix, const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	inCommandList->IASetVertexBuffers(0, 1, &m_vertexBuffer.m_vertexView);
+	inCommandList->IASetVertexBuffers(0, 1, &(m_vertexBuffer.m_vertexView));
 	inCommandList->IASetIndexBuffer(&m_indexBuffer.m_indexView);
 	inCommandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);
 }

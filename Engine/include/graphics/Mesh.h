@@ -14,11 +14,11 @@ class Texture
 public:
 	Texture() = default;
 	Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize);
-	~Texture();
+	~Texture() = default;
 	inline ID3D12Resource* GetTexture() const { return m_data.Get(); };
 	std::string GetPath() const { return m_path; };
 	glm::ivec2 GetSize() const;
-	[[nodiscard]] uint32_t  GetDiscriptorIndex();
+	[[nodiscard]] uint32_t  GetDescriptorIndex() const;
 private:
 	uint32_t m_descriptorIndex;
 	struct TexData;

@@ -13,7 +13,7 @@ WinWindow::~WinWindow()
 	Shutdown();
 }
 
-void WinWindow::Create(int inWidth, int inHeight)
+void WinWindow::Create(const int inWidth, const int inHeight)
 {
     SetWidth(inWidth);
     SetHeight(inHeight);
@@ -40,7 +40,7 @@ void WinWindow::Shutdown()
     glfwTerminate();
 }
 
-void WinWindow::SetIcon(int inCount, const char* inName)
+void WinWindow::SetIcon(const int inCount, const char* inName)
 {
     if (m_windowIconImage)
     {
@@ -50,12 +50,12 @@ void WinWindow::SetIcon(int inCount, const char* inName)
 
     m_windowIconImage = new GLFWimage();
     int width, height, channels;
-    unsigned char* image_data = stbi_load(inName, &width, &height, &channels, 0);
+    unsigned char* imageData = stbi_load(inName, &width, &height, &channels, 0);
 
     // Create a GLFW image structure
     m_windowIconImage->width = width;
     m_windowIconImage->height = height;
-    m_windowIconImage->pixels = image_data;
+    m_windowIconImage->pixels = imageData;
     glfwSetWindowIcon(m_window, inCount, m_windowIconImage);
     stbi_image_free(m_windowIconImage->pixels);
 }
