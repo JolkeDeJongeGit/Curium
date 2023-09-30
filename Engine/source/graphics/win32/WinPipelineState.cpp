@@ -3,18 +3,18 @@
 #include <graphics/win32/WinDevice.h>
 #include "graphics/win32/WinPipelineState.h"
 
-PipelineState::PipelineState(std::string _vertexName, std::string _pixelName, D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool _useDepth)
+PipelineState::PipelineState(const std::string& inVertexName, const std::string& inPixelName, const D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, const bool inUseDepth)
 {
 	auto& shader = ShaderManager::Get();
 	shader.Init();
-	shader.LoadShader(_vertexName.c_str(), std::string("resources/shaders/").c_str());
-	shader.LoadShader(_pixelName.c_str(), std::string("resources/shaders/").c_str());
+	shader.LoadShader(inVertexName.c_str(), std::string("resources/shaders/").c_str());
+	shader.LoadShader(inPixelName.c_str(), std::string("resources/shaders/").c_str());
 
-	m_vertexName = _vertexName.c_str();
-	m_pixelName = _pixelName.c_str();
+	m_vertexName = inVertexName.c_str();
+	m_pixelName = inPixelName.c_str();
 
 	SetupRootSignature();
-	SetupPipelineState(_type, _useDepth);
+	SetupPipelineState(inType, inUseDepth);
 }
 
 ComPtr<ID3D12PipelineState>& PipelineState::GetPipelineState()
@@ -29,13 +29,12 @@ ComPtr<ID3D12RootSignature>& PipelineState::GetRootSignature()
 
 void PipelineState::SetupRootSignature()
 {
-	ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
+	const ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
 
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
 	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-	HRESULT result = device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData));
 
-	if (FAILED(result))
+	if (const HRESULT result = device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData));  FAILED(result))
 		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 
 	CD3DX12_DESCRIPTOR_RANGE1 descRange[3];
@@ -47,7 +46,7 @@ void PipelineState::SetupRootSignature()
 	rootParameter[2].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParameter[3].InitAsConstants(3, 2, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 
-	CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	const CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init_1_1(_countof(rootParameter), rootParameter, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -60,12 +59,12 @@ void PipelineState::SetupRootSignature()
 
 	if (errorBlob)
 	{
-		const char* errStr = (const char*)errorBlob->GetBufferPointer();
+		const auto errStr = static_cast<const char*>(errorBlob->GetBufferPointer());
 		printf("%s", errStr);
 	}
 }
 
-void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool _useDepth)
+void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, bool inUseDepth)
 {
 	ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
 	auto& shader = ShaderManager::Get();
@@ -96,7 +95,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool
 	rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc{ CD3DX12_DEFAULT() };
-	depthStencilDesc.DepthEnable = _useDepth;
+	depthStencilDesc.DepthEnable = inUseDepth;
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
@@ -105,7 +104,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE _type, bool
 
 	pipelineStateStream.pRootSignature = m_rootSignature.Get();
 	pipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-	pipelineStateStream.PrimitiveTopologyType = _type;
+	pipelineStateStream.PrimitiveTopologyType = inType;
 	pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_vertexName).ShaderBlob.Get());
 	pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_pixelName).ShaderBlob.Get());
 	pipelineStateStream.DepthStencil = depthStencilDesc;

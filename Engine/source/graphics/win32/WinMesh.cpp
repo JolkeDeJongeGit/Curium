@@ -5,7 +5,7 @@
 #include "graphics/win32/WinCommandQueue.h"
 #include "graphics/win32/WinCommandList.h"
 
-Texture::Texture(std::string path, std::vector<uint8_t> data, glm::ivec2 imageSize)
+Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize)
 {
 }
 
@@ -13,19 +13,26 @@ Texture::~Texture()
 {
 }
 
+glm::ivec2 Texture::GetSize() const
+{ return m_imageSize; }
 
-VertexData::VertexData(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& texCoord)
+uint32_t Texture::GetDiscriptorIndex()
+{
+	return m_descriptorIndex;
+}
+
+VertexData::VertexData(const glm::vec3& inPosition, const glm::vec3& inNormal, const glm::vec2& inTexCoord)
 {
 	for (size_t i = 0; i < 3; i++)
 	{
-		glm::length_t j = static_cast<glm::length_t>(i);
-		Position[i] = position[j];
-		Normal[i] = normal[j];
+		const glm::length_t j = static_cast<glm::length_t>(i);
+		Position[i] = inPosition[j];
+		Normal[i] = inNormal[j];
 	}
 
 	for (size_t i = 0; i < 2; i++)
 	{
-		TexCoord[i] = texCoord[static_cast<glm::length_t>(i)];
+		TexCoord[i] = inTexCoord[static_cast<glm::length_t>(i)];
 	}
 }
 
@@ -206,9 +213,9 @@ void Mesh::SetupCube()
 	}
 }
 
-void Mesh::Draw(glm::mat4 _matrix, ComPtr<ID3D12GraphicsCommandList>& commandList)
+void Mesh::Draw(glm::mat4 inMatrix, const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	commandList->IASetVertexBuffers(0, 1, &m_vertexBuffer.m_vertexView);
-	commandList->IASetIndexBuffer(&m_indexBuffer.m_indexView);
-	commandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);
+	inCommandList->IASetVertexBuffers(0, 1, &m_vertexBuffer.m_vertexView);
+	inCommandList->IASetIndexBuffer(&m_indexBuffer.m_indexView);
+	inCommandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);
 }

@@ -17,9 +17,9 @@ public:
 	}
 	void Init();
 
-	uint32_t LoadShader(const char* _name, const char* _path);
-	uint32_t UseShader(const char* _name);
-	Shader& GetShader(const char* _name);
+	uint32_t LoadShader(const char* inName, const char* inPath);
+	uint32_t UseShader(const char* inName);
+	Shader& GetShader(const char* inName);
 
 private:
 	std::unordered_map<const char*, Shader> m_shaderMap;

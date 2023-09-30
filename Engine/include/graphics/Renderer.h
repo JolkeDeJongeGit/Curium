@@ -3,7 +3,7 @@
 
 namespace Renderer
 {
-	void Init(uint32_t _width, uint32_t  _height);
+	void Init(uint32_t inWidth, uint32_t  inHeight);
 	void Render();
 	void Update();
 	void Shutdown();

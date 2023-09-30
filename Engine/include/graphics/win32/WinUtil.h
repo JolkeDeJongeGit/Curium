@@ -26,5 +26,5 @@ namespace WinUtil
 	Device* GetDevice();
 	CommandQueue* GetCommandQueue();
 	WinWindow* GetWindow();
-	DescriptorHeap* GetDescriptorHeap(HeapType type);
+	DescriptorHeap* GetDescriptorHeap(HeapType inType);
 }

@@ -24,7 +24,7 @@ namespace Performance
 
 }
 
-Performance::Profiler::Profiler(const std::string& name) : m_name(name)
+Performance::Profiler::Profiler(const std::string& inName) : m_name(inName)
 {
     StartTimer(m_name);
 }
@@ -34,22 +34,22 @@ Performance::Profiler::~Profiler()
     EndTimer(m_name);
 }
 
-void Performance::StartTimer(const std::string& name)
+void Performance::StartTimer(const std::string& inName)
 {
-    m_times[name].m_start = std::chrono::high_resolution_clock::now();
+    m_times[inName].m_start = std::chrono::high_resolution_clock::now();
 }
 
-void Performance::EndTimer(const std::string& name)
+void Performance::EndTimer(const std::string& inName)
 {
-    auto& e = m_times[name];
+    auto& e = m_times[inName];
     e.m_end = std::chrono::high_resolution_clock::now();
     auto elapsed = e.m_end - e.m_start;
     e.m_accum += elapsed;
 }
 
-void Performance::DebugImgui(bool& show)
+void Performance::DebugImgui(bool& inShow)
 {
-    ImGui::Begin("Profiler", &show, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Profiler", &inShow, ImGuiWindowFlags_NoCollapse);
 
     for (auto& itr : m_times)
     {

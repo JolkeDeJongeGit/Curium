@@ -234,14 +234,14 @@ void Debug::Init()
         srv->GetGPUDescriptorHandleForHeapStart());
 }
 
-void Debug::Update(const float dt)
+void Debug::Update(const float inDt)
 {
     PROFILE_FUNCTION();
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    TopBar(dt);
+    TopBar(inDt);
 }
 
 void Debug::Render()

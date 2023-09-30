@@ -20,10 +20,10 @@ void Engine::Init()
 	Debug::Init();
 }
 
-void Engine::Update(const float dt)
+void Engine::Update(const float inDt)
 {
 	PROFILE_FUNCTION();
-	Debug::Update(dt);
+	Debug::Update(inDt);
 	Renderer::Update();
 	if (!Debug::Paused())
 	{

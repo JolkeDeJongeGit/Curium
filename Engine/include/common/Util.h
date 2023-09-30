@@ -2,9 +2,9 @@
 #include <winerror.h>
 #include <exception>
 
-inline void ThrowIfFailed(HRESULT hr)
+inline void ThrowIfFailed(const HRESULT inHr)
 {
-    if (FAILED(hr))
+    if (FAILED(inHr))
     {
         throw std::exception();
     }

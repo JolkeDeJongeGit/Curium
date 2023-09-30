@@ -6,21 +6,21 @@ struct VertexData
 	float Normal[3];   // 4 * 3 = 12 bytes
 	float TexCoord[2]; // 4 * 2 = 8  bytes
 
-	VertexData(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& texCoord);
+	VertexData(const glm::vec3& inPosition, const glm::vec3& inNormal, const glm::vec2& inTexCoord);
 };					   //         32 bytes
 
 class Texture
 {
 public:
 	Texture() = default;
-	Texture(std::string path, std::vector<uint8_t> data, glm::ivec2 imageSize);
+	Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize);
 	~Texture();
 	inline ID3D12Resource* GetTexture() const { return m_data.Get(); };
 	std::string GetPath() const { return m_path; };
-	glm::ivec2 GetSize() const { return m_imageSize; };
-
-	uint32_t m_descriptorIndex;
+	glm::ivec2 GetSize() const;
+	[[nodiscard]] uint32_t  GetDiscriptorIndex();
 private:
+	uint32_t m_descriptorIndex;
 	struct TexData;
 	std::string m_path;
 	glm::ivec2 m_imageSize;
@@ -55,7 +55,7 @@ public:
 	void CreateTexturesBuffer();
 
 	void SetupCube();
-	void Draw(glm::mat4 _matrix, ComPtr<ID3D12GraphicsCommandList>& commandList);
+	void Draw(glm::mat4 inMatrix, const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
 private:
 	std::vector<VertexData> m_vertexData;
 	std::vector<uint32_t>   m_indexData;

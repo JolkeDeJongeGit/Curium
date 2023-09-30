@@ -7,16 +7,14 @@ Device::Device()
 	SetupDevice();
 }
 
-Device::~Device()
-{
-}
+Device::~Device() = default;
 
-ComPtr<ID3D12Device2>& Device::GetDevice()
+const ComPtr<ID3D12Device2>& Device::GetDevice() const
 {
 	return m_device;
 }
 
-ComPtr<IDXGIFactory4>& Device::GetFactory()
+const ComPtr<IDXGIFactory4>& Device::GetFactory() const
 {
 	return m_factory;
 }
@@ -45,7 +43,7 @@ void Device::SetupDevice()
 {
 	ComPtr<IDXGIAdapter1> finalAdapter;
 	ComPtr<IDXGIAdapter1> adapter1;
-	SIZE_T maxVRAM = 0;
+	SIZE_T maxVramSize = 0;
 
 	for (UINT i = 0; DXGI_ERROR_NOT_FOUND != m_factory->EnumAdapters1(i, &adapter1); i++)
 	{
@@ -61,9 +59,9 @@ void Device::SetupDevice()
 
 		if (SUCCEEDED(D3D12CreateDevice(adapter1.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)))
 		{
-			if (desc.DedicatedVideoMemory > maxVRAM)
+			if (desc.DedicatedVideoMemory > maxVramSize)
 			{
-				maxVRAM = desc.DedicatedVideoMemory;
+				maxVramSize = desc.DedicatedVideoMemory;
 				finalAdapter = adapter1;
 			}
 		}

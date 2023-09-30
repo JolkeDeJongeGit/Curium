@@ -12,59 +12,63 @@
 #include <graphics/DebugManager.h>
 #include <include/imgui.h>
 
+#include "graphics/Camera.h"
+
 namespace Renderer
 {
-	Device* m_device = nullptr;
-	CommandQueue* m_commandQueue = nullptr;
-	Swapchain* m_swapchain = nullptr;
-	PipelineState* m_pipelineState = nullptr;
+	Device* device = nullptr;
+	CommandQueue* command_queue = nullptr;
+	Swapchain* swapchain = nullptr;
+	PipelineState* pipeline_state = nullptr;
 
-	DescriptorHeap* m_cbvHeap;
-	DescriptorHeap* m_rtvHeap;
-	DescriptorHeap* m_dsvHeap;
+	DescriptorHeap* cbv_heap;
+	DescriptorHeap* rtv_heap;
+	DescriptorHeap* dsv_heap;
 
-	uint32_t m_viewportWidth = 1920;
-	uint32_t m_viewportHeight = 1080;
+	uint32_t viewport_width = 1920;
+	uint32_t viewport_height = 1080;
 
-	const float m_colorRGBA[4] = { 0.5f,0.1f,0.1f,1 };
+	constexpr float color_rgba[4] = { 0.5f,0.1f,0.1f,1 };
+
+	Camera* camera;
 }
 
 float WinWindow::MouseXOffset;
 float WinWindow::MouseYOffset;
 
-void Renderer::Init(uint32_t _width, uint32_t _height)
+void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 {
-	m_device = &Device::Get();
-	m_commandQueue = &CommandQueue::Get();
-	m_swapchain = &Swapchain::Get();
-	m_pipelineState = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	device = &Device::Get();
+	command_queue = &CommandQueue::Get();
+	swapchain = &Swapchain::Get();
+	pipeline_state = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 
-	m_swapchain->Init(_width, _height);
+	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
 
 	auto heapHandler = HeapHandler::Get();
 	heapHandler.CreateHeaps(Swapchain::BackBufferCount);
 	// Reference of heaps
-	m_cbvHeap = &heapHandler.GetCbvHeap();
-	m_rtvHeap = &heapHandler.GetRtvHeap();
-	m_dsvHeap = &heapHandler.GetDsvHeap();
+	cbv_heap = &heapHandler.GetCbvHeap();
+	rtv_heap = &heapHandler.GetRtvHeap();
+	dsv_heap = &heapHandler.GetDsvHeap();
 
-	m_viewportWidth = _width;
-	m_viewportHeight = _height;
+	viewport_width = inWidth;
+	viewport_height = inHeight;
 }
 
 void Renderer::Render()
 {
-	ComPtr<ID3D12GraphicsCommandList> commandList = m_commandQueue->GetCommandList().GetList();
-	UINT backBufferIndex = m_swapchain->GetCurrentBuffer();
-	ID3D12Resource* renderTarget = m_swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
-	CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
+	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
+	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	
 	commandList->ResourceBarrier(1, &presentBarrier);
 	ThrowIfFailed(commandList->Close());
 
-	m_commandQueue->ExecuteCommandList();
-	m_swapchain->Present();
-	m_swapchain->WaitForFenceValue(m_commandQueue->GetCommandQueue());
+	command_queue->ExecuteCommandList();
+	swapchain->Present();
+	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
 }
 
 struct Mat
@@ -77,38 +81,38 @@ struct Mat
 
 void Renderer::Update()
 {
-	PROFILE_FUNCTION();
-	ComPtr<ID3D12CommandAllocator> commandAllocator = m_commandQueue->GetCommandList().GetAllocater();
-	ComPtr<ID3D12GraphicsCommandList> commandList = m_commandQueue->GetCommandList().GetList();
+	PROFILE_FUNCTION()
+	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
+	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
 
 	auto heapHandler = HeapHandler::Get();
 	// Reference of heaps
-	m_cbvHeap = &heapHandler.GetCbvHeap();
-	m_rtvHeap = &heapHandler.GetRtvHeap();
-	m_dsvHeap = &heapHandler.GetDsvHeap();
+	cbv_heap = &heapHandler.GetCbvHeap();
+	rtv_heap = &heapHandler.GetRtvHeap();
+	dsv_heap = &heapHandler.GetDsvHeap();
 
-	ID3D12DescriptorHeap* pDescriptorHeaps[] = { m_cbvHeap->GetDescriptorHeap().Get() };
+	ID3D12DescriptorHeap* pDescriptorHeaps[] = { cbv_heap->GetDescriptorHeap().Get() };
 
-	UINT backBufferIndex = m_swapchain->GetCurrentBuffer();
-	ID3D12Resource* renderTarget = m_swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
+	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUHandleAt(backBufferIndex);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap->GetCPUHandleAt(0);
+	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(backBufferIndex);
+	const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsv_heap->GetCpuHandleAt(0);
 
-	CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	ThrowIfFailed(commandAllocator->Reset());
-	ThrowIfFailed(commandList->Reset(commandAllocator.Get(), m_pipelineState->GetPipelineState().Get()));
+	ThrowIfFailed(commandList->Reset(commandAllocator.Get(), pipeline_state->GetPipelineState().Get()));
 
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
-	commandList->ClearRenderTargetView(rtvHandle, m_colorRGBA, 0, nullptr);
+	commandList->ClearRenderTargetView(rtvHandle, color_rgba, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-	commandList->SetPipelineState(m_pipelineState->GetPipelineState().Get());
-	commandList->SetGraphicsRootSignature(m_pipelineState->GetRootSignature().Get());
+	commandList->SetPipelineState(pipeline_state->GetPipelineState().Get());
+	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
-	D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(m_viewportWidth), static_cast<float>(m_viewportHeight), 0.01f, 500 };
-	D3D12_RECT rect = { static_cast<long>(100), static_cast<long>(100), static_cast<long>(100) + static_cast<long>(m_viewportWidth), static_cast<long>(100) + static_cast<long>(m_viewportHeight) };
+	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.01f, 500 };
+	const D3D12_RECT rect = { static_cast<long>(100), static_cast<long>(100), static_cast<long>(100) + static_cast<long>(viewport_width), static_cast<long>(100) + static_cast<long>(viewport_height) };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
@@ -120,18 +124,18 @@ void Renderer::Update()
 
 void Renderer::Shutdown()
 {
-	m_swapchain->WaitForFenceValue(m_commandQueue->GetCommandQueue());
-	m_swapchain->~Swapchain();
+	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
+	swapchain->~Swapchain();
 }
 
 Device* WinUtil::GetDevice()
 {
-	return Renderer::m_device;
+	return Renderer::device;
 }
 
 CommandQueue* WinUtil::GetCommandQueue()
 {
-	return Renderer::m_commandQueue;
+	return Renderer::command_queue;
 }
 
 WinWindow* WinUtil::GetWindow()
@@ -139,24 +143,20 @@ WinWindow* WinUtil::GetWindow()
 	return Engine::GetWindow();
 }
 
-DescriptorHeap* WinUtil::GetDescriptorHeap(HeapType type)
+DescriptorHeap* WinUtil::GetDescriptorHeap(const HeapType inType)
 {
-	switch (type)
+	switch (inType)
 	{
 	case HeapType::CBV_SRV_UAV:
 		return &HeapHandler::Get().GetCbvHeap();
-		break;
 
 	case HeapType::DSV:
 		return &HeapHandler::Get().GetDsvHeap();
-		break;
 
 	case HeapType::RTV:
-		return &HeapHandler::Get().GetRtvHeap();
-		break;
+		return &HeapHandler::Get().GetRtvHeap();  // NOLINT(clang-diagnostic-covered-switch-default)
 
-	default:
-		return Renderer::m_cbvHeap;
-		break;
+	default:  // NOLINT(clang-diagnostic-covered-switch-default)
+		return Renderer::cbv_heap;
 	}
 }

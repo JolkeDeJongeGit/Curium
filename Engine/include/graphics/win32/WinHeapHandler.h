@@ -10,7 +10,7 @@ public:
 		return instance;
 	}
 
-	void CreateHeaps(uint32_t _bufferSize);
+	void CreateHeaps(uint32_t inBufferSize);
 	DescriptorHeap& GetRtvHeap();
 	DescriptorHeap& GetCbvHeap();
 	DescriptorHeap& GetDsvHeap();

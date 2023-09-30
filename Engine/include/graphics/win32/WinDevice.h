@@ -18,8 +18,8 @@ public:
 		return m_instance;
 	}
 
-	ComPtr<ID3D12Device2>& GetDevice();
-	ComPtr<IDXGIFactory4>& GetFactory();
+	[[nodiscard]] const ComPtr<ID3D12Device2>& GetDevice() const;
+	const ComPtr<IDXGIFactory4>& GetFactory() const;
 private:
 	void SetupFactory();
 	void SetupDevice();

@@ -9,13 +9,13 @@ namespace Performance
 	class Profiler
 	{
 	public:
-		Profiler(const std::string& name);
+		explicit Profiler(const std::string& inName);
 		~Profiler();
 	private:
 		std::string m_name;
 	};
 
-	void StartTimer(const std::string& name);
-	void EndTimer(const std::string& name);
-	void DebugImgui(bool& show);
+	void StartTimer(const std::string& inName);
+	void EndTimer(const std::string& inName);
+	void DebugImgui(bool& inShow);
 }

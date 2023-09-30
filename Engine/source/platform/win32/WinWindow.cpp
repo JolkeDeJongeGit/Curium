@@ -13,49 +13,49 @@ WinWindow::~WinWindow()
 	Shutdown();
 }
 
-void WinWindow::Create(int _width, int _height)
+void WinWindow::Create(int inWidth, int inHeight)
 {
-    SetWidth(_width);
-    SetHeight(_height);
+    SetWidth(inWidth);
+    SetHeight(inHeight);
 
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    window = glfwCreateWindow(_width, _height, m_title.c_str(), nullptr, nullptr);
-    glfwMakeContextCurrent(window);
-    glfwSetCursorPosCallback(window, mouse_callback);
+    m_window = glfwCreateWindow(inWidth, inHeight, m_title.c_str(), nullptr, nullptr);
+    glfwMakeContextCurrent(m_window);
+    glfwSetCursorPosCallback(m_window, MouseCallback);
 }
 
 void WinWindow::Update()
 {
-    SetActive(!glfwWindowShouldClose(window));
+    SetActive(!glfwWindowShouldClose(m_window));
 
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(m_window);
     glfwPollEvents();
 }
 
 void WinWindow::Shutdown()
 {
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(m_window);
     glfwTerminate();
 }
 
-void WinWindow::SetIcon(int count, const char* name)
+void WinWindow::SetIcon(int inCount, const char* inName)
 {
-    if (windowIconImage)
+    if (m_windowIconImage)
     {
-        delete windowIconImage;
-        windowIconImage = nullptr;
+        delete m_windowIconImage;
+        m_windowIconImage = nullptr;
     }
 
-    windowIconImage = new GLFWimage();
+    m_windowIconImage = new GLFWimage();
     int width, height, channels;
-    unsigned char* image_data = stbi_load(name, &width, &height, &channels, 0);
+    unsigned char* image_data = stbi_load(inName, &width, &height, &channels, 0);
 
     // Create a GLFW image structure
-    windowIconImage->width = width;
-    windowIconImage->height = height;
-    windowIconImage->pixels = image_data;
-    glfwSetWindowIcon(window, count, windowIconImage);
-    stbi_image_free(windowIconImage->pixels);
+    m_windowIconImage->width = width;
+    m_windowIconImage->height = height;
+    m_windowIconImage->pixels = image_data;
+    glfwSetWindowIcon(m_window, inCount, m_windowIconImage);
+    stbi_image_free(m_windowIconImage->pixels);
 }

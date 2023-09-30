@@ -2,22 +2,23 @@
 class Window
 {
 public:
-	virtual void Create(int _width, int _height) = 0;
-	virtual void Update() = 0;
-	virtual void Shutdown() = 0;
-	virtual void SetTitle(const std::string& _title) { m_title = _title; }
+	virtual void Create(int inWidth, int inHeight);
+	virtual void Update();
+	virtual void Shutdown();
+	virtual void SetTitle(const std::string& inTitle) { m_title = inTitle; }
 
-	void SetWidth(const int _width) { m_width = _width; }
-	void SetHeight(const int _height) { m_height = _height; ; }
+	void SetWidth(const int inWidth) { m_width = inWidth; }
+	void SetHeight(const int inHeight) { m_height = inHeight;  }
 
-	const int GetWidth() { return m_width; }
-	const int GetHeight() { return m_height; }
+	[[nodiscard]] int GetWidth() const { return m_width; }
+	[[nodiscard]] int GetHeight() const { return m_height; }
 
 	const std::string& GetTitle() { return m_title; }
 
-	const bool IsActive() { return m_active; }
-	void SetActive(const bool _active) { m_active = _active; }
+	[[nodiscard]] bool IsActive() const;
+	void SetActive(const bool inActive) { m_active = inActive; }
 protected:
+	~Window() = default;
 	int m_width = 1920;
 	int m_height = 1080;
 
@@ -25,3 +26,17 @@ protected:
 
 	std::string m_title = "Curium Engine";
 };
+
+inline void Window::Create(int inWidth, int inHeight)
+{
+}
+
+inline void Window::Update()
+{
+}
+
+inline void Window::Shutdown()
+{
+}
+
+inline bool Window::IsActive() const { return m_active; }

@@ -5,7 +5,7 @@
 
 CommandQueue::CommandQueue()
 {
-	auto device = Device::Get().GetDevice();
+	const auto device = Device::Get().GetDevice();
 	D3D12_COMMAND_QUEUE_DESC description = {};
 	description.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	description.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -43,10 +43,10 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> _resource, D3D12_SUBRESOURC
 
 	list->ResourceBarrier(1, &copyBarrier);
 
-	UINT64 size = GetRequiredIntermediateSize(_resource.Get(), 0, 1);
+	const UINT64 size = GetRequiredIntermediateSize(_resource.Get(), 0, 1);
 	ComPtr<ID3D12Resource> intermediate;
-	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	const D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
 
 	ThrowIfFailed(device->CreateCommittedResource(
 		&properties,
