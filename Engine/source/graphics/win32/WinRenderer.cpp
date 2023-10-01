@@ -120,7 +120,6 @@ void Renderer::Update()
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	Debug::Render();
 	// Draw
 	struct Mat
 	{
@@ -143,6 +142,8 @@ void Renderer::Update()
 	commandList->SetGraphicsRoot32BitConstants(2, 16, matrices.ModelViewProjectionMatrix, 32);
 	
 	cube.Draw(glm::identity<glm::mat4>(), commandList);
+
+	Debug::Render();
 }
 
 void Renderer::Shutdown()

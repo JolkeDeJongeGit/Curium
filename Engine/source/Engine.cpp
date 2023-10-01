@@ -22,7 +22,7 @@ void Engine::Init()
 
 void Engine::Update(const float inDt)
 {
-	PROFILE_FUNCTION();
+	PROFILE_FUNCTION()
 	Debug::Update(inDt);
 	Renderer::Update();
 	if (!Debug::Paused())

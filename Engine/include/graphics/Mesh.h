@@ -42,7 +42,7 @@ public:
 		SetupCube();
 	}
 
-	Mesh(const std::vector<VertexData>& _vertexData, const std::vector<uint32_t>& _indexData, const std::unordered_map<std::string, Texture*>&)
+	Mesh(const std::vector<VertexData>& _vertexData, const std::vector<uint16_t>& _indexData, const std::unordered_map<std::string, Texture*>&)
 		: m_vertexData(_vertexData), m_indexData(_indexData)
 	{
 		CreateVertexBuffer();
@@ -58,7 +58,7 @@ public:
 	void Draw(glm::mat4 inMatrix, const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
 private:
 	std::vector<VertexData> m_vertexData;
-	std::vector<uint32_t>   m_indexData;
+	std::vector<uint16_t>   m_indexData;
 	std::vector<uint32_t>   m_textureData;
 
 	BufferData m_vertexBuffer;
