@@ -236,7 +236,7 @@ void Debug::Init()
 
 void Debug::Update(const float inDt)
 {
-    PROFILE_FUNCTION();
+    PROFILE_FUNCTION()
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();

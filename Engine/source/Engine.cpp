@@ -27,8 +27,9 @@ void Engine::Update(const float inDt)
 	Renderer::Update();
 	if (!Debug::Paused())
 	{
-
+		
 	}
+
 	Renderer::Render();
 	window->Update();
 }

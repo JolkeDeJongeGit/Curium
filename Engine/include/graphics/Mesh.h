@@ -27,13 +27,6 @@ private:
 	ComPtr<ID3D12Resource> m_data;
 };
 
-struct BufferData
-{
-	ComPtr<ID3D12Resource> m_bufferResource;
-	D3D12_VERTEX_BUFFER_VIEW m_vertexView{};
-	D3D12_INDEX_BUFFER_VIEW m_indexView{};
-};
-
 class Mesh
 {
 public:
@@ -61,6 +54,9 @@ private:
 	std::vector<uint16_t>   m_indexData;
 	std::vector<uint32_t>   m_textureData;
 
-	BufferData m_vertexBuffer;
-	BufferData m_indexBuffer;
+
+	ComPtr<ID3D12Resource> m_vertexBuffer;
+	ComPtr<ID3D12Resource> m_indexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW m_vertexView{};
+	D3D12_INDEX_BUFFER_VIEW m_indexView{};
 };

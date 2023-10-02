@@ -18,6 +18,8 @@ void WinWindow::Create(const int inWidth, const int inHeight)
     SetWidth(inWidth);
     SetHeight(inHeight);
 
+    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);

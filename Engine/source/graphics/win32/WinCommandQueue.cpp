@@ -15,7 +15,7 @@ CommandQueue::CommandQueue()
 	ThrowIfFailed(m_commandList.GetList()->Close());
 }
 
-CommandQueue::CommandQueue(D3D12_COMMAND_LIST_TYPE _type)
+CommandQueue::CommandQueue(D3D12_COMMAND_LIST_TYPE inType)
 {
 }
 
@@ -30,20 +30,20 @@ void CommandQueue::ExecuteCommandList()
 	Swapchain::Get().UpdateFenceValue();
 }
 
-void CommandQueue::UploadData(ComPtr<ID3D12Resource> _resource, D3D12_SUBRESOURCE_DATA _subresource)
+void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource)
 {
 	auto list = m_commandList.GetList();
 	auto alloc = m_commandList.GetAllocater();
 	ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
-	CD3DX12_RESOURCE_BARRIER copyBarrier = CD3DX12_RESOURCE_BARRIER::Transition(_resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-	CD3DX12_RESOURCE_BARRIER pixelBarrier = CD3DX12_RESOURCE_BARRIER::Transition(_resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	CD3DX12_RESOURCE_BARRIER copyBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+	CD3DX12_RESOURCE_BARRIER pixelBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	ThrowIfFailed(alloc->Reset());
 	ThrowIfFailed(list->Reset(alloc.Get(), nullptr));
 
 	list->ResourceBarrier(1, &copyBarrier);
 
-	const UINT64 size = GetRequiredIntermediateSize(_resource.Get(), 0, 1);
+	const UINT64 size = GetRequiredIntermediateSize(inResource.Get(), 0, 1);
 	ComPtr<ID3D12Resource> intermediate;
 	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	const D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
@@ -57,7 +57,7 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> _resource, D3D12_SUBRESOURC
 		IID_PPV_ARGS(&intermediate)
 	));
 
-	UpdateSubresources(list.Get(), _resource.Get(), intermediate.Get(), 0, 0, 1, &_subresource);
+	UpdateSubresources(list.Get(), inResource.Get(), intermediate.Get(), 0, 0, 1, &inSubresource);
 	list->ResourceBarrier(1, &pixelBarrier);
 	list->Close();
 

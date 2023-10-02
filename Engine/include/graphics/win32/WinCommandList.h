@@ -3,7 +3,7 @@ class CommandList
 {
 public:
 	CommandList();
-	CommandList(D3D12_COMMAND_LIST_TYPE _type);
+	CommandList(D3D12_COMMAND_LIST_TYPE inType);
 	~CommandList();
 	ComPtr<ID3D12CommandAllocator>& GetAllocater();
 	ComPtr<ID3D12GraphicsCommandList>& GetList();

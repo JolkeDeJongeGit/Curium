@@ -44,22 +44,23 @@ void Mesh::CreateVertexBuffer()
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&m_vertexBuffer.m_bufferResource)));
+		IID_PPV_ARGS(&m_vertexBuffer)));
 
 	UINT8* vertexData = nullptr;
 	const D3D12_RANGE range{ 0, 0 };
 
-	ThrowIfFailed(m_vertexBuffer.m_bufferResource->Map(0, &range, reinterpret_cast<void**>(&vertexData)));
+	ThrowIfFailed(m_vertexBuffer->Map(0, &range, reinterpret_cast<void**>(&vertexData)));
 	memcpy(vertexData, &m_vertexData[0], bufferSize);
-	m_vertexBuffer.m_bufferResource->Unmap(0, nullptr);
+	m_vertexBuffer->Unmap(0, nullptr);
 
-	m_vertexBuffer.m_vertexView.BufferLocation = m_vertexBuffer.m_bufferResource->GetGPUVirtualAddress();
-	m_vertexBuffer.m_vertexView.StrideInBytes = sizeof(VertexData);
-	m_vertexBuffer.m_vertexView.SizeInBytes = bufferSize;
+	m_vertexView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+	m_vertexView.StrideInBytes = sizeof(VertexData);
+	m_vertexView.SizeInBytes = bufferSize;
 }
 
 void Mesh::CreateIndexBuffer()
 {
+	
 	const UINT bufferSize = static_cast<UINT>(m_indexData.size() * sizeof(uint16_t));
 
 	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -71,18 +72,18 @@ void Mesh::CreateIndexBuffer()
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&m_indexBuffer.m_bufferResource)));
+		IID_PPV_ARGS(&m_indexBuffer)));
 
 	UINT8* indexData = nullptr;
 	const D3D12_RANGE range{ 0, 0 };
 
-	ThrowIfFailed(m_indexBuffer.m_bufferResource->Map(0, &range, reinterpret_cast<void**>(&indexData)));
+	ThrowIfFailed(m_indexBuffer->Map(0, &range, reinterpret_cast<void**>(&indexData)));
 	memcpy(indexData, &m_indexData[0], bufferSize);
-	m_indexBuffer.m_bufferResource->Unmap(0, nullptr);
+	m_indexBuffer->Unmap(0, nullptr);
 
-	m_indexBuffer.m_indexView.BufferLocation = m_indexBuffer.m_bufferResource->GetGPUVirtualAddress();
-	m_indexBuffer.m_indexView.Format = DXGI_FORMAT_R16_UINT;
-	m_indexBuffer.m_indexView.SizeInBytes = bufferSize;
+	m_indexView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+	m_indexView.Format = DXGI_FORMAT_R16_UINT;
+	m_indexView.SizeInBytes = bufferSize;
 }
 
 void Mesh::CreateTexturesBuffer()
@@ -213,9 +214,7 @@ void Mesh::SetupCube()
 
 void Mesh::Draw(glm::mat4 inMatrix, const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	const auto x = &m_vertexBuffer.m_vertexView;
-	const auto y = &m_indexBuffer.m_indexView;
-	inCommandList->IASetVertexBuffers(0, 1, x);
-	inCommandList->IASetIndexBuffer(y);
+	inCommandList->IASetVertexBuffers(0, 1, &m_vertexView);
+	inCommandList->IASetIndexBuffer(&m_indexView);
 	inCommandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);
 }

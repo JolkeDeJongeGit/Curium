@@ -31,7 +31,7 @@ namespace Renderer
 
 	Camera camera;
 
-	Mesh cube;
+	Mesh* cube;
 }
 
 float WinWindow::MouseXOffset;
@@ -55,6 +55,7 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 
 	viewport_width = inWidth;
 	viewport_height = inHeight;
+	cube = new Mesh();
 }
 
 void Renderer::Render()
@@ -109,7 +110,6 @@ void Renderer::Update()
 	commandList->ClearRenderTargetView(rtvHandle, color_rgba, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	
-	
 	commandList->SetPipelineState(pipeline_state->GetPipelineState().Get());
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
@@ -140,8 +140,8 @@ void Renderer::Update()
 	commandList->SetGraphicsRoot32BitConstants(1, 16, matrices.ModelViewMatrix, 16);
 	commandList->SetGraphicsRoot32BitConstants(2, 16, matrices.ModelViewProjectionMatrix, 32);
 	
-	cube.Draw(glm::identity<glm::mat4>(), commandList);
-
+	cube->Draw(glm::identity<glm::mat4>(), commandList);
+	
 	Debug::Render();
 }
 
