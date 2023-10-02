@@ -109,6 +109,7 @@ void Renderer::Update()
 	commandList->ClearRenderTargetView(rtvHandle, color_rgba, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	
+	
 	commandList->SetPipelineState(pipeline_state->GetPipelineState().Get());
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
@@ -125,7 +126,6 @@ void Renderer::Update()
 	{
 		float* ModelMatrix;
 		float* ModelViewMatrix;
-		float* InverseTransposeModelViewMatrix;
 		float* ModelViewProjectionMatrix;
 	};
 	Mat matrices;
@@ -134,7 +134,6 @@ void Renderer::Update()
 	
 	matrices.ModelMatrix =  const_cast<float*>(glm::value_ptr(model));
 	matrices.ModelViewMatrix = const_cast<float*>(glm::value_ptr(modelViewMatrix));
-	matrices.InverseTransposeModelViewMatrix = const_cast<float*>(glm::value_ptr(glm::transpose(glm::inverse(modelViewMatrix))));
 	matrices.ModelViewProjectionMatrix = const_cast<float*>(glm::value_ptr(model * (camera.Projection() * camera.View())));
 	
 	commandList->SetGraphicsRoot32BitConstants(0, 16, matrices.ModelMatrix, 0);
