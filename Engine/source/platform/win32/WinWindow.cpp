@@ -7,6 +7,8 @@
 #pragma warning( pop ) 
 
 #include "platform/win32/WinWindow.h"
+#include <graphics/Renderer.h>
+#include "graphics/Camera.h"
 
 WinWindow::~WinWindow()
 {
@@ -61,3 +63,25 @@ void WinWindow::SetIcon(const int inCount, const char* inName)
     glfwSetWindowIcon(m_window, inCount, m_windowIconImage);
     stbi_image_free(m_windowIconImage->pixels);
 }
+
+#pragma warning(push)
+#pragma warning( disable : 4100 )
+void WinWindow::MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos)
+{
+    static bool firstMouse = true;
+    static float lastX = 0.0f;
+    static float lastY = 0.0f;
+    if (firstMouse) {
+        lastX = static_cast<float>(inXPos);
+        lastY = static_cast<float>(inYPos);
+        firstMouse = false;
+    }
+
+    MouseXOffset = static_cast<float>(inXPos) - lastX;
+    MouseYOffset = lastY - static_cast<float>(inYPos);
+    lastX = static_cast<float>(inXPos);
+    lastY = static_cast<float>(inYPos);
+
+    Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
+}
+#pragma warning( pop )

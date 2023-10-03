@@ -40,9 +40,9 @@ void PipelineState::SetupRootSignature()
 	CD3DX12_DESCRIPTOR_RANGE1 descRange[1];
 	descRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-	CD3DX12_ROOT_PARAMETER1 rootParameter[2];
+	CD3DX12_ROOT_PARAMETER1 rootParameter[1];
 	rootParameter[0].InitAsConstants(48, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-	rootParameter[1].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	//rootParameter[1].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
 	const CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
 
@@ -95,8 +95,8 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	CD3DX12_RASTERIZER_DESC rasterizer{ CD3DX12_DEFAULT() };
-	rasterizer.FrontCounterClockwise = true;
-	//rasterizer.CullMode = D3D12_CULL_MODE_BACK;
+	//rasterizer.FrontCounterClockwise = true;
+	//rasterizer.CullMode = D3D12_CULL_MODE_NONE;
 
 	pipelineStateStream.pRootSignature = m_rootSignature.Get();
 	pipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };

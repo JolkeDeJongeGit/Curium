@@ -21,23 +21,8 @@ public:
 private:
 #pragma warning( push )
 #pragma warning( disable : 4100 )
-    static void MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos)
-    {
-        static bool firstMouse = true;
-        static float lastX = 0.0f;
-        static float lastY = 0.0f;
-        if (firstMouse) {
-            lastX = static_cast<float>(inXPos);
-            lastY = static_cast<float>(inYPos);
-            firstMouse = false;
-        }
+    static void MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos);
 
-        MouseXOffset = static_cast<float>(inXPos) - lastX;
-        MouseYOffset = lastY - static_cast<float>(inYPos);
-        lastX = static_cast<float>(inXPos);
-        lastY = static_cast<float>(inYPos);
-
-    }
 #pragma warning( pop )
     GLFWwindow* m_window = nullptr;
     GLFWimage* m_windowIconImage = nullptr;

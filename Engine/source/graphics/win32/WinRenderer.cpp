@@ -129,16 +129,23 @@ void Renderer::Update()
 		float* ModelViewProjectionMatrix;
 	};
 	Mat matrices;
-	constexpr glm::mat4 model = glm::identity<glm::mat4>();
-	const glm::mat4 modelViewMatrix = model  * camera.View();
+	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), static_cast<float>(viewport_width) / static_cast<float>(viewport_height), 0.1f, 100.0f);
+
+	glm::mat4 trans = glm::identity<glm::mat4>();
+	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+	trans = glm::scale(trans, glm::vec3(0.01, 0.01, 0.01));
+
+	//constexpr glm::mat4 model = ;
+	const glm::mat4 modelViewMatrix = trans * camera.GetViewMatrix();
+	const glm::mat4 modelViewProjectionMatrix = trans * (camera.GetViewMatrix() * projection) ;
 	
-	matrices.ModelMatrix =  const_cast<float*>(glm::value_ptr(model));
+	matrices.ModelMatrix =  const_cast<float*>(glm::value_ptr(trans));
 	matrices.ModelViewMatrix = const_cast<float*>(glm::value_ptr(modelViewMatrix));
-	matrices.ModelViewProjectionMatrix = const_cast<float*>(glm::value_ptr(model * (camera.Projection() * camera.View())));
+	matrices.ModelViewProjectionMatrix = const_cast<float*>(glm::value_ptr(modelViewProjectionMatrix));
 	
 	commandList->SetGraphicsRoot32BitConstants(0, 16, matrices.ModelMatrix, 0);
-	commandList->SetGraphicsRoot32BitConstants(1, 16, matrices.ModelViewMatrix, 16);
-	commandList->SetGraphicsRoot32BitConstants(2, 16, matrices.ModelViewProjectionMatrix, 32);
+	commandList->SetGraphicsRoot32BitConstants(0, 16, matrices.ModelViewMatrix, 16);
+	commandList->SetGraphicsRoot32BitConstants(0, 16, matrices.ModelViewProjectionMatrix, 32);
 	
 	cube->Draw(glm::identity<glm::mat4>(), commandList);
 	
@@ -149,6 +156,11 @@ void Renderer::Shutdown()
 {
 	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
 	swapchain->~Swapchain();
+}
+
+Camera* Renderer::GetCamera()
+{
+	return &camera;
 }
 
 Device* WinUtil::GetDevice()

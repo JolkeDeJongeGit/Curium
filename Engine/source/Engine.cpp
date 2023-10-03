@@ -3,6 +3,7 @@
 #include "graphics/Renderer.h"
 #include "platform/win32/WinWindow.h"
 #include "graphics/DebugManager.h"
+#include "graphics/Camera.h"
 
 namespace Engine
 {
@@ -23,6 +24,7 @@ void Engine::Init()
 void Engine::Update(const float inDt)
 {
 	PROFILE_FUNCTION()
+	UpdateInput(inDt);
 	Debug::Update(inDt);
 	Renderer::Update();
 	if (!Debug::Paused())
@@ -38,6 +40,22 @@ void Engine::Shutdown()
 {
 	Debug::Shutdown();
 	Renderer::Shutdown();
+}
+
+void Engine::UpdateInput(const float inDt)
+{
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_W) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyboard(FORWARD, inDt);
+
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_S) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyboard(BACKWARD, inDt);
+
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_A) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyboard(LEFT, inDt);
+
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_D) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyboard(RIGHT, inDt);
+
 }
 
 bool Engine::ShouldQuit()
