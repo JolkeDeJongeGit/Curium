@@ -27,7 +27,7 @@ namespace Renderer
 	uint32_t viewport_width = 1920;
 	uint32_t viewport_height = 1080;
 
-	constexpr float color_rgba[4] = { 0.5f,0.1f,0.1f,1 };
+	constexpr float color_rgba[4] = { 0.2f,0.2f,0.2f,1 };
 
 	Camera camera;
 
@@ -56,6 +56,9 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	viewport_width = inWidth;
 	viewport_height = inHeight;
 	cube = new Mesh();
+
+	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
+	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 }
 
 void Renderer::Render()
@@ -73,21 +76,13 @@ void Renderer::Render()
 	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
 }
 
-struct Mat
-{
-	float** ModelMatrix;
-	float** ModelViewMatrix;
-	float** InverseTransposeModelViewMatrix;
-	float** ModelViewProjectionMatrix;
-};
-
 void Renderer::Update()
 {
 	PROFILE_FUNCTION()
 	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
 	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
 
-	auto heapHandler = HeapHandler::Get();
+	auto& heapHandler = HeapHandler::Get();
 	// Reference of heaps
 	cbv_heap = &heapHandler.GetCbvHeap();
 	rtv_heap = &heapHandler.GetRtvHeap();
@@ -114,38 +109,36 @@ void Renderer::Update()
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
-	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.01f, 500 };
-	const D3D12_RECT rect = { static_cast<long>(100), static_cast<long>(100), static_cast<long>(100) + static_cast<long>(viewport_width), static_cast<long>(100) + static_cast<long>(viewport_height) };
+	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height)};
+	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// Draw
-	struct Mat
-	{
-		float* ModelMatrix;
-		float* ModelViewMatrix;
-		float* ModelViewProjectionMatrix;
-	};
-	Mat matrices;
-	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), static_cast<float>(viewport_width) / static_cast<float>(viewport_height), 0.1f, 100.0f);
-
+	
+	ImGui::Begin("Triangle Position/Color");
+	static float rotationX = 0.0;
+	ImGui::SliderFloat("rotationX", &rotationX, 0, 360);
+	static float rotationY = 0.0;
+	ImGui::SliderFloat("rotationY", &rotationY, 0, 360);
+	static float rotationZ = 0.0;
+	ImGui::SliderFloat("rotationZ", &rotationZ, 0, 360);
+	static float translation[] = {0.0, 0.0, 10.0};
+	ImGui::SliderFloat3("position", translation, -10, 10);
+	static float scale[] = {2.0, 2.0, 2.0};
+	ImGui::SliderFloat3("scale", scale, 0.1f, 100.0f);
+	ImGui::End();
+	
 	glm::mat4 trans = glm::identity<glm::mat4>();
-	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-	trans = glm::scale(trans, glm::vec3(0.01, 0.01, 0.01));
-
-	//constexpr glm::mat4 model = ;
-	const glm::mat4 modelViewMatrix = trans * camera.GetViewMatrix();
-	const glm::mat4 modelViewProjectionMatrix = trans * (camera.GetViewMatrix() * projection) ;
+	trans = glm::translate(trans, glm::vec3(translation[0], translation[1], translation[2]));
+	trans = glm::rotate(trans, glm::radians(rotationX), glm::vec3(1.0, 0.0, 0.0));
+	trans = glm::rotate(trans, glm::radians(rotationY), glm::vec3(0.0, 1.0, 0.0));
+	trans = glm::rotate(trans, glm::radians(rotationZ), glm::vec3(0.0, 0.0, 1.0));
+	trans = glm::scale(trans, glm::vec3(scale[0], scale[1], scale[2]));
 	
-	matrices.ModelMatrix =  const_cast<float*>(glm::value_ptr(trans));
-	matrices.ModelViewMatrix = const_cast<float*>(glm::value_ptr(modelViewMatrix));
-	matrices.ModelViewProjectionMatrix = const_cast<float*>(glm::value_ptr(modelViewProjectionMatrix));
-	
-	commandList->SetGraphicsRoot32BitConstants(0, 16, matrices.ModelMatrix, 0);
-	commandList->SetGraphicsRoot32BitConstants(0, 16, matrices.ModelViewMatrix, 16);
-	commandList->SetGraphicsRoot32BitConstants(0, 16, matrices.ModelViewProjectionMatrix, 32);
+	commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(camera.GetView()), 0);
+	commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(camera.GetProjection()), 16);
+	commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(trans), 32);
 	
 	cube->Draw(glm::identity<glm::mat4>(), commandList);
 	

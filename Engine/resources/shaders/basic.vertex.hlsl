@@ -1,34 +1,34 @@
-struct Mat
+struct Data
 {
-    matrix ModelMatrix;
-    matrix ModelViewMatrix;
-    matrix ModelViewProjectionMatrix;
+    float4x4 View;
+    float4x4 Projection;
+    float4x4 Model;
+};
+ConstantBuffer<Data> DataCB : register(b0);
+
+struct VertexInput
+{
+    float3 Position : POSITION;
+    float3 Normal : NORMAL;
+    float2 TextureCoord : TEXCOORD;
 };
 
-ConstantBuffer<Mat> MatCB : register(b0);
-
-struct VertexPositionNormalTexture
+struct VertexOutput
 {
-    float3 Position  : POSITION;
-    float3 Normal    : NORMAL;
-    float2 TexCoord  : TEXCOORD;
+    float4 Position : SV_Position;
+    float4 Normal : NORMAL;
+    float2 TextureCoord : TEXCOORD;
 };
 
-struct VertexShaderOutput
+VertexOutput main( VertexInput inInput )
 {
-    float4 PositionVS : POSITION;
-    float3 NormalVS : NORMAL;
-    float2 TexCoord   : TEXCOORD;
-    float4 Position   : SV_Position;
-};
+    VertexOutput output;
 
-VertexShaderOutput main(VertexPositionNormalTexture IN)
-{
-    VertexShaderOutput OUT;
-    OUT.Position = mul( MatCB.ModelViewProjectionMatrix, float4(IN.Position, 1.0f));
-    OUT.PositionVS = mul( MatCB.ModelViewMatrix, float4(IN.Position, 1.0f));
-    OUT.NormalVS = mul((float3x3)MatCB.ModelViewMatrix, IN.Normal);
-    OUT.TexCoord = IN.TexCoord;
-
-    return OUT;
+    const float4 worldPosition = mul(DataCB.Model, float4(inInput.Position, 1));
+    output.Position = mul(mul(DataCB.Projection, DataCB.View), worldPosition);
+    output.TextureCoord = inInput.TextureCoord;
+    //output.Normal = mul(DataCB.Model, float4(inInput.Normal, 0.0f));
+    output.Normal = float4(inInput.Normal, 0.0f);
+    
+    return output;
 }

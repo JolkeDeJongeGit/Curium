@@ -5,7 +5,7 @@ struct VertexData
 	float Position[3]; // 4 * 3 = 12 bytes
 	float Normal[3];   // 4 * 3 = 12 bytes
 	float TexCoord[2]; // 4 * 2 = 8  bytes
-
+	VertexData() = default;
 	VertexData(const glm::vec3& inPosition, const glm::vec3& inNormal, const glm::vec2& inTexCoord);
 };					   //         32 bytes
 
@@ -35,8 +35,8 @@ public:
 		SetupCube();
 	}
 
-	Mesh(const std::vector<VertexData>& _vertexData, const std::vector<uint16_t>& _indexData, const std::unordered_map<std::string, Texture*>&)
-		: m_vertexData(_vertexData), m_indexData(_indexData)
+	Mesh(const std::vector<VertexData>& inVertexData, const std::vector<uint16_t>& inIndexData, const std::unordered_map<std::string, Texture*>&)
+		: m_vertexData(inVertexData), m_indexData(inIndexData)
 	{
 		CreateVertexBuffer();
 		CreateIndexBuffer();

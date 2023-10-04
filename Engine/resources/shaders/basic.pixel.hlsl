@@ -1,14 +1,19 @@
-struct VertexShaderInput
+struct PixelInput
 {
-    float4 PositionVS : POSITION;
-    float3 NormalVS : NORMAL;
-    float2 TexCoord   : TEXCOORD;
-    float4 Position   : SV_Position;
+    float4 Position : SV_Position;
+    float4 Normal : NORMAL;
+    float2 TextureCoord : TEXCOORD;
 };
 
-SamplerState LinearSampler : register(s0);
-
-float4 main(VertexShaderInput IN) : SV_Target
+struct PixelOutput
 {
-    return float4(0, 0, 0, 1);
+    float4 Color : SV_Target0;
+};
+
+PixelOutput main(PixelInput Input)
+{
+    PixelOutput Output;
+    Output.Color = Input.Normal;
+
+    return Output;
 }

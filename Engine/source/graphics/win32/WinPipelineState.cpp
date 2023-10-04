@@ -97,6 +97,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	CD3DX12_RASTERIZER_DESC rasterizer{ CD3DX12_DEFAULT() };
 	//rasterizer.FrontCounterClockwise = true;
 	//rasterizer.CullMode = D3D12_CULL_MODE_NONE;
+	//rasterizer.FillMode = D3D12_FILL_MODE_WIREFRAME;
 
 	pipelineStateStream.pRootSignature = m_rootSignature.Get();
 	pipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
