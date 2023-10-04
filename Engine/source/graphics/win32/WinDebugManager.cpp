@@ -8,8 +8,7 @@
 #include "include/iconfont.h"
 #include "include/imgui_internal.h"
 #include "include/imgui_impl_dx12.h"
-#include "include/imgui_impl_win32.h"
-
+#include "Components/GameObject.h"
 #include "Engine.h"
 #include "graphics/DebugManager.h"
 #include <include/imgui_impl_glfw.h>
@@ -19,6 +18,7 @@ namespace Debug
 {
     bool m_paused = false;
     bool m_showProfiler = false;
+    int m_selectedGameObject;
 }
 
 void Tooltip(const char* tooltip)
@@ -53,7 +53,7 @@ bool ButtonCenteredOnLine(const char* label, float alignment = 0.5f)
     return ImGui::Button(label);
 }
 
-void TopBar(const float dt)
+void TopBar(const float inDt)
 {
     ImGui::Begin("Window", nullptr,
         ImGuiWindowFlags_NoScrollbar |
@@ -94,7 +94,7 @@ void TopBar(const float dt)
 
     ImGui::SameLine(ImGui::GetWindowSize().x - 220.f);
     {
-        const float fps = 1.f / dt;
+        const float fps = 1.f / inDt;
         ImGui::PushStyleColor(ImGuiCol_Text, Interpolate(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), ImVec4(0.0f, 1.0f, 0.0f, 1.0f), fps / 60.f));
 
         ImGui::Text("%.2f fps", fps);
@@ -103,13 +103,14 @@ void TopBar(const float dt)
 
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-    ImGui::Text("| %.3f delta time", dt);
+    ImGui::Text("| %.3f delta time", inDt);
     ImGui::SameLine();
     ImGui::Text("| V0.3");
     ImGui::PopStyleColor();
     Tooltip("Engine Version");
     ImGui::End();
 }
+
 
 void Theme()
 {
@@ -242,6 +243,54 @@ void Debug::Update(const float inDt)
     ImGui::NewFrame();
 
     TopBar(inDt);
+}
+
+void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneList)
+{
+    ImGui::Begin("Properties", nullptr,
+                 ImGuiWindowFlags_NoTitleBar |
+                 ImGuiWindowFlags_NoResize |
+                 ImGuiWindowFlags_NoMove |
+                 ImGuiWindowFlags_NoCollapse |
+                 ImGuiWindowFlags_NoSavedSettings );
+    ImGui::SetWindowPos({ static_cast<float>(Engine::GetWindow()->GetWidth()) - 400.f ,30 });
+    ImGui::SetWindowSize({ 400, static_cast<float>(Engine::GetWindow()->GetHeight())});
+    std::vector<const char*> names;
+    ImGui::CollapsingHeader("Game Objects", (ImGuiTreeNodeFlags_DefaultOpen));
+    {
+        for(const auto& [fst, snd]: inSceneList)
+            names.push_back(fst.c_str());
+        ImGui::PushID(1);
+        ImGui::ListBox("", &m_selectedGameObject, names.data(), static_cast<int>(names.size()), static_cast<int>(names.size()));
+        ImGui::PopID();
+    }
+
+    if (ImGui::CollapsingHeader("Properties", (ImGuiTreeNodeFlags_DefaultOpen) ))
+    {
+        if(static_cast<int>(names.size()) > Debug::m_selectedGameObject)
+        {
+            Transform& transform = inSceneList[names[m_selectedGameObject]].GetTransform();
+            ImGui::PushID(2);
+            ImGui::Text("Rotation");
+            ImGui::SliderFloat("X", &transform.GetEulerRotation()[0], 0,  2*glm::pi<float>());
+            ImGui::SliderFloat("Y", &transform.GetEulerRotation()[1], 0, 2*glm::pi<float>());
+            ImGui::SliderFloat("z", &transform.GetEulerRotation()[2], 0, 2*glm::pi<float>());
+            ImGui::PopID();
+            ImGui::PushID(3);
+            ImGui::Text("Position");
+            ImGui::SliderFloat("X", &transform.GetPosition()[0], -10, 10);
+            ImGui::SliderFloat("Y", &transform.GetPosition()[1], -10, 10);
+            ImGui::SliderFloat("Z", &transform.GetPosition()[2], -10, 10);
+            ImGui::PopID();
+            ImGui::PushID(4);
+            ImGui::Text("Scale");
+            ImGui::SliderFloat("X", &transform.GetScale()[0], 0, 10);
+            ImGui::SliderFloat("Y", &transform.GetScale()[1], 0, 10);
+            ImGui::SliderFloat("Z", &transform.GetScale()[2], 0, 10);
+            ImGui::PopID();
+        }
+    }
+    ImGui::End();
 }
 
 void Debug::Render()

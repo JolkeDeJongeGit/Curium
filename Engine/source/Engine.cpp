@@ -44,18 +44,23 @@ void Engine::Shutdown()
 
 void Engine::UpdateInput(const float inDt)
 {
-	// if (glfwGetKey(window->GetWindow(), GLFW_KEY_W) == GLFW_PRESS)
-	// 	Renderer::GetCamera()->ProcessKeyboard(FORWARD, inDt);
-	//
-	// if (glfwGetKey(window->GetWindow(), GLFW_KEY_S) == GLFW_PRESS)
-	// 	Renderer::GetCamera()->ProcessKeyboard(BACKWARD, inDt);
-	//
-	// if (glfwGetKey(window->GetWindow(), GLFW_KEY_A) == GLFW_PRESS)
-	// 	Renderer::GetCamera()->ProcessKeyboard(LEFT, inDt);
-	//
-	// if (glfwGetKey(window->GetWindow(), GLFW_KEY_D) == GLFW_PRESS)
-	// 	Renderer::GetCamera()->ProcessKeyboard(RIGHT, inDt);
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_W) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyMovement(Direction::FORWARD, inDt);
+	
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_S) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyMovement(Direction::BACKWARDS, inDt);
+	
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_A) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyMovement(Direction::LEFT, inDt);
+	
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_D) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyMovement(Direction::RIGHT, inDt);
+	
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyMovement(Direction::UP, inDt);
 
+	if (glfwGetKey(window->GetWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		Renderer::GetCamera()->ProcessKeyMovement(Direction::DOWN, inDt);
 }
 
 bool Engine::ShouldQuit()

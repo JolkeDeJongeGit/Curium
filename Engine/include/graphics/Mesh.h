@@ -48,12 +48,11 @@ public:
 	void CreateTexturesBuffer();
 
 	void SetupCube();
-	void Draw(glm::mat4 inMatrix, const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
+	void Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
 private:
 	std::vector<VertexData> m_vertexData;
 	std::vector<uint16_t>   m_indexData;
 	std::vector<uint32_t>   m_textureData;
-
 
 	ComPtr<ID3D12Resource> m_vertexBuffer;
 	ComPtr<ID3D12Resource> m_indexBuffer;

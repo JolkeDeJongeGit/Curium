@@ -4,6 +4,7 @@
 Transform::Transform()
     : Transform(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(1.f))
 {
+    UpdateModelMatrix();
 }
 
 Transform::Transform(const glm::vec3& inPosition, const glm::vec3& inEulerRotation, const glm::vec3& inScale)
@@ -13,11 +14,17 @@ Transform::Transform(const glm::vec3& inPosition, const glm::vec3& inEulerRotati
     m_scale(inScale)
 {
     CalculateOrientation();
+    UpdateModelMatrix();
 }
 
 void Transform::SetPosition(const glm::vec3& inPosition)
 {
     m_position = inPosition;
+}
+
+void Transform::AddPosition(const glm::vec3& inPosition)
+{
+    m_position += inPosition;
 }
 
 void Transform::SetEulerRotation(const glm::vec3& inEulerAnglesInRadians)
@@ -34,6 +41,16 @@ void Transform::SetScale(const glm::vec3& inScale)
 void Transform::Translate(const glm::vec3& inOffset)
 {
     m_position += inOffset;
+}
+
+void Transform::Rotate(const glm::vec3& inRotation)
+{
+    m_rotation += inRotation;
+
+    if (m_rotation.x > 1.4f) { m_rotation.x = 1.4f; }
+    if (m_rotation.x < -1.4f) { m_rotation.x = -1.4f; }
+
+    CalculateOrientation();
 }
 
 void Transform::AddScale(const glm::vec3& inScale)
@@ -59,9 +76,9 @@ void Transform::UpdateModelMatrix()
 void Transform::CalculateOrientation()
 {
     glm::mat4 rotationMatrix = glm::identity<glm::mat4>();
+    rotationMatrix = glm::rotate(rotationMatrix, m_rotation.y, glm::vec3(right));
+    rotationMatrix = glm::rotate(rotationMatrix, m_rotation.x, glm::vec3(up));
     rotationMatrix = glm::rotate(rotationMatrix, m_rotation.z, glm::vec3(forward));
-    rotationMatrix = glm::rotate(rotationMatrix, m_rotation.x, glm::vec3(right));
-    rotationMatrix = glm::rotate(rotationMatrix, m_rotation.y, glm::vec3(up));
     m_forward = glm::normalize(rotationMatrix * forward);
     m_right = glm::normalize(rotationMatrix * right);
     m_up = glm::normalize(rotationMatrix * up);

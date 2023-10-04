@@ -1,4 +1,13 @@
 	#include "Components/Transform.h"
+	enum class Direction
+	{
+		FORWARD,
+		BACKWARDS,
+		LEFT,
+		RIGHT,
+		UP,
+		DOWN
+	};
 
 	class Camera
 	{
@@ -32,6 +41,10 @@
 	    float GetFarPlane() const { return m_far; }
 		inline void SetFarPlane(const float inFar) { m_far = inFar; }
 
+		float GetSensitivity() const { return m_sensitivity; }
+		
+		void ProcessMouseMovement(float inOffsetX, float inOffsetY);
+		void ProcessKeyMovement(Direction inDirection, const float inDeltaTime);
 	private:
 	    float m_yaw = 0.0f;
 	    float m_pitch = 0.0f;
@@ -45,4 +58,6 @@
 	    float m_near = 0.1f;
 	    float m_far = 10000.0f;
 	    float m_aspectRatio = 1.f;
+		float m_sensitivity = 0.003f;
+		float m_movementSpeed = 2.5f;
 	};

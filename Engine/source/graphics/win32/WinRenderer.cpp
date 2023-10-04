@@ -11,6 +11,8 @@
 #include "graphics/Renderer.h"
 #include <graphics/DebugManager.h>
 #include <include/imgui.h>
+
+#include "Components/GameObject.h"
 #include "graphics/Camera.h"
 
 namespace Renderer
@@ -31,7 +33,8 @@ namespace Renderer
 
 	Camera camera;
 
-	Mesh* cube;
+	// @TODO::Add this to a scene class
+	std::unordered_map<std::string, GameObject> scene;
 }
 
 float WinWindow::MouseXOffset;
@@ -55,10 +58,18 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 
 	viewport_width = inWidth;
 	viewport_height = inHeight;
-	cube = new Mesh();
-
+	
 	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
+
+	// World creation
+	const Transform transformWorld(glm::vec3(0, 0, 10), glm::vec3(0), glm::vec3(1));
+	scene.insert(std::pair<std::string, GameObject>("World", GameObject(transformWorld, {new Mesh()})));
+	scene["World"].Init();
+
+	const Transform transformSun(glm::vec3(0, 0, 10), glm::vec3(0), glm::vec3(1));
+	scene.insert(std::pair<std::string, GameObject>("Sun", GameObject(transformSun, {new Mesh()})));
+	scene["Sun"].Init();
 }
 
 void Renderer::Render()
@@ -79,6 +90,9 @@ void Renderer::Render()
 void Renderer::Update()
 {
 	PROFILE_FUNCTION()
+
+	Debug::EditProperties(scene);
+	
 	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
 	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
 
@@ -116,31 +130,17 @@ void Renderer::Update()
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
-	ImGui::Begin("Triangle Position/Color");
-	static float rotationX = 0.0;
-	ImGui::SliderFloat("rotationX", &rotationX, 0, 360);
-	static float rotationY = 0.0;
-	ImGui::SliderFloat("rotationY", &rotationY, 0, 360);
-	static float rotationZ = 0.0;
-	ImGui::SliderFloat("rotationZ", &rotationZ, 0, 360);
-	static float translation[] = {0.0, 0.0, 10.0};
-	ImGui::SliderFloat3("position", translation, -10, 10);
-	static float scale[] = {2.0, 2.0, 2.0};
-	ImGui::SliderFloat3("scale", scale, 0.1f, 100.0f);
-	ImGui::End();
-	
-	glm::mat4 trans = glm::identity<glm::mat4>();
-	trans = glm::translate(trans, glm::vec3(translation[0], translation[1], translation[2]));
-	trans = glm::rotate(trans, glm::radians(rotationX), glm::vec3(1.0, 0.0, 0.0));
-	trans = glm::rotate(trans, glm::radians(rotationY), glm::vec3(0.0, 1.0, 0.0));
-	trans = glm::rotate(trans, glm::radians(rotationZ), glm::vec3(0.0, 0.0, 1.0));
-	trans = glm::scale(trans, glm::vec3(scale[0], scale[1], scale[2]));
-	
 	commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(camera.GetView()), 0);
 	commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(camera.GetProjection()), 16);
-	commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(trans), 32);
-	
-	cube->Draw(glm::identity<glm::mat4>(), commandList);
+
+	for(auto& [name, gameobject] : scene)
+	{
+		commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(gameobject.GetTransform().GetModelMatrix()), 32);
+		for (const Mesh* mesh : gameobject.GetMeshes())
+		{
+			mesh->Draw(commandList);
+		}
+	}
 	
 	Debug::Render();
 }

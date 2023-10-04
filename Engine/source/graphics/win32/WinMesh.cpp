@@ -154,7 +154,7 @@ void Mesh::SetupCube()
 	CreateTexturesBuffer();
 }
 
-void Mesh::Draw(glm::mat4 inMatrix, const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
+void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
 	inCommandList->IASetVertexBuffers(0, 1, &m_vertexView);
 	inCommandList->IASetIndexBuffer(&m_indexView);

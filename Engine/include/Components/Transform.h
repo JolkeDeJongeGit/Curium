@@ -19,14 +19,16 @@ public:
     Transform(const Transform&) = default;
     Transform(Transform&&) = default;
     void SetPosition(const glm::vec3& inPosition);
+    void AddPosition(const glm::vec3& inPosition);
     void SetEulerRotation(const glm::vec3& inEulerAnglesInRadians);
     void SetScale(const glm::vec3& inScale);
     void Translate(const glm::vec3& inOffset);
+    void Rotate(const glm::vec3& inRotation);
     void AddScale(const glm::vec3& inScale);
     void ScaleUniform(const float inScale);
-    inline glm::vec3 GetPosition() const {return m_position; }
-    inline glm::vec3 GetEulerRotation() const {return m_rotation; }
-    inline glm::vec3 GetScale() const {return m_scale; }
+    inline glm::vec3& GetPosition() {return m_position; }
+    inline glm::vec3& GetEulerRotation() {return m_rotation; }
+    inline glm::vec3& GetScale() {return m_scale; }
     inline glm::vec3 GetForwardVector() const { return m_forward; }
     inline void SetForwardVector(const glm::vec3& inForward) { m_forward = inForward; }
     inline glm::vec3 GetRightVector() const { return m_right; }

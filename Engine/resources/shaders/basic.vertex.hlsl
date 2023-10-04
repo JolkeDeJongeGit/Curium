@@ -24,6 +24,7 @@ VertexOutput main( VertexInput inInput )
 {
     VertexOutput output;
 
+    inInput.Position = normalize(inInput.Position);
     const float4 worldPosition = mul(DataCB.Model, float4(inInput.Position, 1));
     output.Position = mul(mul(DataCB.Projection, DataCB.View), worldPosition);
     output.TextureCoord = inInput.TextureCoord;
