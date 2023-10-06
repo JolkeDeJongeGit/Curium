@@ -1,10 +1,43 @@
 #include "precomp.h"
 #include "graphics/Mesh.h"
+#include "graphics/win32/WinCommandQueue.h"
+#include "graphics/win32/WinDescriptorHeap.h"
 #include "graphics/win32/WinDevice.h"
 
 Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize): m_descriptorIndex(0),
-	m_imageSize()
+	m_path(inPath), m_imageSize(inImageSize)
 {
+
+	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
+	DescriptorHeap* srvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
+	CommandQueue* commands = WinUtil::GetCommandQueue();
+
+	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, inImageSize.x, inImageSize.y);
+
+	ThrowIfFailed(device->CreateCommittedResource(
+		&properties,
+		D3D12_HEAP_FLAG_NONE,
+		&desc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&m_data)));
+
+	D3D12_SUBRESOURCE_DATA subresource;
+	subresource.pData = inData.data();
+	subresource.RowPitch = inImageSize.x * sizeof(uint32_t);
+	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint32_t);
+
+	commands->UploadData(m_data, subresource);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = 1; // for now...
+
+	m_descriptorIndex = srvHeap->GetNextIndex();
+	device->CreateShaderResourceView(m_data.Get(), &srvDesc, srvHeap->GetCpuHandleAt(m_descriptorIndex));
 }
 
 glm::ivec2 Texture::GetSize() const
@@ -29,7 +62,6 @@ VertexData::VertexData(const glm::vec3& inPosition, const glm::vec3& inNormal, c
 		TexCoord[i] = inTexCoord[static_cast<glm::length_t>(i)];
 	}
 }
-
 
 void Mesh::CreateVertexBuffer()
 {

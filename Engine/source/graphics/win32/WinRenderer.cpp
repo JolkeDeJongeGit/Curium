@@ -62,12 +62,12 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
 	// World creation
-	const Transform transformWorld(glm::vec3(0, 0, 10), glm::vec3(0), glm::vec3(1));
-	scene.insert(std::pair<std::string, GameObject>("World", GameObject(transformWorld, {new Mesh()})));
+	const Transform transformWorld(glm::vec3(0, 0.f, 10), glm::vec3(0), glm::vec3(1.f));
+	scene.insert(std::pair<std::string, GameObject>("World", GameObject(transformWorld, {Mesh(false)})));
 	scene["World"].Init();
 
 	const Transform transformSun(glm::vec3(0, 0, 10), glm::vec3(0), glm::vec3(1));
-	scene.insert(std::pair<std::string, GameObject>("Sun", GameObject(transformSun, {new Mesh()})));
+	scene.insert(std::pair<std::string, GameObject>("Sun", GameObject(transformSun, {Mesh(true)})));
 	scene["Sun"].Init();
 }
 
@@ -129,9 +129,9 @@ void Renderer::Update()
 	for(auto& [name, gameobject] : scene)
 	{
 		commandList->SetGraphicsRoot32BitConstants(0, 16, glm::value_ptr(gameobject.GetTransform().GetModelMatrix()), 32);
-		for (const Mesh* mesh : gameobject.GetMeshes())
+		for (const Mesh& mesh : gameobject.GetMeshes())
 		{
-			mesh->Draw(commandList);
+			mesh.Draw(commandList);
 		}
 	}
 	

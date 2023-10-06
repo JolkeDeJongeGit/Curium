@@ -21,7 +21,6 @@ public:
 	[[nodiscard]] uint32_t  GetDescriptorIndex() const;
 private:
 	uint32_t m_descriptorIndex;
-	struct TexData;
 	std::string m_path;
 	glm::ivec2 m_imageSize;
 	ComPtr<ID3D12Resource> m_data;
@@ -30,17 +29,20 @@ private:
 class Mesh
 {
 public:
-	Mesh()
+	Mesh() = default; 
+	explicit Mesh(const bool inIsSphere)
 	{
-		SetupCube();
+		if(inIsSphere)
+		{
+			SetupSphere();
+		}
+		else
+		{
+			SetupCube();
+		}
 	}
 
-	explicit Mesh(bool inIsSphere)
-	{
-		SetupSphere();
-	}
-
-	Mesh(const std::vector<VertexData>& inVertexData, const std::vector<uint16_t>& inIndexData, const std::unordered_map<std::string, Texture*>&)
+	Mesh(const std::vector<VertexData>& inVertexData, const std::vector<uint16_t>& inIndexData, const std::unordered_map<std::string, Texture>&)
 		: m_vertexData(inVertexData), m_indexData(inIndexData)
 	{
 		CreateVertexBuffer();
@@ -51,14 +53,14 @@ public:
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
 	void CreateTexturesBuffer();
-
+	
 	void SetupCube();
 	void SetupSphere();
 	void Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
 private:
 	std::vector<VertexData> m_vertexData;
 	std::vector<uint16_t>   m_indexData;
-	std::vector<uint32_t>   m_textureData;
+	std::unordered_map<std::string, Texture>  m_textureData;
 
 	ComPtr<ID3D12Resource> m_vertexBuffer;
 	ComPtr<ID3D12Resource> m_indexBuffer;
