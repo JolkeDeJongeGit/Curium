@@ -40,7 +40,8 @@
 	    float GetFarPlane() const { return m_far; }
 		inline void SetFarPlane(const float inFar) { m_far = inFar; }
 
-		float GetSensitivity() const { return m_sensitivity; }
+		float& GetSensitivity() { return m_sensitivity; }
+		float& GetMovementSpeed() { return m_movementSpeed; }
 		
 		void ProcessMouseMovement(float inOffsetX, float inOffsetY);
 		void ProcessKeyMovement(Direction inDirection, const float inDeltaTime);
@@ -55,7 +56,7 @@
 
 	    float m_fovDegrees = 80.f;
 	    float m_near = 0.1f;
-	    float m_far = 10000.0f;
+	    float m_far = 100.0f;
 	    float m_aspectRatio = 1.f;
 		float m_sensitivity = 0.003f;
 		float m_movementSpeed = 2.5f;

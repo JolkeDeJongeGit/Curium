@@ -11,7 +11,6 @@
 #include "graphics/Renderer.h"
 #include <graphics/DebugManager.h>
 #include <include/imgui.h>
-
 #include "Components/GameObject.h"
 #include "graphics/Camera.h"
 
@@ -117,7 +116,7 @@ void Renderer::Update()
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
-	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height)};
+	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0};
 	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);

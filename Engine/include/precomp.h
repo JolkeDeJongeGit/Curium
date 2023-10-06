@@ -18,7 +18,6 @@
 #include "common/Util.h"
 #include "common/PerformanceManager.h"
 
-
 #pragma region DirectX12
 #include <wrl.h>
 using namespace Microsoft::WRL;

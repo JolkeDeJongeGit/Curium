@@ -35,6 +35,11 @@ public:
 		SetupCube();
 	}
 
+	explicit Mesh(bool inIsSphere)
+	{
+		SetupSphere();
+	}
+
 	Mesh(const std::vector<VertexData>& inVertexData, const std::vector<uint16_t>& inIndexData, const std::unordered_map<std::string, Texture*>&)
 		: m_vertexData(inVertexData), m_indexData(inIndexData)
 	{
@@ -48,6 +53,7 @@ public:
 	void CreateTexturesBuffer();
 
 	void SetupCube();
+	void SetupSphere();
 	void Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
 private:
 	std::vector<VertexData> m_vertexData;

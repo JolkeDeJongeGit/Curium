@@ -70,7 +70,7 @@ void Transform::UpdateModelMatrix()
     const glm::mat4 zRotate = glm::rotate(m_rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
     const glm::mat4 rotationMatrix = zRotate * yRotate * xRotate;
 
-	m_model =  rotationMatrix * glm::translate(m_position) * glm::scale(m_scale);
+	m_model =  glm::translate(m_position) * rotationMatrix  * glm::scale(m_scale);
 }
 
 void Transform::CalculateOrientation()

@@ -10,11 +10,13 @@
 #include "include/imgui_impl_dx12.h"
 #include "Components/GameObject.h"
 #include "Engine.h"
-#include "graphics/DebugManager.h"
 #include <include/imgui_impl_glfw.h>
 #include <include/implot.h>
 
 #include "graphics/win32/WinSwapchain.h"
+#include "graphics/Camera.h"
+#include "graphics/Renderer.h"
+#include "graphics/DebugManager.h"
 
 namespace Debug
 {
@@ -202,7 +204,7 @@ void Debug::Init()
     ImGui::CreateContext();
     ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-
+    io.WantCaptureMouse = true;
     io.DisplaySize = ImVec2(static_cast<float>(Engine::GetWindow()->GetWidth()), static_cast<float>(Engine::GetWindow()->GetHeight()));
 
     float ys;
@@ -258,7 +260,7 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
     ImGui::SetWindowPos({ static_cast<float>(Engine::GetWindow()->GetWidth()) - 400.f ,30 });
     ImGui::SetWindowSize({ 400, static_cast<float>(Engine::GetWindow()->GetHeight())});
     std::vector<const char*> names;
-    ImGui::CollapsingHeader("Game Objects", (ImGuiTreeNodeFlags_DefaultOpen));
+    ImGui::CollapsingHeader("Game Objects");
     {
         for(const auto& [fst, snd]: inSceneList)
             names.push_back(fst.c_str());
@@ -266,7 +268,9 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
         ImGui::ListBox("", &selected_game_object, names.data(), static_cast<int>(names.size()), static_cast<int>(names.size()));
         ImGui::PopID();
     }
-
+    ImGui::Separator();
+    ImGui::NewLine();
+    ImGui::NewLine();
     if (ImGui::CollapsingHeader("Properties", (ImGuiTreeNodeFlags_DefaultOpen) ))
     {
         if(static_cast<int>(names.size()) > Debug::selected_game_object)
@@ -291,6 +295,22 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
             ImGui::SliderFloat("Z", &transform.GetScale()[2], 0, 10);
             ImGui::PopID();
         }
+    }
+    ImGui::Separator();
+    ImGui::NewLine();
+    ImGui::NewLine();
+    if(ImGui::CollapsingHeader("Base Settings", (ImGuiTreeNodeFlags_DefaultOpen)))
+    {
+        ImGui::Text("Camera Settings");
+        ImGui::Separator();
+        ImGui::PushID(5);
+        ImGui::Text("Mouse Sensitivity");
+        ImGui::SliderFloat("", &Renderer::GetCamera()->GetSensitivity(), 0.001f, 0.1f);
+        ImGui::PopID();
+        ImGui::PushID(6);
+        ImGui::Text("Camera Speed");
+        ImGui::SliderFloat("", &Renderer::GetCamera()->GetMovementSpeed(), 1.f, 20.f);
+        ImGui::PopID();
     }
     ImGui::End();
 }
