@@ -26,7 +26,6 @@
 	    glm::vec3 GetForward() const { return m_objectTransform.GetForwardVector(); }
 	    glm::vec3 GetRight() const { return m_objectTransform.GetRightVector(); }
 
-	    void Rotate(glm::vec2 inATrans);
 	    void UpdateDirections();
 
 	    Transform GetTransform() const { return m_objectTransform; }

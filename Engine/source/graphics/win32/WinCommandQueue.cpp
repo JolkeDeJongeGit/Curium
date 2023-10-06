@@ -5,7 +5,7 @@
 
 CommandQueue::CommandQueue()
 {
-	const auto device = Device::Get().GetDevice();
+	const auto device =  WinUtil::GetDevice()->GetDevice();
 	D3D12_COMMAND_QUEUE_DESC description = {};
 	description.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	description.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -27,14 +27,14 @@ void CommandQueue::ExecuteCommandList()
 {
 	ID3D12CommandList* const commandLists[] = { m_commandList.GetList().Get()};
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	Swapchain::Get().UpdateFenceValue();
+	WinUtil::GetSwapchain()->UpdateFenceValue();
 }
 
 void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource)
 {
 	auto list = m_commandList.GetList();
 	auto alloc = m_commandList.GetAllocater();
-	ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
+	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 	CD3DX12_RESOURCE_BARRIER copyBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
 	CD3DX12_RESOURCE_BARRIER pixelBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -62,7 +62,7 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOUR
 	list->Close();
 
 	ExecuteCommandList();
-	Swapchain::Get().WaitForFenceValue(m_commandQueue);
+	WinUtil::GetSwapchain()->WaitForFenceValue(m_commandQueue);
 }
 
 

@@ -1,5 +1,6 @@
 #pragma once
 
+class Swapchain;
 class Device;
 class CommandQueue;
 class WinWindow;
@@ -24,6 +25,7 @@ enum class HeapType
 namespace WinUtil
 {
 	Device* GetDevice();
+	Swapchain* GetSwapchain();
 	CommandQueue* GetCommandQueue();
 	WinWindow* GetWindow();
 	DescriptorHeap* GetDescriptorHeap(HeapType inType);

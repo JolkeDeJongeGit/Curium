@@ -10,14 +10,7 @@ class Device
 public:
 	Device();
 	~Device();
-
-
-	static Device& Get()
-	{
-		static Device m_instance;
-		return m_instance;
-	}
-
+	
 	[[nodiscard]] const ComPtr<ID3D12Device2>& GetDevice() const;
 	const ComPtr<IDXGIFactory4>& GetFactory() const;
 private:

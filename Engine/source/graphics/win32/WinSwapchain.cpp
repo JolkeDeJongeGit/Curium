@@ -9,12 +9,13 @@
 #define GLFW_NATIVE_INCLUDE_NONE
 #include <GLFW3/include/GLFW/glfw3native.h>
 #include "Engine.h"
+#include "graphics/win32/WinUtil.h"
 
 void Swapchain::Init(const int inWidth, const int inHeight)
 {
-	const ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
+	const ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 
-	HeapHandler::Get().CreateHeaps(BackBufferCount);
+	//HeapHandler::Get().CreateHeaps(BackBufferCount);
 
 	SetupSwapchain(inWidth, inHeight);
 	SetupDepthBuffer(inWidth, inHeight);
@@ -90,12 +91,12 @@ ComPtr<ID3D12Resource>& Swapchain::GetDepthBuffer()
 
 void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
 {
-	const Device& device = Device::Get();
-	const ComPtr<ID3D12Device2>& devices = Device::Get().GetDevice();
-	const ComPtr<IDXGIFactory4>& factory = device.GetFactory();
+	const Device* device =  WinUtil::GetDevice();
+	const ComPtr<ID3D12Device2>& devices = device->GetDevice();
+	const ComPtr<IDXGIFactory4>& factory = device->GetFactory();
 	const HWND hwnd = glfwGetWin32Window(Engine::GetWindow()->GetWindow());
-	const ComPtr<ID3D12CommandQueue>& command = CommandQueue::Get().GetCommandQueue();
-	DescriptorHeap& heap = HeapHandler::Get().GetRtvHeap();
+	const ComPtr<ID3D12CommandQueue>& command = WinUtil::GetCommandQueue()->GetCommandQueue();
+	DescriptorHeap* heap = WinUtil::GetDescriptorHeap(HeapType::RTV);
 
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	swapchainDesc.BufferCount = BackBufferCount;
@@ -117,7 +118,7 @@ void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
 	// This is setting up the render targets.
 	for (uint32_t i = 0; i < BackBufferCount; i++)
 	{
-		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap.GetCpuHandleAt(heap.GetNextIndex());
+		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap->GetCpuHandleAt(heap->GetNextIndex());
 		ThrowIfFailed(m_swapchain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])));
 		devices.Get()->CreateRenderTargetView(m_renderTargets[i].Get(), nullptr, rtvHandle);
 	}
@@ -125,8 +126,8 @@ void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
 
 void Swapchain::SetupDepthBuffer(const int inWidth, const int inHeight)
 {
-	const ComPtr<ID3D12Device2>& devices = Device::Get().GetDevice();
-	const DescriptorHeap& heap = HeapHandler::Get().GetDsvHeap();
+	const ComPtr<ID3D12Device2>& devices = WinUtil::GetDevice()->GetDevice();
+	const DescriptorHeap* heap =  WinUtil::GetDescriptorHeap(HeapType::DSV);
 
 	D3D12_CLEAR_VALUE optimizedClearValue = {};
 	optimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
@@ -150,7 +151,6 @@ void Swapchain::SetupDepthBuffer(const int inWidth, const int inHeight)
 	dsv.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsv.Texture2D.MipSlice = 0;
 	dsv.Flags = D3D12_DSV_FLAG_NONE;
-
 	devices.Get()->CreateDepthStencilView(m_depthBuffer.Get(), &dsv,
-		heap.GetCpuHandleAt(0));
+		heap->GetCpuHandleAt(0));
 }

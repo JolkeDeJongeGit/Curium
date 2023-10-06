@@ -38,7 +38,7 @@ void Mesh::CreateVertexBuffer()
 	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	const D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
 
-	ThrowIfFailed(Device::Get().GetDevice().Get()->CreateCommittedResource(
+	ThrowIfFailed( WinUtil::GetDevice()->GetDevice().Get()->CreateCommittedResource(
 		&properties,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
@@ -66,7 +66,7 @@ void Mesh::CreateIndexBuffer()
 	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	const D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
 
-	ThrowIfFailed(Device::Get().GetDevice().Get()->CreateCommittedResource(
+	ThrowIfFailed(WinUtil::GetDevice()->GetDevice().Get()->CreateCommittedResource(
 		&properties,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,

@@ -6,13 +6,13 @@ constexpr glm::vec4 up = glm::vec4(0.f, 1.f, 0.f, 0.f);
 class Transform
 {
 private:
-    glm::vec3 m_position;
-    glm::vec3 m_rotation;
-    glm::vec3 m_scale;
-    glm::vec3 m_forward;
-    glm::vec3 m_right;
-    glm::vec3 m_up;
-    glm::mat4 m_model;
+    glm::vec3 m_position = glm::vec3(0);
+    glm::vec3 m_rotation = glm::vec3(0);
+    glm::vec3 m_scale = glm::vec3(1);
+    glm::vec3 m_forward = forward;
+    glm::vec3 m_right = right;
+    glm::vec3 m_up = up;
+    glm::mat4 m_model = glm::identity<glm::mat4>();
 public:
     Transform();
     Transform(const glm::vec3& inPosition, const glm::vec3& inEulerRotation, const glm::vec3& inScale);

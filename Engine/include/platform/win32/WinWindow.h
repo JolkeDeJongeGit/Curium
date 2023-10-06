@@ -16,8 +16,8 @@ public:
 
     inline GLFWwindow* GetWindow() const { return m_window; };
 
-    static float MouseXOffset;
-    static float MouseYOffset;
+    inline static float MouseXOffset = 0.f;
+    inline static float MouseYOffset = 0.f;
 private:
 #pragma warning( push )
 #pragma warning( disable : 4100 )

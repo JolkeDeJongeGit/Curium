@@ -14,29 +14,31 @@
 #include <include/imgui_impl_glfw.h>
 #include <include/implot.h>
 
+#include "graphics/win32/WinSwapchain.h"
+
 namespace Debug
 {
-    bool m_paused = false;
-    bool m_showProfiler = false;
-    int m_selectedGameObject;
+    bool paused = false;
+    bool show_profiler = false;
+    int selected_game_object;
 }
 
-void Tooltip(const char* tooltip)
+void Tooltip(const char* inTooltip)
 {
     if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 0.6f)
     {
         ImGui::BeginTooltip();
-        ImGui::SetTooltip("%s", tooltip);
+        ImGui::SetTooltip("%s", inTooltip);
         ImGui::EndTooltip();
     }
 }
 
-ImVec4 Interpolate(ImVec4 color1, ImVec4 color2, float fraction)
+ImVec4 Interpolate(const ImVec4 inColor1, const ImVec4 inColor2, const float inFraction)
 {
-    return ImVec4((color2.x - color1.x) * fraction + color1.x,
-        (color2.y - color1.y) * fraction + color1.y,
-        (color2.z - color1.z) * fraction + color1.z,
-        (color2.w - color1.w) * fraction + color1.w);
+    return ImVec4((inColor2.x - inColor1.x) * inFraction + inColor1.x,
+        (inColor2.y - inColor1.y) * inFraction + inColor1.y,
+        (inColor2.z - inColor1.z) * inFraction + inColor1.z,
+        (inColor2.w - inColor1.w) * inFraction + inColor1.w);
 }
 
 bool ButtonCenteredOnLine(const char* label, float alignment = 0.5f)
@@ -69,13 +71,13 @@ void TopBar(const float inDt)
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_CHART_BAR))
     {
-        Debug::m_showProfiler = !Debug::m_showProfiler;
+        Debug::show_profiler = !Debug::show_profiler;
     }
     ImGui::SameLine();
-    if (Debug::m_paused)
+    if (Debug::paused)
     {
         if (ButtonCenteredOnLine(ICON_FA_PLAY, 0.47f))
-            Debug::m_paused = false;
+            Debug::paused = false;
         Tooltip("Play");
         ImGui::SameLine();
         Tooltip("Next Frame");
@@ -83,13 +85,13 @@ void TopBar(const float inDt)
     else
     {
         if (ButtonCenteredOnLine(ICON_FA_PAUSE, 0.48f))
-            Debug::m_paused = true;
+            Debug::paused = true;
         Tooltip("Pause");
     }
 
-    if (Debug::m_showProfiler)
+    if (Debug::show_profiler)
     {
-        Performance::DebugImgui(Debug::m_showProfiler);
+        Performance::DebugImgui(Debug::show_profiler);
     }
 
     ImGui::SameLine(ImGui::GetWindowSize().x - 220.f);
@@ -229,7 +231,7 @@ void Debug::Init()
     auto window = Engine::GetWindow()->GetWindow();
     ID3D12DescriptorHeap* srv = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetDescriptorHeap().Get();
     ImGui_ImplGlfw_InitForOther(window, true);
-    ImGui_ImplDX12_Init(WinUtil::GetDevice()->GetDevice().Get(), 2,
+    ImGui_ImplDX12_Init(WinUtil::GetDevice()->GetDevice().Get(), Swapchain::BackBufferCount,
         DXGI_FORMAT_R8G8B8A8_UNORM, srv,
         srv->GetCPUDescriptorHandleForHeapStart(),
         srv->GetGPUDescriptorHandleForHeapStart());
@@ -261,15 +263,15 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
         for(const auto& [fst, snd]: inSceneList)
             names.push_back(fst.c_str());
         ImGui::PushID(1);
-        ImGui::ListBox("", &m_selectedGameObject, names.data(), static_cast<int>(names.size()), static_cast<int>(names.size()));
+        ImGui::ListBox("", &selected_game_object, names.data(), static_cast<int>(names.size()), static_cast<int>(names.size()));
         ImGui::PopID();
     }
 
     if (ImGui::CollapsingHeader("Properties", (ImGuiTreeNodeFlags_DefaultOpen) ))
     {
-        if(static_cast<int>(names.size()) > Debug::m_selectedGameObject)
+        if(static_cast<int>(names.size()) > Debug::selected_game_object)
         {
-            Transform& transform = inSceneList[names[m_selectedGameObject]].GetTransform();
+            Transform& transform = inSceneList[names[selected_game_object]].GetTransform();
             ImGui::PushID(2);
             ImGui::Text("Rotation");
             ImGui::SliderFloat("X", &transform.GetEulerRotation()[0], 0,  2*glm::pi<float>());
@@ -301,7 +303,7 @@ void Debug::Render()
 
 bool Debug::Paused()
 {
-    bool t = m_paused;
+    bool t = paused;
     return t;
 }
 

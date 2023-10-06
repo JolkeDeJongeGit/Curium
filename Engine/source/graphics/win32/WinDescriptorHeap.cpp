@@ -2,11 +2,13 @@
 #include "graphics/win32/WinDescriptorHeap.h"
 #include <graphics/win32/WinDevice.h>
 
+#include "graphics/win32/WinUtil.h"
+
 // Used from https://github.com/BredaUniversityGames/Y2022A-Y2-PR-Alpaca
 
-DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE inType, uint32_t inAmountOfDescriptors, bool inIsShaderVisible)
+DescriptorHeap::DescriptorHeap(const D3D12_DESCRIPTOR_HEAP_TYPE inType, const uint32_t inAmountOfDescriptors, const bool inIsShaderVisible)
 {
-	const ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
+	const ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Type = inType;

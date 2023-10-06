@@ -6,13 +6,7 @@ public:
 	~Swapchain();
 
 	void Init(int inWidth, int inHeight);
-
-	static Swapchain& Get()
-	{
-		static Swapchain instance;
-		return instance;
-	}
-
+	
 	uint32_t GetCurrentBuffer() const;
 
 	ComPtr<IDXGISwapChain4>& GetSwapchain();
@@ -27,7 +21,7 @@ public:
 	ComPtr<ID3D12Fence>& GetFence();
 	ComPtr<ID3D12Resource>& GetCurrentRenderTarget(const uint32_t inIndex);
 	ComPtr<ID3D12Resource>& GetDepthBuffer();
-	static const uint32_t BackBufferCount = 2;
+	static constexpr uint32_t BackBufferCount = 2;
 private:
 	void SetupSwapchain(int inWidth, int inHeight);
 	void SetupDepthBuffer(int inWidth, int inHeight);

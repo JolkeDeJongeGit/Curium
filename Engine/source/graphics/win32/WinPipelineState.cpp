@@ -29,7 +29,7 @@ ComPtr<ID3D12RootSignature>& PipelineState::GetRootSignature()
 
 void PipelineState::SetupRootSignature()
 {
-	const ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
+	const ComPtr<ID3D12Device2> device =  WinUtil::GetDevice()->GetDevice();
 
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
 	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
@@ -64,7 +64,7 @@ void PipelineState::SetupRootSignature()
 
 void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, bool inUseDepth)
 {
-	ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
+	ComPtr<ID3D12Device2> device =  WinUtil::GetDevice()->GetDevice();
 	auto& shader = ShaderManager::Get();
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},

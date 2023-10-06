@@ -27,4 +27,5 @@ using namespace Microsoft::WRL;
 #include "directX12/d3dx12.h"
 #pragma endregion
 
+#include "graphics/win32/WinUtil.h"
 #include "resource.h"

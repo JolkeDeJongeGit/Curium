@@ -25,6 +25,8 @@ namespace Renderer
 	DescriptorHeap* cbv_heap;
 	DescriptorHeap* rtv_heap;
 	DescriptorHeap* dsv_heap;
+	
+	HeapHandler* heap_handler;
 
 	uint32_t viewport_width = 1920;
 	uint32_t viewport_height = 1080;
@@ -37,27 +39,25 @@ namespace Renderer
 	std::unordered_map<std::string, GameObject> scene;
 }
 
-float WinWindow::MouseXOffset;
-float WinWindow::MouseYOffset;
 
 void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 {
-	device = &Device::Get();
-	command_queue = &CommandQueue::Get();
-	swapchain = &Swapchain::Get();
-	pipeline_state = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
-	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
-
-	auto heapHandler = HeapHandler::Get();
-	heapHandler.CreateHeaps(Swapchain::BackBufferCount);
+	device = new Device;
+	command_queue = new CommandQueue;
+	swapchain = new Swapchain;
+	
+	heap_handler = new HeapHandler;
+	heap_handler->CreateHeaps(Swapchain::BackBufferCount);
 	// Reference of heaps
-	cbv_heap = &heapHandler.GetCbvHeap();
-	rtv_heap = &heapHandler.GetRtvHeap();
-	dsv_heap = &heapHandler.GetDsvHeap();
+	cbv_heap = heap_handler->GetCbvHeap();
+	rtv_heap = heap_handler->GetRtvHeap();
+	dsv_heap = heap_handler->GetDsvHeap();
+	pipeline_state = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 
 	viewport_width = inWidth;
 	viewport_height = inHeight;
+	
+	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
 	
 	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
@@ -95,13 +95,7 @@ void Renderer::Update()
 	
 	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
 	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-
-	auto& heapHandler = HeapHandler::Get();
-	// Reference of heaps
-	cbv_heap = &heapHandler.GetCbvHeap();
-	rtv_heap = &heapHandler.GetRtvHeap();
-	dsv_heap = &heapHandler.GetDsvHeap();
-
+	
 	ID3D12DescriptorHeap* pDescriptorHeaps[] = { cbv_heap->GetDescriptorHeap().Get() };
 
 	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
@@ -147,8 +141,14 @@ void Renderer::Update()
 
 void Renderer::Shutdown()
 {
-	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
-	swapchain->~Swapchain();
+	delete device;
+	delete heap_handler;
+	delete swapchain;
+	delete command_queue;
+	device = nullptr;
+	heap_handler = nullptr;
+	command_queue = nullptr;
+	swapchain = nullptr;
 }
 
 Camera* Renderer::GetCamera()
@@ -159,6 +159,11 @@ Camera* Renderer::GetCamera()
 Device* WinUtil::GetDevice()
 {
 	return Renderer::device;
+}
+
+Swapchain* WinUtil::GetSwapchain()
+{
+	return Renderer::swapchain;
 }
 
 CommandQueue* WinUtil::GetCommandQueue()
@@ -176,13 +181,13 @@ DescriptorHeap* WinUtil::GetDescriptorHeap(const HeapType inType)
 	switch (inType)
 	{
 	case HeapType::CBV_SRV_UAV:
-		return &HeapHandler::Get().GetCbvHeap();
+		return Renderer::cbv_heap;
 
 	case HeapType::DSV:
-		return &HeapHandler::Get().GetDsvHeap();
+		return Renderer::dsv_heap;
 
 	case HeapType::RTV:
-		return &HeapHandler::Get().GetRtvHeap();  // NOLINT(clang-diagnostic-covered-switch-default)
+		return Renderer::rtv_heap;  // NOLINT(clang-diagnostic-covered-switch-default)
 
 	default:  // NOLINT(clang-diagnostic-covered-switch-default)
 		return Renderer::cbv_heap;

@@ -14,5 +14,6 @@ int main()
         previousTime = currentTime;
         Engine::Update(deltaTime);
     }
+    Engine::Shutdown();
 	return 0;
 }

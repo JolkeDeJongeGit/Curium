@@ -6,13 +6,7 @@ public:
 	CommandQueue();
 	CommandQueue(D3D12_COMMAND_LIST_TYPE inType);
 	~CommandQueue();
-
-	static CommandQueue& Get()
-	{
-		static CommandQueue instance;
-		return instance;
-	}
-
+	
 	void ExecuteCommandList();
 
 	void UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource);
