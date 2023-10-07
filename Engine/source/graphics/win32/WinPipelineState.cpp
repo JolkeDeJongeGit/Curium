@@ -40,9 +40,9 @@ void PipelineState::SetupRootSignature()
 	CD3DX12_DESCRIPTOR_RANGE1 descRange[1];
 	descRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-	CD3DX12_ROOT_PARAMETER1 rootParameter[1];
+	CD3DX12_ROOT_PARAMETER1 rootParameter[2];
 	rootParameter[0].InitAsConstants(48, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-	//rootParameter[1].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[1].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
 	const CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
 

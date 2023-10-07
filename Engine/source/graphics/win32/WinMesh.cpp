@@ -1,4 +1,6 @@
 #include "precomp.h"
+
+#include "common/AssetManager.h"
 #include "graphics/Mesh.h"
 #include "graphics/win32/WinCommandQueue.h"
 #include "graphics/win32/WinDescriptorHeap.h"
@@ -13,7 +15,7 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 	CommandQueue* commands = WinUtil::GetCommandQueue();
 
 	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, inImageSize.x, inImageSize.y);
+	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, inImageSize.x, inImageSize.y);
 
 	ThrowIfFailed(device->CreateCommittedResource(
 		&properties,
@@ -24,14 +26,14 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 		IID_PPV_ARGS(&m_data)));
 
 	D3D12_SUBRESOURCE_DATA subresource;
-	subresource.pData = inData.data();
-	subresource.RowPitch = inImageSize.x * sizeof(uint32_t);
-	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint32_t);
+	subresource.pData = &inData[0];
+	subresource.RowPitch = inImageSize.x * sizeof(uint8_t);
+	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint8_t);
 
 	commands->UploadData(m_data, subresource);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Texture2D.MipLevels = 1; // for now...
@@ -180,6 +182,12 @@ void Mesh::SetupCube()
 	{
 		m_vertexData.push_back(VertexData(vertices[i], normals[i], textureCoords[i]));
 	}
+
+	m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
+	//m_textureData.insert(std::pair("normal", AssetManager::LoadTexture("assets/textures/cube_normal.png")));
+	//m_textureData.insert(std::pair("height", AssetManager::LoadTexture("assets/textures/cube_height.png")));
+	//m_textureData.insert(std::pair("roughness", AssetManager::LoadTexture("assets/textures/cube_roughness.png")));
+	//m_textureData.insert(std::pair("ao", AssetManager::LoadTexture("assets/textures/cube_ao.png")));
 	
 	CreateVertexBuffer();
 	CreateIndexBuffer();
@@ -265,6 +273,12 @@ void Mesh::SetupSphere()
 	{
 		m_vertexData.push_back(VertexData(vertices[i], normals[i], texCoords[i]));
 	}
+
+	m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
+	//m_textureData.insert(std::pair("normal", AssetManager::LoadTexture("assets/textures/cube_normal.png")));
+	//m_textureData.insert(std::pair("height", AssetManager::LoadTexture("assets/textures/cube_height.png")));
+	//m_textureData.insert(std::pair("roughness", AssetManager::LoadTexture("assets/textures/cube_roughness.png")));
+	//m_textureData.insert(std::pair("ao", AssetManager::LoadTexture("assets/textures/cube_ao.png")));
 	
 	CreateVertexBuffer();
 	CreateIndexBuffer();
@@ -273,6 +287,13 @@ void Mesh::SetupSphere()
 
 void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
+	auto descriptorIndex = m_textureData.at("albedo").GetDescriptorIndex();
+	auto descriptorHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
+	//inCommandList->SetGraphicsRootDescriptorTable(2, descriptorHeap->GetGpuHandleAt(descriptorIndex));
+	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
+	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
+	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
+	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
 	inCommandList->IASetVertexBuffers(0, 1, &m_vertexView);
 	inCommandList->IASetIndexBuffer(&m_indexView);
 	inCommandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);

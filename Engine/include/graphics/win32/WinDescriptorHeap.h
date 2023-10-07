@@ -7,7 +7,7 @@ public:
 
 	ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap();
 	CD3DX12_CPU_DESCRIPTOR_HANDLE GetCpuHandleAt(uint32_t inDex) const;
-	[[nodiscard]] CD3DX12_GPU_DESCRIPTOR_HANDLE GetGpuHandleAt(uint32_t inDex) const;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GetGpuHandleAt(uint32_t inDex) const;
 
 	uint32_t GetDescriptorSize() const;
 	uint32_t GetNextIndex();
