@@ -1,31 +1,29 @@
 #pragma once
-#include "CustomWin.h"
+#include "GLFW3/include/GLFW/glfw3.h"
 #include "platform/Window.h"
 
-class WinWindow : public Window
+class WinWindow final : public Window
 {
 public:
-	static WinWindow& Get()
-	{
-		static WinWindow instance;
-		return instance;
-	}
+    WinWindow() = default;
+    virtual ~WinWindow();
 
-	void Create(int _width, int _height) override;
-	void Update() override;
-	void Terminate() override;
-	void SetTitle(const std::wstring& _title) override;
+    void Create(int inWidth, int inHeight) override;
+    void Update() override;
+    void Shutdown() override;
 
-	const wchar_t* GetName() { return m_className.c_str();  }
+    void SetIcon(int inCount, const char* inName);
 
-	HWND GetHwnd() { return m_hwnd; }
-	HINSTANCE GetInstance() { return m_instance; }
+    inline GLFWwindow* GetWindow() const { return m_window; };
 
-protected:
-	static LRESULT CALLBACK EventHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+    inline static float MouseXOffset = 0.f;
+    inline static float MouseYOffset = 0.f;
 private:
-	HWND m_hwnd;
-	HINSTANCE m_instance;
+#pragma warning( push )
+#pragma warning( disable : 4100 )
+    static void MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos);
 
-	std::wstring m_className = L"WinClass";
+#pragma warning( pop )
+    GLFWwindow* m_window = nullptr;
+    GLFWimage* m_windowIconImage = nullptr;
 };

@@ -3,13 +3,13 @@ class DescriptorHeap
 {
 public:
 	DescriptorHeap() = default;
-	DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t amountOfDescriptors, bool isShaderVisible);
+	DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE inType, uint32_t inAmountOfDescriptors, bool inIsShaderVisible);
 
 	ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap();
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GetCPUHandleAt(uint32_t index);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE GetGPUHandleAt(uint32_t index);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GetCpuHandleAt(uint32_t inDex) const;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GetGpuHandleAt(uint32_t inDex) const;
 
-	uint32_t GetDescriptorSize();
+	uint32_t GetDescriptorSize() const;
 	uint32_t GetNextIndex();
 private:
 	ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;

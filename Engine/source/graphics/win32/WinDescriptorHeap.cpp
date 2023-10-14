@@ -2,21 +2,23 @@
 #include "graphics/win32/WinDescriptorHeap.h"
 #include <graphics/win32/WinDevice.h>
 
+#include "graphics/win32/WinUtil.h"
+
 // Used from https://github.com/BredaUniversityGames/Y2022A-Y2-PR-Alpaca
 
-DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t amountOfDescriptors, bool isShaderVisible)
+DescriptorHeap::DescriptorHeap(const D3D12_DESCRIPTOR_HEAP_TYPE inType, const uint32_t inAmountOfDescriptors, const bool inIsShaderVisible)
 {
-	ComPtr<ID3D12Device2> device = Device::Get().GetDevice();
+	const ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.Type = type;
-	heapDesc.NumDescriptors = amountOfDescriptors;
-	heapDesc.Flags = isShaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	heapDesc.Type = inType;
+	heapDesc.NumDescriptors = inAmountOfDescriptors;
+	heapDesc.Flags = inIsShaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 	ThrowIfFailed(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_descriptorHeap)));
-	m_descriptorSize = device->GetDescriptorHandleIncrementSize(type);
+	m_descriptorSize = device->GetDescriptorHandleIncrementSize(inType);
 
-	m_maxDescriptorIndex = amountOfDescriptors - 1;
+	m_maxDescriptorIndex = inAmountOfDescriptors - 1;
 }
 
 ComPtr<ID3D12DescriptorHeap>& DescriptorHeap::GetDescriptorHeap()
@@ -24,17 +26,17 @@ ComPtr<ID3D12DescriptorHeap>& DescriptorHeap::GetDescriptorHeap()
 	return m_descriptorHeap;
 }
 
-CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandleAt(uint32_t index)
+CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuHandleAt(const uint32_t inDex) const
 {
-	return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart(), index, m_descriptorSize);
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart(), inDex, m_descriptorSize);
 }
 
-CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandleAt(uint32_t index)
+CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuHandleAt(const uint32_t inDex) const
 {
-	return CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(), index, m_descriptorSize);
+	return CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(), inDex, m_descriptorSize);
 }
 
-uint32_t DescriptorHeap::GetDescriptorSize()
+uint32_t DescriptorHeap::GetDescriptorSize() const
 {
 	return m_descriptorSize;
 }
@@ -47,7 +49,7 @@ uint32_t DescriptorHeap::GetNextIndex()
 		return 0;
 	}
 
-	uint32_t index = m_descriptorIndex;
+	const uint32_t index = m_descriptorIndex;
 	m_descriptorIndex++;
 	return index;
 }

@@ -1,133 +1,92 @@
 #include "precomp.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-#include <fcntl.h>
-#include <io.h>
-#include <windowsx.h>
+
+#pragma warning( push )
+#pragma warning(push, 0)
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image/stb_image.h"
+#pragma warning( pop ) 
+
 #include "platform/win32/WinWindow.h"
+#include <graphics/Renderer.h>
+#include <include/imgui.h>
 
-void WinWindow::Create(int _width, int _height)
+#include "graphics/Camera.h"
+
+WinWindow::~WinWindow()
 {
-	RECT wr;
-	wr.left = 100;
-	wr.right = _width + wr.left;
-	wr.top = 100;
-	wr.bottom = _height + wr.top;
+	Shutdown();
+}
 
-	m_instance = GetModuleHandle(nullptr);
+void WinWindow::Create(const int inWidth, const int inHeight)
+{
+    SetWidth(inWidth);
+    SetHeight(inHeight);
 
-	WNDCLASSEX wc = { 0 };
-	wc.cbSize = sizeof(wc);
-	wc.style = CS_OWNDC;
-	wc.lpfnWndProc = EventHandler;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = GetInstance();
-	wc.hCursor = nullptr;
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wc.lpszMenuName = nullptr;
-	wc.lpszClassName = GetName();
-
-	wc.hIcon = static_cast<HICON>(LoadImage(
-		GetInstance(), MAKEINTRESOURCE(IDI_ICON1),
-		IMAGE_ICON, 32, 32, 0
-	));
-		wc.hIconSm = static_cast<HICON>(LoadImage(
-		GetInstance(), MAKEINTRESOURCE(IDI_ICON1),
-		IMAGE_ICON, 16, 16, 0
-	));
-
-	RegisterClassEx(&wc);
-	LPCWSTR value = (LPCWSTR)GetTitle().c_str();
-	m_hwnd = CreateWindow(
-		GetName(),
-		value,
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		wr.right - wr.left,
-		wr.bottom - wr.top,
-		nullptr,        // We have no parent window.
-		nullptr,        // We aren't using menus.
-		m_instance,
-		this);
-
-	assert(m_hwnd && "Failed to create window");
-
-	ShowWindow(m_hwnd, SW_NORMAL);
-
-	RAWINPUTDEVICE rid;
-	rid.usUsagePage = 0x01; // mouse page
-	rid.usUsage = 0x02; // mouse usage
-	rid.dwFlags = 0;
-	rid.hwndTarget = nullptr;
-	RegisterRawInputDevices(&rid, 1, sizeof(rid));
+    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    m_window = glfwCreateWindow(inWidth, inHeight, m_title.c_str(), nullptr, nullptr);
+    glfwMakeContextCurrent(m_window);
+    glfwSetCursorPosCallback(m_window, MouseCallback);
 }
 
 void WinWindow::Update()
 {
-	// Window Loop sends events.
-	MSG msg = {};
-	// Process any messages in the queue.
-	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+    SetActive(!glfwWindowShouldClose(m_window));
+
+    glfwSwapBuffers(m_window);
+    glfwPollEvents();
 }
 
-void WinWindow::Terminate()
+void WinWindow::Shutdown()
 {
-	UnregisterClass(GetName(), GetInstance());
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
 }
 
-void WinWindow::SetTitle(const std::wstring& _title)
+void WinWindow::SetIcon(const int inCount, const char* inName)
 {
-	SetWindowText(m_hwnd, std::wstring(_title.begin(), _title.end()).c_str());
-	Window::SetTitle(_title);
+    if (m_windowIconImage)
+    {
+        delete m_windowIconImage;
+        m_windowIconImage = nullptr;
+    }
+
+    m_windowIconImage = new GLFWimage();
+    int width, height, channels;
+    unsigned char* imageData = stbi_load(inName, &width, &height, &channels, 0);
+
+    // Create a GLFW image structure
+    m_windowIconImage->width = width;
+    m_windowIconImage->height = height;
+    m_windowIconImage->pixels = imageData;
+    glfwSetWindowIcon(m_window, inCount, m_windowIconImage);
+    stbi_image_free(m_windowIconImage->pixels);
 }
 
-LRESULT WinWindow::EventHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+#pragma warning(push)
+#pragma warning( disable : 4100 )
+void WinWindow::MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos)
 {
-	switch (message)
-	{
-	case WM_DESTROY:
-	{
-		//SetActive(false);
-		PostQuitMessage(0);
-		return 0;
-	}
-	case WM_SIZE:
-	{
-		RECT clientRect = {};
-		GetClientRect(hWnd, &clientRect);
+    static bool firstMouse = true;
+    static float lastX = 0.0f;
+    static float lastY = 0.0f;
+    if (firstMouse) {
+        lastX = static_cast<float>(inXPos);
+        lastY = static_cast<float>(inYPos);
+        firstMouse = false;
+    }
 
-		int width = clientRect.right - clientRect.left;
-		int height = clientRect.bottom - clientRect.top;
+    MouseXOffset = static_cast<float>(inXPos) - lastX;
+    MouseYOffset = lastY - static_cast<float>(inYPos);
+    lastX = static_cast<float>(inXPos);
+    lastY = static_cast<float>(inYPos);
 
-		// Update width and height in the render
-
-		return 0;
-	}
-	// Keyboard Input
-	case WM_KEYDOWN: case WM_SYSKEYDOWN:
-		break;
-	case WM_KEYUP: case WM_SYSKEYUP:
-		break;
-		// Mouse Input
-	case WM_MOUSEMOVE:
-		break;
-	case WM_LBUTTONDOWN:
-		break;
-	case WM_RBUTTONDOWN:
-		break;
-	case WM_LBUTTONUP:
-		break;
-	case WM_RBUTTONUP:
-		break;
-	}
-
-	// Handle any messages the switch statement didn't.
-	return DefWindowProc(hWnd, message, wParam, lParam);
+    if(glfwGetMouseButton(inWindow, GLFW_MOUSE_BUTTON_2) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+    {
+        Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
+    }
 }
+#pragma warning( pop )

@@ -4,16 +4,16 @@
 
 CommandList::CommandList()
 {
-	auto device = Device::Get().GetDevice();
+	const auto device = WinUtil::GetDevice()->GetDevice();
 	ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
 	ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
 }
 
-CommandList::CommandList(D3D12_COMMAND_LIST_TYPE _type)
+CommandList::CommandList(const D3D12_COMMAND_LIST_TYPE inType)
 {
-	auto device = Device::Get().GetDevice();
-	ThrowIfFailed(device->CreateCommandAllocator(_type, IID_PPV_ARGS(&m_commandAllocator)));
-	ThrowIfFailed(device->CreateCommandList(0, _type, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
+	const auto device = WinUtil::GetDevice()->GetDevice();
+	ThrowIfFailed(device->CreateCommandAllocator(inType, IID_PPV_ARGS(&m_commandAllocator)));
+	ThrowIfFailed(device->CreateCommandList(0, inType, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
 }
 
 CommandList::~CommandList()

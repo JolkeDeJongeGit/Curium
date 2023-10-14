@@ -1,9 +1,3 @@
-struct ModelViewProjection
-{
-    matrix MVP;
-    matrix Model;
-};
-ConstantBuffer<ModelViewProjection> ModelViewProjectionCB : register(b0);
 
 struct VertexInput
 {
@@ -12,24 +6,21 @@ struct VertexInput
     float2 TextureCoord : TEXCOORD;
 };
 
-struct PixelInput
+struct VertexOutput
 {
-    float4 Position : SV_Position;
-    float3 Normal : NORMAL;
+    float4 Position : POSITION;
+    float4 Normal : NORMAL;
     float2 TextureCoord : TEXCOORD;
-    float3 FragPos : COLOR0;
 };
 
-PixelInput main(VertexInput IN)
+VertexOutput main( VertexInput inInput )
 {
-    PixelInput OUT;
-
-    OUT.Position = mul(ModelViewProjectionCB.MVP, float4(IN.Position, 1));
-    OUT.TextureCoord = IN.TextureCoord;
-    OUT.Normal = mul(ModelViewProjectionCB.Model, float4(IN.Normal, 0.0f));
+    VertexOutput output;
+    output.Position = float4(inInput.Position, 1);
+    //output.Position = mul(mul(mul(DataCB.Projection, DataCB.View), DataCB.Model), float4(inInput.Position, 1));
+    output.TextureCoord = inInput.TextureCoord;
+    //output.Normal = mul(DataCB.Model, float4(inInput.Normal, 0.0f));
+   output.Normal = float4(inInput.Normal, 0.0f);
     
-    float3 frag = mul(ModelViewProjectionCB.Model, float4(IN.Position, 0.0f));
-    OUT.FragPos = frag;
-    
-    return OUT;
+    return output;
 }

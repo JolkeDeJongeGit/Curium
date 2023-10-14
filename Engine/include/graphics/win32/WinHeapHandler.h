@@ -4,18 +4,13 @@
 class HeapHandler
 {
 public:
-	static HeapHandler& Get()
-	{
-		static HeapHandler instance;
-		return instance;
-	}
-
-	void CreateHeaps(uint32_t _bufferSize);
-	DescriptorHeap& GetRtvHeap();
-	DescriptorHeap& GetCbvHeap();
-	DescriptorHeap& GetDsvHeap();
+	~HeapHandler();
+	void CreateHeaps(uint32_t inBufferSize);
+	[[nodiscard]] DescriptorHeap* GetRtvHeap() const;
+	DescriptorHeap* GetCbvHeap() const;
+	DescriptorHeap* GetDsvHeap() const;
 private:
-	DescriptorHeap m_renderTargetViewHeap;
-	DescriptorHeap m_constantBufferViewHeap;
-	DescriptorHeap m_depthStencilViewHeap;
+	DescriptorHeap* m_renderTargetViewHeap = nullptr;
+	DescriptorHeap* m_constantBufferViewHeap = nullptr;
+	DescriptorHeap* m_depthStencilViewHeap = nullptr;
 };
