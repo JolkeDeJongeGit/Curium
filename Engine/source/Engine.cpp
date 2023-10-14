@@ -29,6 +29,8 @@ void Engine::Update(const float inDt)
 {
 	PROFILE_FUNCTION()
 	UpdateInput(inDt);
+
+	Debug::NewFrame();
 	Debug::Update(inDt);
 	Renderer::Update();
 	if (!Debug::Paused())

@@ -9,4 +9,5 @@ namespace Renderer
 	void Shutdown();
 
 	Camera* GetCamera();
+	std::vector<int>& GetRootConstants();
 }

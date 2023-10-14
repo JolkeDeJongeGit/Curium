@@ -33,9 +33,7 @@ CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCpuHandleAt(const uint32_t inDe
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuHandleAt(const uint32_t inDex) const
 {
-	auto value = m_descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	auto value1 = CD3DX12_GPU_DESCRIPTOR_HANDLE(value, inDex, m_descriptorSize);
-	return value1;
+	return CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(), inDex, m_descriptorSize);
 }
 
 uint32_t DescriptorHeap::GetDescriptorSize() const

@@ -21,7 +21,7 @@ public:
 	ComPtr<ID3D12Fence>& GetFence();
 	ComPtr<ID3D12Resource>& GetCurrentRenderTarget(const uint32_t inIndex);
 	ComPtr<ID3D12Resource>& GetDepthBuffer();
-	static constexpr uint32_t BackBufferCount = 2;
+	static constexpr uint32_t BackBufferCount = 3;
 private:
 	void SetupSwapchain(int inWidth, int inHeight);
 	void SetupDepthBuffer(int inWidth, int inHeight);

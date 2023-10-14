@@ -138,6 +138,9 @@
     <ClCompile Include="source\common\AssetManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\precomp.h">
@@ -203,6 +206,9 @@
     <ClInclude Include="include\common\AssetManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\graphics\win32\WinBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\basic.pixel.hlsl">
@@ -211,5 +217,7 @@
     <FxCompile Include="resources\shaders\basic.vertex.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="resources\shaders\basic.hull.hlsl" />
+    <FxCompile Include="resources\shaders\basic.domain.hlsl" />
   </ItemGroup>
 </Project>

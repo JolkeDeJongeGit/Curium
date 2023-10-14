@@ -8,10 +8,10 @@
 #include "include/iconfont.h"
 #include "include/imgui_internal.h"
 #include "include/imgui_impl_dx12.h"
-#include "Components/GameObject.h"
-#include "Engine.h"
 #include <include/imgui_impl_glfw.h>
 #include <include/implot.h>
+#include "Components/GameObject.h"
+#include "Engine.h"
 
 #include "graphics/win32/WinSwapchain.h"
 #include "graphics/Camera.h"
@@ -22,7 +22,9 @@ namespace Debug
 {
     bool paused = false;
     bool show_profiler = false;
+    bool wireframe_mode = false;
     int selected_game_object;
+
 }
 
 void Tooltip(const char* inTooltip)
@@ -230,7 +232,7 @@ void Debug::Init()
     io.Fonts->AddFontFromFileTTF("assets/fonts/font-awesome.otf", 14.0f * uiScale, &config, icons_ranges);
     Theme();
 
-    auto window = Engine::GetWindow()->GetWindow();
+    auto window = Engine::GetWindow()->GetWindow();;
     ID3D12DescriptorHeap* srv = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetDescriptorHeap().Get();
     ImGui_ImplGlfw_InitForOther(window, true);
     ImGui_ImplDX12_Init(WinUtil::GetDevice()->GetDevice().Get(), Swapchain::BackBufferCount,
@@ -239,13 +241,16 @@ void Debug::Init()
         srv->GetGPUDescriptorHandleForHeapStart());
 }
 
-void Debug::Update(const float inDt)
+void Debug::NewFrame()
 {
-    PROFILE_FUNCTION()
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+}
 
+void Debug::Update(const float inDt)
+{
+    PROFILE_FUNCTION()
     TopBar(inDt);
 }
 
@@ -299,7 +304,7 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
     ImGui::Separator();
     ImGui::NewLine();
     ImGui::NewLine();
-    if(ImGui::CollapsingHeader("Base Settings", (ImGuiTreeNodeFlags_DefaultOpen)))
+    if (ImGui::CollapsingHeader("Base Settings", (ImGuiTreeNodeFlags_DefaultOpen)))
     {
         ImGui::Text("Camera Settings");
         ImGui::Separator();
@@ -311,13 +316,20 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
         ImGui::Text("Camera Speed");
         ImGui::SliderFloat("", &Renderer::GetCamera()->GetMovementSpeed(), 1.f, 20.f);
         ImGui::PopID();
+
+        ImGui::Checkbox("Wireframe mode", &wireframe_mode);
+        ImGui::PushID(7);
+        ImGui::Text("Detail:");
+        ImGui::SliderInt("", &Renderer::GetRootConstants()[0], 1, 64);
+        ImGui::SliderInt("", &Renderer::GetRootConstants()[1], 1, 64);
+        ImGui::PopID();
+        ImGui::End();
     }
-    ImGui::End();
+
 }
 
 void Debug::Render()
 {
-    ImGui::Render();
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), WinUtil::GetCommandQueue()->GetCommandList().GetList().Get());
 }
 
@@ -325,6 +337,11 @@ bool Debug::Paused()
 {
     bool t = paused;
     return t;
+}
+
+bool Debug::IsWireframeMode()
+{
+    return wireframe_mode;
 }
 
 void Debug::Shutdown()

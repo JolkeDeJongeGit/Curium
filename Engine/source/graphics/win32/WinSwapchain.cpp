@@ -15,8 +15,6 @@ void Swapchain::Init(const int inWidth, const int inHeight)
 {
 	const ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 
-	//HeapHandler::Get().CreateHeaps(BackBufferCount);
-
 	SetupSwapchain(inWidth, inHeight);
 	SetupDepthBuffer(inWidth, inHeight);
 

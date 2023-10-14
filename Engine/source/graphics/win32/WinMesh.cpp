@@ -126,61 +126,45 @@ void Mesh::CreateTexturesBuffer()
 
 void Mesh::SetupCube()
 {
-	m_indexData = 
+	int div = 1;
+	for (int row = 0; row < div; row++)
 	{
-		0, 1, 2,
-		0, 2, 3,
-		6, 5, 4,
-		6, 4, 7,
-		4, 5, 1,
-		4, 1, 0,
-		3, 2, 6,
-		3, 6, 7,
-		1, 5, 6,
-		1, 6, 2,
-		4, 0, 3,
-		4, 3, 7
-	};
+		for (int col = 0; col < div; col++)
+		{
+			int index = row * (div + 1) + col;			
+			m_indexData.push_back(index);					
+			m_indexData.push_back(index + 1);				
+			m_indexData.push_back(index + (div + 1) + 1);	
+			m_indexData.push_back(index + (div + 1));		
+		}
+	}
 
-	const std::vector<glm::vec3> vertices =
-	{
-			glm::vec3(-1.0f, -1.0f, -1.0f),
-			glm::vec3(-1.0f, 1.0f, -1.0f),
-			glm::vec3(1.0f, 1.0f, -1.0f),
-			glm::vec3(1.0f, -1.0f, -1.0f),
-			glm::vec3(-1.0f, -1.0f, 1.0f),
-			glm::vec3(-1.0f, 1.0f, 1.0f),
-			glm::vec3(1.0f, 1.0f, 1.0f),
-			glm::vec3(1.0f, -1.0f, 1.0f),
-	};
+	glm::vec3 v0 = glm::vec3(-0.5f, 0.0f, -0.5f);
+	glm::vec3 v1 = glm::vec3(-0.5f, 0.0f, 0.5f);
+	glm::vec3 v2 = glm::vec3(0.5f, 0.0f, 0.5f);
+	glm::vec3 v3 = glm::vec3(0.5f, 0.0f, -0.5f);
 
-	const std::vector<glm::vec2> textureCoords =
+	glm::vec3 dir03 = (v3 - v0) / float(div);
+	glm::vec3 dir12 = (v2 - v1) / float(div);
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec2> textureCoords;
+	// dir2 and dir3
+	for (float i = 0; i < div + 1; i++)
 	{
-			glm::vec2(0,0),
-			glm::vec2(0,1),
-			glm::vec2(1,1),
-			glm::vec2(1,1),
-			glm::vec2(1,1),
-			glm::vec2(1,1),
-			glm::vec2(1,1),
-			glm::vec2(1,1)
-	};
+		for (float j = 0; j < div + 1; j++)
+		{
+			glm::vec3 acrossj = ((v1 + i * dir12) - (v0 + i * dir03)) / float(div);
+			glm::vec3 crntVec = v0 + i * dir03 + j * acrossj;
+			// Position
+			vertices.push_back(glm::vec3(crntVec.x, crntVec.y, crntVec.z));
+			// Tex UV
+			textureCoords.push_back(glm::vec2(float(j) / div, float(i) / div));
+		}
+	}
 
-	const std::vector<glm::vec3> normals =
+	for (size_t i = 0; i < vertices.size(); i++)
 	{
-			glm::vec3(0,0,0),
-			glm::vec3(0.0f, 1.0f, 0.0f),
-			glm::vec3(1.0f, 1.0f, 0.0f),
-			glm::vec3(1.0f, 0.0f, 0.0f),
-			glm::vec3(0.0f, 0.0f, 1.0f),
-			glm::vec3(1.0f, 1.0f, 1.0f),
-			glm::vec3(1.0f, 0.0f, 1.0f),
-			glm::vec3(1.0f, 0.0f, 1.0f),
-	};
-	
-	for (size_t i = 0; i < normals.size(); i++)
-	{
-		m_vertexData.push_back(VertexData(vertices[i], normals[i], textureCoords[i]));
+		m_vertexData.push_back(VertexData(vertices[i], glm::vec3(0, 1, 0), textureCoords[i]));
 	}
 
 	m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
