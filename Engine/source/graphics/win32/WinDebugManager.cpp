@@ -323,8 +323,8 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
         ImGui::SliderInt("", &Renderer::GetRootConstants()[0], 1, 64);
         ImGui::SliderInt("", &Renderer::GetRootConstants()[1], 1, 64);
         ImGui::PopID();
-        ImGui::End();
     }
+    ImGui::End();
 
 }
 
