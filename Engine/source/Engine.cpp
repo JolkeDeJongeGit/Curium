@@ -35,7 +35,7 @@ void Engine::Update(const float inDt)
 	Debug::Update(inDt);
 	if (!Debug::Paused())
 	{
-		
+		// Here is gameplay related code
 	}
 	Renderer::Render();
 	window->Update();

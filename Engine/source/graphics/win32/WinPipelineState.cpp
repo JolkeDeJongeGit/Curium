@@ -72,8 +72,8 @@ void PipelineState::SetupRootSignature()
 	CD3DX12_ROOT_PARAMETER1 dsObjCb;
 	ZeroMemory(&dsObjCb, sizeof(dsObjCb));
 	dsObjCb.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
-	dsObjCb.Descriptor = { 0, 0 }; // first register (b0) in first register space
-	dsObjCb.ShaderVisibility = D3D12_SHADER_VISIBILITY_DOMAIN; // only used in domain shader
+	dsObjCb.Descriptor = { 0, 1 }; // first register (b0) in first register space
+	dsObjCb.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // only used in domain shader
 
 	CD3DX12_ROOT_PARAMETER1 rootParameter[3];
 	rootParameter[0] = dsObjCb;

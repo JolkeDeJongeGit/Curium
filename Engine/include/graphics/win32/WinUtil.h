@@ -11,7 +11,6 @@ class PipelineState;
 /// namespace with functions that access the user to
 /// Custom DX components like DXDevice.
 /// </summary>
-
 enum class HeapType
 {
 	CBV_SRV_UAV, // Constant buffer/Shader resource/Unordered access views

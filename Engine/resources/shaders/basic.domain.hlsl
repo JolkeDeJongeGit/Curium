@@ -3,8 +3,11 @@
 struct Data
 {
     float4x4 ViewProjection;
+    float4 eye;
+    //float4 frustum[6];
 };
-ConstantBuffer<Data> DataCB : register(b0);
+ConstantBuffer<Data> DataCB : register(b0, space1);
+//ConstantBuffer<Data> DataCB : register(b0);
 
 struct PatchConstantData
 {
@@ -25,6 +28,9 @@ struct DomainToPixel
     float4 Normal : NORMAL;
     float2 TextureCoord : TEXCOORD;
 };
+
+Texture2D HeightMap : register(t0);
+SamplerState LinearSampler : register(s0);
 
 [domain("quad")]
 DomainToPixel main(PatchConstantData input, float2 domain : SV_DomainLocation, const OutputPatch<HullToDomain, NUM_CONTROL_POINTS> patch, uint patchID : SV_PrimitiveID)

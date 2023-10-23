@@ -15,8 +15,16 @@
 #include "graphics/Camera.h"
 #include <graphics/win32/WinBuffer.h>
 
+
+
 namespace Renderer
 {
+	struct Data
+	{
+		float* ViewProject;
+		float* cameraPos;
+	};
+
 	Device* device = nullptr;
 	CommandQueue* command_queue = nullptr;
 	Swapchain* swapchain = nullptr;
@@ -36,13 +44,14 @@ namespace Renderer
 	Camera camera;
 
 	Buffer m_domainConstant;
+
 	// @TODO::Add this to a scene class
 	std::unordered_map<std::string, GameObject> scene;
 
 	std::vector<int> rootConstants{ 64, 64 };
+
+	Data CameraData;
 }
-
-
 
 void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 {
@@ -74,7 +83,8 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	scene.insert(std::pair<std::string, GameObject>("World", GameObject(transformWorld, {Mesh(false)})));
 	scene["World"].Init();
 
-	m_domainConstant.CreateConstantBuffer(16 * sizeof(float));
+
+	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
 }
 
 void Renderer::Render()
@@ -144,7 +154,9 @@ void Renderer::Update()
 
 	for(auto& [name, gameobject] : scene)
 	{
-		m_domainConstant.UpdateBuffer(&(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix())[0]);
+		CameraData.ViewProject = reinterpret_cast<float*>(&(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix())[0]);
+		CameraData.cameraPos = &(camera.GetTransform().GetPosition())[0];
+		m_domainConstant.UpdateBuffer(&CameraData.ViewProject[0]);
 		m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
 
 		for (const Mesh& mesh : gameobject.GetMeshes())

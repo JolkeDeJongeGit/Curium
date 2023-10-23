@@ -43,7 +43,9 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 }
 
 glm::ivec2 Texture::GetSize() const
-{ return m_imageSize; }
+{ 
+	return m_imageSize;
+}
 
 uint32_t Texture::GetDescriptorIndex() const
 {

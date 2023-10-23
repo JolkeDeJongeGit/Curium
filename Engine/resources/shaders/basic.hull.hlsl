@@ -1,4 +1,6 @@
 #define NUM_CONTROL_POINTS 4
+#define MIN_DETAIL 4
+#define MAX_DETAIL 128
 
 struct PatchTesselationFactors
 {
@@ -6,6 +8,13 @@ struct PatchTesselationFactors
     int inside;
 };
 ConstantBuffer<PatchTesselationFactors> tessFactors : register(b0);
+
+struct Data
+{
+    float4x4 ViewProjection;
+    float4 eye;
+};
+ConstantBuffer<Data> DataCB : register(b0, space1);
 
 struct VertexToHull
 {
@@ -30,13 +39,15 @@ struct HullToDomain
 PatchConstantData calculatePatchConstants()
 {
     PatchConstantData output;
-
-    output.edgeTessFactor[0] = tessFactors.edge;
-    output.edgeTessFactor[1] = tessFactors.edge;
-    output.edgeTessFactor[2] = tessFactors.edge;
-    output.edgeTessFactor[3] = tessFactors.edge;
-    output.insideTessFactor[0] = tessFactors.inside;
-    output.insideTessFactor[1] = tessFactors.inside;
+    //if (DataCB.eye.x == 0)
+    {
+        output.edgeTessFactor[0] = tessFactors.edge;
+        output.edgeTessFactor[1] = tessFactors.edge;
+        output.edgeTessFactor[2] = tessFactors.edge;
+        output.edgeTessFactor[3] = tessFactors.edge;
+        output.insideTessFactor[0] = tessFactors.inside;
+        output.insideTessFactor[1] = tessFactors.inside;
+    }
 
     return output;
 }

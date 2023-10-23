@@ -78,9 +78,6 @@
     <ClCompile Include="source\graphics\win32\WinHeapHandler.cpp">
       <Filter>Source Files\graphics\win32</Filter>
     </ClCompile>
-    <ClCompile Include="source\graphics\win32\WinShaderManager.cpp">
-      <Filter>Source Files\graphics\win32</Filter>
-    </ClCompile>
     <ClCompile Include="source\graphics\win32\WinCommandList.cpp">
       <Filter>Source Files\graphics\win32</Filter>
     </ClCompile>
@@ -139,6 +136,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\graphics\win32\WinBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\WinShaderManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
