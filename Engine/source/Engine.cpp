@@ -31,8 +31,8 @@ void Engine::Update(const float inDt)
 	UpdateInput(inDt);
 
 	Debug::NewFrame();
-	Debug::Update(inDt);
 	Renderer::Update();
+	Debug::Update(inDt);
 	if (!Debug::Paused())
 	{
 		

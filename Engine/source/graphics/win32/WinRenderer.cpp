@@ -60,7 +60,10 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 
 	viewport_width = inWidth;
 	viewport_height = inHeight;
-	
+
+	// Don't know but I have to do this to fix imgui
+	cbv_heap->GetNextIndex();
+
 	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
 	
 	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
@@ -76,13 +79,13 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 
 void Renderer::Render()
 {
-	Debug::Render();
-
 	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
 	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
 	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
 	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	
+	Debug::Render(commandList);
+
 	commandList->ResourceBarrier(1, &presentBarrier);
 	ThrowIfFailed(commandList->Close());
 
@@ -94,14 +97,11 @@ void Renderer::Render()
 void Renderer::Update()
 {
 	PROFILE_FUNCTION()
+	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
+	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
 
 	Debug::EditProperties(scene);
 
-	ImGui::Render();
-
-	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
-	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-	
 	ID3D12DescriptorHeap* pDescriptorHeaps[] = { cbv_heap->GetDescriptorHeap().Get() };
 
 	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
@@ -110,6 +110,7 @@ void Renderer::Update()
 	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(backBufferIndex);
 	const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsv_heap->GetCpuHandleAt(0);
 
+	
 	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	ThrowIfFailed(commandAllocator->Reset());
@@ -141,7 +142,6 @@ void Renderer::Update()
 	
 	commandList->SetGraphicsRoot32BitConstants(1, static_cast<UINT>(rootConstants.size()), rootConstants.data(), 0);
 
-
 	for(auto& [name, gameobject] : scene)
 	{
 		m_domainConstant.UpdateBuffer(&(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix())[0]);
@@ -152,7 +152,6 @@ void Renderer::Update()
 			mesh.Draw(commandList);
 		}
 	}
-	
 }
 
 void Renderer::Shutdown()

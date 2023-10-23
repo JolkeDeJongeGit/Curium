@@ -60,9 +60,16 @@ DomainToPixel main(PatchConstantData input, float2 domain : SV_DomainLocation, c
     float4 nor =leftNor + u * (rightNor - leftNor);
     
     DomainToPixel output;
-    output.Position = pos;
+    
+    float height = HeightMap.SampleLevel(LinearSampler, texCoord, 0.0f).x;
+
+    float3 worldPos = pos.xyz + float3(0, height/29.f, 0); // Displace the vertex along the y-axis
+    output.Position = float4(worldPos,1.f);
+    
     output.Position = mul(DataCB.ViewProjection, output.Position);
+    
     output.Normal = nor;
+    
     output.TextureCoord = texCoord;
 
     return output;

@@ -9,7 +9,7 @@ public:
 	
 	void ExecuteCommandList();
 
-	void UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource);
+	void UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource, D3D12_RESOURCE_STATES inInitialState);
 
 	CommandList& GetCommandList();
 	ComPtr<ID3D12CommandQueue>& GetCommandQueue();

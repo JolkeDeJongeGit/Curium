@@ -98,18 +98,18 @@ void TopBar(const float inDt)
         Performance::DebugImgui(Debug::show_profiler);
     }
 
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::SameLine(ImGui::GetWindowSize().x - 220.f);
     {
-        const float fps = 1.f / inDt;
+        const float fps = 1.f / io.DeltaTime;
         ImGui::PushStyleColor(ImGuiCol_Text, Interpolate(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), ImVec4(0.0f, 1.0f, 0.0f, 1.0f), fps / 60.f));
 
         ImGui::Text("%.2f fps", fps);
         ImGui::PopStyleColor();
     }
-
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-    ImGui::Text("| %.3f delta time", inDt);
+    ImGui::Text("| %.3f delta time", io.DeltaTime);
     ImGui::SameLine();
     ImGui::Text("| V0.3");
     ImGui::PopStyleColor();
@@ -232,7 +232,7 @@ void Debug::Init()
     io.Fonts->AddFontFromFileTTF("assets/fonts/font-awesome.otf", 14.0f * uiScale, &config, icons_ranges);
     Theme();
 
-    auto window = Engine::GetWindow()->GetWindow();;
+    auto window = Engine::GetWindow()->GetWindow();
     ID3D12DescriptorHeap* srv = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetDescriptorHeap().Get();
     ImGui_ImplGlfw_InitForOther(window, true);
     ImGui_ImplDX12_Init(WinUtil::GetDevice()->GetDevice().Get(), Swapchain::BackBufferCount,
@@ -328,9 +328,10 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
 
 }
 
-void Debug::Render()
+void Debug::Render(ComPtr<ID3D12GraphicsCommandList> const& inCommandList)
 {
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), WinUtil::GetCommandQueue()->GetCommandList().GetList().Get());
+    ImGui::Render();
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), inCommandList.Get());
 }
 
 bool Debug::Paused()

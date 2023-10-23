@@ -78,13 +78,16 @@ void PipelineState::SetupRootSignature()
 	CD3DX12_ROOT_PARAMETER1 rootParameter[3];
 	rootParameter[0] = dsObjCb;
 	rootParameter[1] = hsTessFactorsCb;
-	rootParameter[2].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[2].InitAsDescriptorTable(1, &descRange[0]);
 
-
-	const CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	CD3DX12_STATIC_SAMPLER_DESC	descSamplers[1];
+	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	descSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	descSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	descSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init_1_1(_countof(rootParameter), rootParameter, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	rootSignatureDesc.Init_1_1(_countof(rootParameter), rootParameter, 1, &descSamplers[0], D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> signatureBlob;
 	ComPtr<ID3DBlob> errorBlob;
@@ -140,7 +143,6 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	};
 
 	ThrowIfFailed(device->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&m_pipelineState)));
-
 
 	// Create wireframe version
 	CD3DX12_RASTERIZER_DESC rasterizer1{ CD3DX12_DEFAULT() };

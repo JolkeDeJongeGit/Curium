@@ -26,11 +26,11 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 		IID_PPV_ARGS(&m_data)));
 
 	D3D12_SUBRESOURCE_DATA subresource;
-	subresource.pData = &inData[0];
-	subresource.RowPitch = inImageSize.x * sizeof(uint8_t);
-	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint8_t);
-
-	commands->UploadData(m_data, subresource);
+	subresource.pData = inData.data();
+	subresource.RowPitch = inImageSize.x * sizeof(uint32_t);
+	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint32_t);
+	m_data->SetName(std::wstring(inPath.begin(), inPath.end()).c_str());
+	commands->UploadData(m_data, subresource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -83,6 +83,7 @@ void Mesh::CreateVertexBuffer()
 	UINT8* vertexData = nullptr;
 	const D3D12_RANGE range{ 0, 0 };
 
+
 	ThrowIfFailed(m_vertexBuffer->Map(0, &range, reinterpret_cast<void**>(&vertexData)));
 	memcpy(vertexData, &m_vertexData[0], bufferSize);
 	m_vertexBuffer->Unmap(0, nullptr);
@@ -126,7 +127,7 @@ void Mesh::CreateTexturesBuffer()
 
 void Mesh::SetupCube()
 {
-	int div = 1;
+	int div = 8;
 	for (int row = 0; row < div; row++)
 	{
 		for (int col = 0; col < div; col++)
@@ -167,7 +168,8 @@ void Mesh::SetupCube()
 		m_vertexData.push_back(VertexData(vertices[i], glm::vec3(0, 1, 0), textureCoords[i]));
 	}
 
-	m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
+	//m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
+	m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/heightmap.png")));
 	//m_textureData.insert(std::pair("normal", AssetManager::LoadTexture("assets/textures/cube_normal.png")));
 	//m_textureData.insert(std::pair("height", AssetManager::LoadTexture("assets/textures/cube_height.png")));
 	//m_textureData.insert(std::pair("roughness", AssetManager::LoadTexture("assets/textures/cube_roughness.png")));
@@ -180,9 +182,9 @@ void Mesh::SetupCube()
 
 void Mesh::SetupSphere()
 {
-	constexpr float radius = 1.f;
-	constexpr float sectorCount = 36.f;
-	constexpr float stackCount = 18.f;
+	const float radius = 1.f;
+	const float sectorCount = 36.f;
+	const float stackCount = 18.f;
 	// clear memory of prev arrays
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
@@ -192,7 +194,7 @@ void Mesh::SetupSphere()
 	float nx, ny, nz, lengthInv = 1.0f / radius;    // vertex normal
 	float s, t;                                     // vertex texCoord
 
-	float sectorStep = 2 * glm::pi<float>() / sectorCount;
+	float sectorStep = 2.f * glm::pi<float>() / sectorCount;
 	float stackStep = glm::pi<float>() / stackCount;
 	float sectorAngle, stackAngle;
 
@@ -271,9 +273,8 @@ void Mesh::SetupSphere()
 
 void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	auto descriptorIndex = m_textureData.at("albedo").GetDescriptorIndex();
-	auto descriptorHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
-	//inCommandList->SetGraphicsRootDescriptorTable(2, descriptorHeap->GetGpuHandleAt(descriptorIndex));
+	auto descriptorIndex = m_textureData.at("heightmap").GetDescriptorIndex();
+	inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
 	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
 	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
 	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));

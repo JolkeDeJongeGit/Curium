@@ -36,7 +36,7 @@ Swapchain::~Swapchain()
 
 uint32_t Swapchain::GetCurrentBuffer() const
 {
-	return m_currentBuffer;
+	return m_swapchain->GetCurrentBackBufferIndex();
 }
 
 ComPtr<IDXGISwapChain4>& Swapchain::GetSwapchain()
@@ -53,7 +53,6 @@ void Swapchain::ResizeBuffer(int _width, int _height) const
 void Swapchain::Present()
 {
 	m_swapchain->Present(1, 0);
-	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 }
 
 void Swapchain::UpdateFenceValue()

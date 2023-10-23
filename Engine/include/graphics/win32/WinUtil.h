@@ -19,6 +19,8 @@ enum class HeapType
 	RTV			 // Render target view
 };
 
+#define NAMED_RESOURCE(obj, name) (obj)->SetName(L#name)
+
 /// <summary>
 /// Global getters that are defined in the Windows implementation of renderer
 /// </summary>

@@ -6,7 +6,7 @@ namespace Debug
 	void NewFrame();
 	void Update(const float inDt);
 	void EditProperties(std::unordered_map<std::string, GameObject>& inSceneList);
-	void Render();
+	void Render(ComPtr<ID3D12GraphicsCommandList> const& inCommandList);
 	bool Paused();
 	bool IsWireframeMode();
 	void Shutdown();

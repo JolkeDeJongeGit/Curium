@@ -84,9 +84,12 @@ void WinWindow::MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos
     lastX = static_cast<float>(inXPos);
     lastY = static_cast<float>(inYPos);
 
-    if(glfwGetMouseButton(inWindow, GLFW_MOUSE_BUTTON_2) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+    if(glfwGetMouseButton(inWindow, GLFW_MOUSE_BUTTON_2))
     {
-        Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
+        if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+        {
+            Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
+        }
     }
 }
 #pragma warning( pop )
