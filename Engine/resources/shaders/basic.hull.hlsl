@@ -13,7 +13,10 @@ struct Data
 {
     float4x4 ViewProjection;
     float4 eye;
-};
+    //float4 frustum[6];
+    //float dummy;
+}; // 48 bytes
+
 ConstantBuffer<Data> DataCB : register(b0, space1);
 
 struct VertexToHull

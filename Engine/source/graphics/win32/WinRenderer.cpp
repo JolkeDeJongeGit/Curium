@@ -19,12 +19,6 @@
 
 namespace Renderer
 {
-	struct Data
-	{
-		float* ViewProject;
-		float* cameraPos;
-	};
-
 	Device* device = nullptr;
 	CommandQueue* command_queue = nullptr;
 	Swapchain* swapchain = nullptr;
@@ -50,7 +44,7 @@ namespace Renderer
 
 	std::vector<int> rootConstants{ 64, 64 };
 
-	Data CameraData;
+	CameraData cameraData;
 }
 
 void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
@@ -154,9 +148,8 @@ void Renderer::Update()
 
 	for(auto& [name, gameobject] : scene)
 	{
-		CameraData.ViewProject = reinterpret_cast<float*>(&(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix())[0]);
-		CameraData.cameraPos = &(camera.GetTransform().GetPosition())[0];
-		m_domainConstant.UpdateBuffer(&CameraData.ViewProject[0]);
+		cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
+		m_domainConstant.UpdateBuffer(&cameraData);
 		m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
 
 		for (const Mesh& mesh : gameobject.GetMeshes())

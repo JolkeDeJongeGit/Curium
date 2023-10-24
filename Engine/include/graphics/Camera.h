@@ -9,6 +9,14 @@
 		DOWN
 	};
 
+	struct CameraData
+	{
+		CameraData() = default;
+		CameraData(glm::mat4 const& view, glm::vec3 const& position);
+		float ViewProjectMatrix[4][4];
+		float Eye[4];
+	};
+
 	class Camera
 	{
 	public:

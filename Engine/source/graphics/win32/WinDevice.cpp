@@ -24,9 +24,9 @@ void Device::SetupFactory()
 	uint32_t dxgiFactoryFlags = 0;
 
 #ifdef _DEBUG
-	ID3D12Debug5* dc;
+	ID3D12Debug* dc;
 	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&dc)));
-	dc->SetEnableAutoName(true);
+//	dc->SetEnableAutoName(true);
 	ThrowIfFailed(dc->QueryInterface(IID_PPV_ARGS(&m_debugController)));
 	m_debugController->EnableDebugLayer();
 	m_debugController->SetEnableGPUBasedValidation(true);
