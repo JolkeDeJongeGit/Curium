@@ -12,7 +12,7 @@ ConstantBuffer<PatchTesselationFactors> tessFactors : register(b0);
 struct Data
 {
     float4x4 ViewProjection;
-    float4 eye;
+    float4 Eye;
     //float4 frustum[6];
     //float dummy;
 }; // 48 bytes
@@ -39,18 +39,43 @@ struct HullToDomain
     float2 TextureCoord : TEXCOORD;
 };
 
-PatchConstantData calculatePatchConstants()
+float CalcTessFactor(float3 p)
+{
+    float d = distance(p, DataCB.Eye.xyz);
+
+    float s = saturate((d - 16.0f) / (256.0f - 16.0f));
+    return pow(2, (lerp(6, 0, s)));
+}
+
+PatchConstantData calculatePatchConstants(InputPatch<VertexToHull, NUM_CONTROL_POINTS> ip,
+	uint PatchID : SV_PrimitiveID)
 {
     PatchConstantData output;
-    //if (DataCB.eye.x == 0)
-    {
-        output.edgeTessFactor[0] = tessFactors.edge;
-        output.edgeTessFactor[1] = tessFactors.edge;
-        output.edgeTessFactor[2] = tessFactors.edge;
-        output.edgeTessFactor[3] = tessFactors.edge;
-        output.insideTessFactor[0] = tessFactors.inside;
-        output.insideTessFactor[1] = tessFactors.inside;
-    }
+        
+    //output.edgeTessFactor[0] = tessFactors.edge;
+    //output.edgeTessFactor[1] = tessFactors.edge;
+    //output.edgeTessFactor[2] = tessFactors.edge;
+    //output.edgeTessFactor[3] = tessFactors.edge;
+    //output.insideTessFactor[0] = tessFactors.inside;
+    //output.insideTessFactor[1] = tessFactors.inside;
+    
+    float4 view0 = mul(DataCB.ViewProjection, float4(ip[0].Position, 1));
+    float4 view1 = mul(DataCB.ViewProjection, float4(ip[1].Position, 1));
+    float4 view2 = mul(DataCB.ViewProjection, float4(ip[2].Position, 1));
+    float4 view3 = mul(DataCB.ViewProjection, float4(ip[3].Position, 1));
+    
+    float3 e0 = 0.5f * (view0 + view2);
+    float3 e1 = 0.5f * (view0 + view1);
+    float3 e2 = 0.5f * (view1 + view3);
+    float3 e3 = 0.5f * (view2 + view3);
+    float3 c = 0.25f * (view0 + view1 + view2 + view3);
+
+    output.edgeTessFactor[0] = clamp_distance(e0);
+    output.edgeTessFactor[1] = clamp_distance(e1);
+    output.edgeTessFactor[2] = clamp_distance(e2);
+    output.edgeTessFactor[3] = clamp_distance(e3);
+    output.insideTessFactor[0] = clamp_distance(c);
+    output.insideTessFactor[1] = output.insideTessFactor[0];
 
     return output;
 }
