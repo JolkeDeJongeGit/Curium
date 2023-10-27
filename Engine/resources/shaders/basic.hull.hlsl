@@ -70,11 +70,11 @@ PatchConstantData calculatePatchConstants(InputPatch<VertexToHull, NUM_CONTROL_P
     float3 e3 = 0.5f * (view2 + view3);
     float3 c = 0.25f * (view0 + view1 + view2 + view3);
 
-    output.edgeTessFactor[0] = clamp_distance(e0);
-    output.edgeTessFactor[1] = clamp_distance(e1);
-    output.edgeTessFactor[2] = clamp_distance(e2);
-    output.edgeTessFactor[3] = clamp_distance(e3);
-    output.insideTessFactor[0] = clamp_distance(c);
+    output.edgeTessFactor[0] = CalcTessFactor(e0);
+    output.edgeTessFactor[1] = CalcTessFactor(e1);
+    output.edgeTessFactor[2] = CalcTessFactor(e2);
+    output.edgeTessFactor[3] = CalcTessFactor(e3);
+    output.insideTessFactor[0] = CalcTessFactor(c);
     output.insideTessFactor[1] = output.insideTessFactor[0];
 
     return output;
