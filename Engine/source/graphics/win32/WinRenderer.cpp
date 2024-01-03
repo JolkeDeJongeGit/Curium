@@ -14,6 +14,7 @@
 #include "Components/GameObject.h"
 #include "graphics/Camera.h"
 #include <graphics/win32/WinBuffer.h>
+#include <core/ImGuiLayer.h>
 
 
 
@@ -88,7 +89,7 @@ void Renderer::Render()
 	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
 	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	
-	Debug::Render(commandList);
+	ImGuiLayer::Render(commandList.Get());
 
 	commandList->ResourceBarrier(1, &presentBarrier);
 	ThrowIfFailed(commandList->Close());
@@ -169,7 +170,6 @@ void Renderer::Shutdown()
 	command_queue = nullptr;
 	swapchain = nullptr;
 }
-
 
 Camera* Renderer::GetCamera()
 {

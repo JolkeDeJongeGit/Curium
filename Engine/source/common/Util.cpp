@@ -2,6 +2,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
+
 bool DecomposeTransform(const glm::mat4& inTransform, glm::vec3& outTranslation, glm::vec3& outScale, glm::vec3& outRotation)
 {
     using namespace glm;
@@ -50,3 +51,4 @@ bool DecomposeTransform(const glm::mat4& inTransform, glm::vec3& outTranslation,
     }
     return true;
 }
+

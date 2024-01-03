@@ -7,6 +7,7 @@
 #include "platform/win32/WinWindow.h"
 #include "graphics/DebugManager.h"
 #include "graphics/Camera.h"
+#include <core/ImGuiLayer.h>
 
 namespace Engine
 {
@@ -23,6 +24,7 @@ void Engine::Init()
 
 	Renderer::Init(window->GetWidth(), window->GetHeight());
 	Debug::Init();
+	ImGuiLayer::Init();
 }
 
 void Engine::Update(const float inDt)
@@ -30,9 +32,9 @@ void Engine::Update(const float inDt)
 	PROFILE_FUNCTION()
 	UpdateInput(inDt);
 
-	Debug::NewFrame();
+	ImGuiLayer::NewFrame();
 	Renderer::Update();
-	Debug::Update(inDt);
+	ImGuiLayer::UpdateWindow(inDt);
 	if (!Debug::Paused())
 	{
 		// Here is gameplay related code
@@ -43,6 +45,7 @@ void Engine::Update(const float inDt)
 
 void Engine::Shutdown()
 {
+	ImGuiLayer::Shutdown();
 	Debug::Shutdown();
 	Renderer::Shutdown();
 }
