@@ -35,7 +35,7 @@ public:
     inline void SetRightVector(const glm::vec3& inRight) { m_right = inRight; }
     inline glm::vec3 GetUpVector() const { return m_up; }
     inline void SetUpVector(const glm::vec3& inUp) { m_up = inUp; }
-    inline glm::mat4 GetModelMatrix() { UpdateModelMatrix(); return m_model; }
+    inline glm::mat4& GetModelMatrix() { UpdateModelMatrix(); return m_model; }
     Transform& operator = (const Transform&) = default;
     Transform& operator = (Transform&&) = default;
 private:

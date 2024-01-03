@@ -10,6 +10,7 @@
 #include "include/imgui_impl_dx12.h"
 #include <include/imgui_impl_glfw.h>
 #include <include/implot.h>
+#include "include/ImGuizmo.h"
 #include "Components/GameObject.h"
 #include "Engine.h"
 
@@ -24,6 +25,13 @@ namespace Debug
     bool show_profiler = false;
     bool wireframe_mode = false;
     int selected_game_object;
+
+    std::unordered_map<std::string, GameObject> scenelist;
+
+    std::vector<const char*> names;
+
+    ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
+    ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
 
 }
 
@@ -78,9 +86,11 @@ void TopBar(const float inDt)
         Debug::show_profiler = !Debug::show_profiler;
     }
     ImGui::SameLine();
+
+
     if (Debug::paused)
     {
-        if (ButtonCenteredOnLine(ICON_FA_PLAY, 0.47f))
+        if (ButtonCenteredOnLine(ICON_FA_PLAY, 0.41f))
             Debug::paused = false;
         Tooltip("Play");
         ImGui::SameLine();
@@ -88,7 +98,7 @@ void TopBar(const float inDt)
     }
     else
     {
-        if (ButtonCenteredOnLine(ICON_FA_PAUSE, 0.48f))
+        if (ButtonCenteredOnLine(ICON_FA_PAUSE, 0.41f))
             Debug::paused = true;
         Tooltip("Pause");
     }
@@ -114,9 +124,42 @@ void TopBar(const float inDt)
     ImGui::Text("| V0.3");
     ImGui::PopStyleColor();
     Tooltip("Engine Version");
+
+    if (ImGui::IsKeyPressed(ImGuiKey_T))
+        Debug::mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+    if (ImGui::IsKeyPressed(ImGuiKey_E))
+        Debug::mCurrentGizmoOperation = ImGuizmo::ROTATE;
+    if (ImGui::IsKeyPressed(ImGuiKey_R)) // r Key
+        Debug::mCurrentGizmoOperation = ImGuizmo::SCALE;
+
+    if (ImGui::RadioButton("Translate", Debug::mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+        Debug::mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Rotate", Debug::mCurrentGizmoOperation == ImGuizmo::ROTATE))
+        Debug::mCurrentGizmoOperation = ImGuizmo::ROTATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Scale", Debug::mCurrentGizmoOperation == ImGuizmo::SCALE))
+        Debug::mCurrentGizmoOperation = ImGuizmo::SCALE;
+
+    ImGui::SameLine();
+    if (Debug::mCurrentGizmoOperation != ImGuizmo::SCALE)
+    {
+        ImGui::SameLine();
+        ImGui::Text("   ||  ");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Local Space", Debug::mCurrentGizmoMode == ImGuizmo::LOCAL))
+            Debug::mCurrentGizmoMode = ImGuizmo::LOCAL;
+        ImGui::SameLine();
+        ImGui::Text("|");
+        ImGui::SameLine();
+        std::string global = std::string(ICON_FA_GLOBE + std::string(" World Space"));
+        if (ImGui::RadioButton(global.c_str(), Debug::mCurrentGizmoMode == ImGuizmo::WORLD))
+            Debug::mCurrentGizmoMode = ImGuizmo::WORLD;
+        ImGui::SameLine();
+    }
+
     ImGui::End();
 }
-
 
 void Theme()
 {
@@ -246,6 +289,7 @@ void Debug::NewFrame()
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 }
 
 void Debug::Update(const float inDt)
@@ -256,15 +300,16 @@ void Debug::Update(const float inDt)
 
 void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneList)
 {
+    names.clear();
+
     ImGui::Begin("Properties", nullptr,
                  ImGuiWindowFlags_NoTitleBar |
                  ImGuiWindowFlags_NoResize |
                  ImGuiWindowFlags_NoMove |
                  ImGuiWindowFlags_NoCollapse |
                  ImGuiWindowFlags_NoSavedSettings );
-    ImGui::SetWindowPos({ static_cast<float>(Engine::GetWindow()->GetWidth()) - 400.f ,30 });
-    ImGui::SetWindowSize({ 400, static_cast<float>(Engine::GetWindow()->GetHeight())});
-    std::vector<const char*> names;
+    ImGui::SetWindowPos({ static_cast<float>(Engine::GetWindow()->GetWidth()) - 400.f ,52 });
+    ImGui::SetWindowSize({ 400, static_cast<float>(Engine::GetWindow()->GetHeight() - 60)});
     ImGui::CollapsingHeader("Game Objects");
     {
         for(const auto& [fst, snd]: inSceneList)
@@ -273,37 +318,6 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
         ImGui::ListBox("", &selected_game_object, names.data(), static_cast<int>(names.size()), static_cast<int>(names.size()));
         ImGui::PopID();
     }
-    ImGui::Separator();
-    ImGui::NewLine();
-    ImGui::NewLine();
-    if (ImGui::CollapsingHeader("Properties", (ImGuiTreeNodeFlags_DefaultOpen) ))
-    {
-        if(static_cast<int>(names.size()) > Debug::selected_game_object)
-        {
-            Transform& transform = inSceneList[names[selected_game_object]].GetTransform();
-            ImGui::PushID(2);
-            ImGui::Text("Rotation");
-            ImGui::SliderFloat("X", &transform.GetEulerRotation()[0], 0,  2*glm::pi<float>());
-            ImGui::SliderFloat("Y", &transform.GetEulerRotation()[1], 0, 2*glm::pi<float>());
-            ImGui::SliderFloat("z", &transform.GetEulerRotation()[2], 0, 2*glm::pi<float>());
-            ImGui::PopID();
-            ImGui::PushID(3);
-            ImGui::Text("Position");
-            ImGui::SliderFloat("X", &transform.GetPosition()[0], -10, 10);
-            ImGui::SliderFloat("Y", &transform.GetPosition()[1], -10, 10);
-            ImGui::SliderFloat("Z", &transform.GetPosition()[2], -10, 10);
-            ImGui::PopID();
-            ImGui::PushID(4);
-            ImGui::Text("Scale");
-            ImGui::SliderFloat("X", &transform.GetScale()[0], 0, 10);
-            ImGui::SliderFloat("Y", &transform.GetScale()[1], 0, 10);
-            ImGui::SliderFloat("Z", &transform.GetScale()[2], 0, 10);
-            ImGui::PopID();
-        }
-    }
-    ImGui::Separator();
-    ImGui::NewLine();
-    ImGui::NewLine();
     if (ImGui::CollapsingHeader("Base Settings", (ImGuiTreeNodeFlags_DefaultOpen)))
     {
         ImGui::Text("Camera Settings");
@@ -318,14 +332,29 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
         ImGui::PopID();
 
         ImGui::Checkbox("Wireframe mode", &wireframe_mode);
-        ImGui::PushID(7);
-        ImGui::Text("Detail:");
-        ImGui::SliderInt("", &Renderer::GetRootConstants()[0], 1, 64);
-        ImGui::SliderInt("", &Renderer::GetRootConstants()[1], 1, 64);
-        ImGui::PopID();
     }
     ImGui::End();
 
+    // TODO::Needs to be having a scene selection stuff
+    Transform& transform = inSceneList[names[selected_game_object]].GetTransform();
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
+    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+    float* view = &(Renderer::GetCamera()->GetView()[0].x);
+    float* proj = &(Renderer::GetCamera()->GetProjection()[0].x);
+    glm::mat4 model = transform.GetModelMatrix();
+    ImGuizmo::Manipulate(view, proj, mCurrentGizmoOperation, mCurrentGizmoMode, glm::value_ptr(model), nullptr);
+
+    if (ImGuizmo::IsUsing())
+    {
+        glm::vec3 translation, scale, rotation;
+        DecomposeTransform(model, translation, scale, rotation);
+        glm::vec3 deltaRotation = rotation - transform.GetEulerRotation();
+        transform.SetPosition(translation);
+        transform.SetScale(scale);
+        transform.Rotate(deltaRotation);
+    }
 }
 
 void Debug::Render(ComPtr<ID3D12GraphicsCommandList> const& inCommandList)
