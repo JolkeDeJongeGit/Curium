@@ -50,6 +50,8 @@
 
 		float& GetSensitivity() { return m_sensitivity; }
 		float& GetMovementSpeed() { return m_movementSpeed; }
+
+		inline void SetAspect(const float inAspect) { m_aspectRatio = inAspect; }
 		
 		void ProcessMouseMovement(float inOffsetX, float inOffsetY);
 		void ProcessKeyMovement(Direction inDirection, const float inDeltaTime);

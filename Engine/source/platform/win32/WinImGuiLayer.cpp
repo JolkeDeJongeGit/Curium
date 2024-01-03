@@ -24,6 +24,10 @@ void ImGuiLayer::_Init()
     io.WantCaptureMouse = true;
     io.DisplaySize = ImVec2(static_cast<float>(Engine::GetWindow()->GetWidth()), static_cast<float>(Engine::GetWindow()->GetHeight()));
 
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+    io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
+
     float ys;
     float xs;
     glfwGetWindowContentScale(Engine::GetWindow()->GetWindow(), &xs, &ys);
@@ -57,6 +61,12 @@ void ImGuiLayer::Render(void* inCommandList)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::Render();
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), static_cast<ID3D12GraphicsCommandList*>(inCommandList));
+
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault(nullptr, inCommandList);
+    }
 }
 
 void ImGuiLayer::Shutdown()

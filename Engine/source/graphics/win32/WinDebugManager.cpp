@@ -63,17 +63,14 @@ void Debug::EditProperties(std::unordered_map<std::string, GameObject>& inSceneL
     for (const auto& [fst, snd] : inSceneList)
         names.push_back(fst.c_str());
 
-
     // TODO::Needs to be having a scene selection stuff
     Transform& transform = inSceneList[names[selected_game_object]].GetTransform();
     ImGuiIO& io = ImGui::GetIO();
 
     ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
-    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, 1920, 1080);
-    float* view = &(Renderer::GetCamera()->GetView()[0].x);
-    float* proj = &(Renderer::GetCamera()->GetProjection()[0].x);
+    ImGuizmo::SetRect(ImGui::GetMainViewport()->Pos.x, ImGui::GetMainViewport()->Pos.y, ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y);
     glm::mat4 model = transform.GetModelMatrix();
-    ImGuizmo::Manipulate(view, proj, mCurrentGizmoOperation, mCurrentGizmoMode, glm::value_ptr(model), nullptr);
+    ImGuizmo::Manipulate(glm::value_ptr(Renderer::GetCamera()->GetView()), glm::value_ptr(Renderer::GetCamera()->GetProjection()), mCurrentGizmoOperation, mCurrentGizmoMode, glm::value_ptr(model), nullptr);
 
     if (ImGuizmo::IsUsing())
     {

@@ -13,8 +13,6 @@ struct Data
 {
     float4x4 ViewProjection;
     float4 Eye;
-    //float4 frustum[6];
-    //float dummy;
 }; // 48 bytes
 
 ConstantBuffer<Data> DataCB : register(b0, space1);
@@ -39,36 +37,17 @@ struct HullToDomain
     float2 TextureCoord : TEXCOORD;
 };
 
-float CalcTessFactor(float3 p)
-{
-    float d = distance(p, DataCB.Eye.xyz);
-
-    float s = saturate((d - 16.0f) / (256.0f - 16.0f));
-    return pow(2, (lerp(6, 0, s)));
-}
-
 PatchConstantData calculatePatchConstants(InputPatch<VertexToHull, NUM_CONTROL_POINTS> ip,
 	uint PatchID : SV_PrimitiveID)
 {
     PatchConstantData output;
 
-    float4 view0 = mul(DataCB.ViewProjection, float4(ip[0].Position, 1));
-    float4 view1 = mul(DataCB.ViewProjection, float4(ip[1].Position, 1));
-    float4 view2 = mul(DataCB.ViewProjection, float4(ip[2].Position, 1));
-    float4 view3 = mul(DataCB.ViewProjection, float4(ip[3].Position, 1));
-    
-    float3 e0 = 0.5f * (view0 + view2);
-    float3 e1 = 0.5f * (view0 + view1);
-    float3 e2 = 0.5f * (view1 + view3);
-    float3 e3 = 0.5f * (view2 + view3);
-    float3 c = 0.25f * (view0 + view1 + view2 + view3);
-
-    output.edgeTessFactor[0] = CalcTessFactor(e0);
-    output.edgeTessFactor[1] = CalcTessFactor(e1);
-    output.edgeTessFactor[2] = CalcTessFactor(e2);
-    output.edgeTessFactor[3] = CalcTessFactor(e3);
-    output.insideTessFactor[0] = CalcTessFactor(c);
-    output.insideTessFactor[1] = output.insideTessFactor[0];
+    output.edgeTessFactor[0] = 16;
+    output.edgeTessFactor[1] = 16;
+    output.edgeTessFactor[2] = 16;
+    output.edgeTessFactor[3] = 16;
+    output.insideTessFactor[0] = 16;
+    output.insideTessFactor[1] = 16;
 
     return output;
 }

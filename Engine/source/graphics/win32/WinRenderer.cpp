@@ -16,8 +16,6 @@
 #include <graphics/win32/WinBuffer.h>
 #include <core/ImGuiLayer.h>
 
-
-
 namespace Renderer
 {
 	Device* device = nullptr;
@@ -78,7 +76,6 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	scene.insert(std::pair<std::string, GameObject>("World", GameObject(transformWorld, {Mesh(false)})));
 	scene["World"].Init();
 
-
 	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
 }
 
@@ -137,7 +134,7 @@ void Renderer::Update()
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
-	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0};
+	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0f};
 	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);

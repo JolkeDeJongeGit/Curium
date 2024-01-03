@@ -3,6 +3,8 @@
 #include <include/imgui_internal.h>
 #include <include/implot.h>
 #include <graphics/DebugManager.h>
+#include "graphics/Renderer.h"
+#include "graphics/Camera.h"
 
 void SetTheme()
 {
@@ -98,6 +100,10 @@ void ImGuiLayer::Init()
 
     // Set Font 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
     _Init();
     ImFontConfig config;
     config.OversampleH = 8;
@@ -115,6 +121,11 @@ void ImGuiLayer::UpdateWindow(const float inDt)
     static bool mFirstTime = true;
 
     Debug::Update(inDt);
+
+    // ToDo Needs to go to the editor
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    float aspect = io.DisplaySize.y > 0 ? io.DisplaySize.x / io.DisplaySize.y : 1.0f;
+    Renderer::GetCamera()->SetAspect(aspect);
 }
 
 // ImGui Util -------------------------------------------------------------------------------------
