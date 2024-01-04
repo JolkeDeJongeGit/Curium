@@ -91,6 +91,11 @@ bool Engine::ShouldQuit()
 	return !window->IsActive();
 }
 
+void Engine::Close()
+{
+	window->SetActive(false);
+}
+
 WinWindow* Engine::GetWindow()
 {
 	return Engine::window;

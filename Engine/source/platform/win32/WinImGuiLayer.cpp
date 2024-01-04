@@ -59,6 +59,7 @@ void ImGuiLayer::NewFrame()
 void ImGuiLayer::Render(void* inCommandList)
 {
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+
     ImGui::Render();
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), static_cast<ID3D12GraphicsCommandList*>(inCommandList));
 

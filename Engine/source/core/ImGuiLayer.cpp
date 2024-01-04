@@ -5,6 +5,7 @@
 #include <graphics/DebugManager.h>
 #include "graphics/Renderer.h"
 #include "graphics/Camera.h"
+#include <core/Editor.h>
 
 void SetTheme()
 {
@@ -96,14 +97,13 @@ void ImGuiLayer::Init()
 
     SetTheme();
 
-    // This function will be used for platform specific code
-
     // Set Font 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+    // This function will be used for platform specific code
     _Init();
     ImFontConfig config;
     config.OversampleH = 8;
@@ -115,6 +115,8 @@ void ImGuiLayer::Init()
     config.OversampleV = 8;
 
     io.Fonts->AddFontFromFileTTF("assets/fonts/font-awesome.otf", 14.0f * ImGuiLayer::uiScale, &config, icons_ranges);
+
+    Editor::Init();
 }
 void ImGuiLayer::UpdateWindow(const float inDt)
 {
@@ -122,8 +124,39 @@ void ImGuiLayer::UpdateWindow(const float inDt)
 
     Debug::Update(inDt);
 
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(viewport->WorkSize);
+    ImGui::SetNextWindowViewport(viewport->ID);
+   
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f,0.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+    if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+        window_flags |= ImGuiWindowFlags_NoBackground;
+
+    ImGui::Begin("MainScreen", nullptr, window_flags);
+
+    ImGui::PopStyleVar(3);
+
+    // Submit the DockSpace
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+    {
+        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+    }
+
+    Editor::Update(inDt);
+
+    ImGui::End();
     // ToDo Needs to go to the editor
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
     float aspect = io.DisplaySize.y > 0 ? io.DisplaySize.x / io.DisplaySize.y : 1.0f;
     Renderer::GetCamera()->SetAspect(aspect);
 }

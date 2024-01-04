@@ -115,8 +115,10 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	PipelineStateStream pipelineStateStream;
 
 	D3D12_RT_FORMAT_ARRAY rtvFormats = {};
-	rtvFormats.NumRenderTargets = 1;
+	rtvFormats.NumRenderTargets = 3;
 	rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtvFormats.RTFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtvFormats.RTFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc{ CD3DX12_DEFAULT() };
 	depthStencilDesc.DepthEnable = inUseDepth;

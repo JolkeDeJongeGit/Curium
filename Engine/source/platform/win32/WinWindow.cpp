@@ -34,7 +34,8 @@ void WinWindow::Create(const int inWidth, const int inHeight)
 
 void WinWindow::Update()
 {
-    SetActive(!glfwWindowShouldClose(m_window));
+    if(glfwWindowShouldClose(m_window))
+        SetActive(false);
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
