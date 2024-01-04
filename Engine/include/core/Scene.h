@@ -8,7 +8,7 @@ namespace Scene
 	void AddSceneObject(std::string name, GameObject const& gameobject);
 	void HierarchyWindow(bool& inShow);
 
-	GameObject& GetSelectedSceneObject();
+	GameObject* GetSelectedSceneObject();
 
 	std::unordered_map<std::string, GameObject>& AllSceneObjects();
 }

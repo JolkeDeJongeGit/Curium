@@ -112,13 +112,28 @@ void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
 	//delete swapchain;
 	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 
+	CommandQueue* commands = WinUtil::GetCommandQueue();
+	DescriptorHeap* srvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
+
 	// This is setting up the render targets.
 	for (uint32_t i = 0; i < BackBufferCount; i++)
 	{
 		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap->GetCpuHandleAt(heap->GetNextIndex());
 		ThrowIfFailed(m_swapchain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])));
 		devices.Get()->CreateRenderTargetView(m_renderTargets[i].Get(), nullptr, rtvHandle);
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Texture2D.MipLevels = 1; // for now...
+		m_renderTargetsID[i] = srvHeap->GetNextIndex();
+		devices->CreateShaderResourceView(
+			m_renderTargets[i].Get(),
+			&srvDesc,
+			srvHeap->GetCpuHandleAt(m_renderTargetsID[i]));
 	}
+
 }
 
 void Swapchain::SetupDepthBuffer(const int inWidth, const int inHeight)

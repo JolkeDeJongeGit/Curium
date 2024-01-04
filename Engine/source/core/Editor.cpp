@@ -5,6 +5,8 @@
 #include "core/ImGuiLayer.h"
 #include "include/imgui_internal.h"
 #include "core/Scene.h"
+#include "graphics/win32/WinSwapchain.h"
+#include "graphics/win32/WinDescriptorHeap.h"
 
 
 namespace Editor
@@ -49,7 +51,8 @@ void Editor::Viewport()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("Viewport");
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
+    auto value = WinUtil::GetSwapchain()->m_renderTargetsID[WinUtil::GetSwapchain()->GetCurrentBuffer()];
+    ImGui::Image((ImTextureID)WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(value).ptr, viewportSize);
     ImGui::End();
     ImGui::PopStyleVar();
 }
