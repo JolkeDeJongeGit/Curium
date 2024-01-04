@@ -233,8 +233,8 @@ void Mesh::SetupSphere()
 	int k1, k2;
 	for(int i = 0; i < stackCount; ++i)
 	{
-		k1 = i * (sectorCount + 1);     // beginning of current stack
-		k2 = k1 + sectorCount + 1;      // beginning of next stack
+		k1 = i * static_cast<int>(sectorCount + 1);     // beginning of current stack
+		k2 = k1 + static_cast<int>(sectorCount) + 1;      // beginning of next stack
 
 		for(int j = 0; j < sectorCount; ++j, ++k1, ++k2)
 		{
@@ -275,12 +275,17 @@ void Mesh::SetupSphere()
 
 void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	auto descriptorIndex = m_textureData.at("heightmap").GetDescriptorIndex();
-	inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
+	if (m_textureData.find("heightmap") != m_textureData.end())
+	{
+		auto descriptorIndex = m_textureData.at("heightmap").GetDescriptorIndex();
+		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
+	}
+	else
+	{
+		auto descriptorIndex = m_textureData.at("albedo").GetDescriptorIndex();
+		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
+	}
+
 	inCommandList->IASetVertexBuffers(0, 1, &m_vertexView);
 	inCommandList->IASetIndexBuffer(&m_indexView);
 	inCommandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);

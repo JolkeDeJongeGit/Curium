@@ -15,6 +15,7 @@
 #include "graphics/Camera.h"
 #include <graphics/win32/WinBuffer.h>
 #include <core/ImGuiLayer.h>
+#include "core/Scene.h"
 
 namespace Renderer
 {
@@ -37,9 +38,6 @@ namespace Renderer
 	Camera camera;
 
 	Buffer m_domainConstant;
-
-	// @TODO::Add this to a scene class
-	std::unordered_map<std::string, GameObject> scene;
 
 	std::vector<int> rootConstants{ 64, 64 };
 
@@ -71,10 +69,11 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
-	// World creation
+	// @TODO::Needs to load in scene 
 	const Transform transformWorld(glm::vec3(0, -1.f, 2.f), glm::vec3(0), glm::vec3(100.f));
-	scene.insert(std::pair<std::string, GameObject>("World", GameObject(transformWorld, {Mesh(false)})));
-	scene["World"].Init();
+	const Transform transformSphere(glm::vec3(0, 2.f, 2.f), glm::vec3(0), glm::vec3(20.f));
+	Scene::AddSceneObject("World", GameObject(transformWorld, { Mesh(false) }));
+	Scene::AddSceneObject("Sphere", GameObject(transformWorld, { Mesh(true) }));
 
 	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
 }
@@ -101,8 +100,6 @@ void Renderer::Update()
 	PROFILE_FUNCTION()
 	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
 	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-
-	Debug::EditProperties(scene);
 
 	ID3D12DescriptorHeap* pDescriptorHeaps[] = { cbv_heap->GetDescriptorHeap().Get() };
 
@@ -143,7 +140,7 @@ void Renderer::Update()
 	
 	commandList->SetGraphicsRoot32BitConstants(1, static_cast<UINT>(rootConstants.size()), rootConstants.data(), 0);
 
-	for(auto& [name, gameobject] : scene)
+	for(auto& [name, gameobject] : Scene::AllSceneObjects())
 	{
 		cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
 		m_domainConstant.UpdateBuffer(&cameraData);

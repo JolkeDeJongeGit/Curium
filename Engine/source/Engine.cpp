@@ -8,6 +8,7 @@
 #include "graphics/DebugManager.h"
 #include "graphics/Camera.h"
 #include <core/ImGuiLayer.h>
+#include <core/Scene.h>
 
 namespace Engine
 {
@@ -23,6 +24,7 @@ void Engine::Init()
 	window->SetIcon(1, "assets/icon.png");
 
 	Renderer::Init(window->GetWidth(), window->GetHeight());
+	Scene::Init();
 	Debug::Init();
 	ImGuiLayer::Init();
 }
@@ -35,10 +37,12 @@ void Engine::Update(const float inDt)
 	ImGuiLayer::NewFrame();
 	Renderer::Update();
 	ImGuiLayer::UpdateWindow(inDt);
+
 	if (!Debug::Paused())
 	{
-		// Here is gameplay related code
+		Scene::Update(inDt);
 	}
+
 	Renderer::Render();
 	window->Update();
 }
