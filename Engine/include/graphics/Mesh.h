@@ -13,8 +13,12 @@ class Texture
 {
 public:
 	Texture() = default;
+
 	Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize);
 	~Texture() = default;
+
+	void SetState(D3D12_RESOURCE_STATES inSetState);
+
 	inline ID3D12Resource* GetTexture() const { return m_data.Get(); };
 	std::string GetPath() const { return m_path; };
 	glm::ivec2 GetSize() const;
@@ -24,6 +28,7 @@ private:
 	std::string m_path;
 	glm::ivec2 m_imageSize;
 	ComPtr<ID3D12Resource> m_data;
+	D3D12_RESOURCE_STATES m_currentState = D3D12_RESOURCE_STATE_COMMON;
 };
 
 class Mesh

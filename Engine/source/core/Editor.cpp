@@ -7,7 +7,8 @@
 #include "core/Scene.h"
 #include "graphics/win32/WinSwapchain.h"
 #include "graphics/win32/WinDescriptorHeap.h"
-
+#include <graphics/Renderer.h>
+#include "graphics/Camera.h"
 
 namespace Editor
 {
@@ -51,7 +52,10 @@ void Editor::Viewport()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("Viewport");
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-    auto value = WinUtil::GetSwapchain()->m_renderTargetsID[WinUtil::GetSwapchain()->GetCurrentBuffer()];
+    auto value = WinUtil::GetSwapchain()->m_renderTargetsID;
+    //WinUtil::GetSwapchain()->ResizeBuffer(viewportSize.x, viewportSize.y);
+    Renderer::GetCamera()->SetAspect(viewportSize.x / viewportSize.y);
+    Renderer::Resize(viewportSize.x, viewportSize.y);
     ImGui::Image((ImTextureID)WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(value).ptr, viewportSize);
     ImGui::End();
     ImGui::PopStyleVar();

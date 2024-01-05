@@ -64,6 +64,7 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	// Don't know but I have to do this to fix imgui
 	cbv_heap->GetNextIndex();
 
+	command_queue->OpenCommandList();
 	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
 	
 	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
@@ -71,36 +72,16 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 
 	// @TODO::Needs to load in scene 
 	const Transform transformWorld(glm::vec3(0, -1.f, 2.f), glm::vec3(0), glm::vec3(100.f));
-	const Transform transformSphere(glm::vec3(0, 2.f, 2.f), glm::vec3(0), glm::vec3(20.f));
 	Scene::AddSceneObject("World", GameObject(transformWorld, { Mesh(false) }));
-	Scene::AddSceneObject("Sphere", GameObject(transformWorld, { Mesh(true) }));
+	//Scene::AddSceneObject("Sphere", GameObject(transformWorld, { Mesh(true) }));
 
 	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
+	command_queue->CloseCommandList();
 }
-
-void Renderer::Render()
-{
-	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
-	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
-	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	
-	ImGuiLayer::Render(commandList.Get());
-
-	commandList->ResourceBarrier(1, &presentBarrier);
-	ThrowIfFailed(commandList->Close());
-
-	command_queue->ExecuteCommandList();
-	swapchain->Present();
-	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
-}
-
 void Renderer::Update()
 {
 	PROFILE_FUNCTION()
-	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
-	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-
+	const ComPtr<ID3D12GraphicsCommandList>& commandList = command_queue->GetCommandList().GetList();
 	ID3D12DescriptorHeap* pDescriptorHeaps[] = { cbv_heap->GetDescriptorHeap().Get() };
 
 	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
@@ -111,8 +92,7 @@ void Renderer::Update()
 	
 	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	ThrowIfFailed(commandAllocator->Reset());
-	ThrowIfFailed(commandList->Reset(commandAllocator.Get(), nullptr));
+	command_queue->OpenCommandList();
 
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
 
@@ -136,6 +116,7 @@ void Renderer::Update()
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 	
 	commandList->SetGraphicsRoot32BitConstants(1, static_cast<UINT>(rootConstants.size()), rootConstants.data(), 0);
@@ -153,6 +134,23 @@ void Renderer::Update()
 	}
 }
 
+void Renderer::Render()
+{
+	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
+	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
+	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	
+	ImGuiLayer::Render(commandList.Get());
+
+	commandList->ResourceBarrier(1, &presentBarrier);
+	ThrowIfFailed(commandList->Close());
+
+	command_queue->ExecuteCommandList();
+	swapchain->Present();
+	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
+}
+
 void Renderer::Shutdown()
 {
 	delete device;
@@ -165,15 +163,15 @@ void Renderer::Shutdown()
 	swapchain = nullptr;
 }
 
+void Renderer::Resize(uint32_t inWidth, uint32_t inHeight)
+{
+	viewport_width = inWidth;
+	viewport_height = inHeight;
+}
+
 Camera* Renderer::GetCamera()
 {
 	return &camera;
-}
-
-//TODO:: REMOVE THIS DEBUG ONLY
-std::vector<int>& Renderer::GetRootConstants()
-{
-	return rootConstants;
 }
 
 Device* WinUtil::GetDevice()

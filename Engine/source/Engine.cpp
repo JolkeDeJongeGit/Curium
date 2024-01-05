@@ -56,7 +56,7 @@ void Engine::Shutdown()
 
 void Engine::UpdateInput(const float inDt)
 {
-	if(!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+	//if(!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
 	{
 		if(glfwGetMouseButton(window->GetWindow(), GLFW_MOUSE_BUTTON_2))
 		{

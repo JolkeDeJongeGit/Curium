@@ -5,18 +5,19 @@
 #include "graphics/win32/WinCommandQueue.h"
 #include "graphics/win32/WinDescriptorHeap.h"
 #include "graphics/win32/WinDevice.h"
+#include "graphics/win32/WinCommandList.h"
+
+Texture::Texture(const Texture& copy) = default;
 
 Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize): m_descriptorIndex(0),
 	m_path(inPath), m_imageSize(inImageSize)
 {
-
 	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 	DescriptorHeap* srvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
 	CommandQueue* commands = WinUtil::GetCommandQueue();
 
 	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, inImageSize.x, inImageSize.y);
-
 	ThrowIfFailed(device->CreateCommittedResource(
 		&properties,
 		D3D12_HEAP_FLAG_NONE,
@@ -30,7 +31,7 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 	subresource.RowPitch = inImageSize.x * sizeof(uint32_t);
 	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint32_t);
 	m_data->SetName(std::wstring(inPath.begin(), inPath.end()).c_str());
-	commands->UploadData(m_data, subresource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commands->UploadData(m_data, subresource, D3D12_RESOURCE_STATE_COMMON);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -40,6 +41,19 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 
 	m_descriptorIndex = srvHeap->GetNextIndex();
 	device->CreateShaderResourceView(m_data.Get(), &srvDesc, srvHeap->GetCpuHandleAt(m_descriptorIndex));
+
+	SetState(D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+}
+
+void Texture::SetState(D3D12_RESOURCE_STATES inSetState)
+{
+	if (m_currentState == inSetState)
+		return;
+
+	auto& commands = WinUtil::GetCommandQueue()->GetCommandList().GetList();
+	CD3DX12_RESOURCE_BARRIER changeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_data.Get(), m_currentState, inSetState);
+	commands->ResourceBarrier(1, &changeBarrier);
+	m_currentState = inSetState;
 }
 
 glm::ivec2 Texture::GetSize() const
@@ -84,7 +98,6 @@ void Mesh::CreateVertexBuffer()
 
 	UINT8* vertexData = nullptr;
 	const D3D12_RANGE range{ 0, 0 };
-
 
 	ThrowIfFailed(m_vertexBuffer->Map(0, &range, reinterpret_cast<void**>(&vertexData)));
 	memcpy(vertexData, &m_vertexData[0], bufferSize);
@@ -171,6 +184,7 @@ void Mesh::SetupCube()
 	}
 
 	//m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
+
 	m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/heightmap.png")));
 	//m_textureData.insert(std::pair("normal", AssetManager::LoadTexture("assets/textures/cube_normal.png")));
 	//m_textureData.insert(std::pair("height", AssetManager::LoadTexture("assets/textures/cube_height.png")));
@@ -275,14 +289,11 @@ void Mesh::SetupSphere()
 
 void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	if (m_textureData.find("heightmap") != m_textureData.end())
+	if (auto heightmapTexture = m_textureData.find("heightmap"); heightmapTexture != m_textureData.end())
 	{
-		auto descriptorIndex = m_textureData.at("heightmap").GetDescriptorIndex();
-		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
-	}
-	else
-	{
-		auto descriptorIndex = m_textureData.at("albedo").GetDescriptorIndex();
+		auto& texture = heightmapTexture->second;
+		auto descriptorIndex = texture.GetDescriptorIndex();
+		//texture.SetState(D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
 	}
 

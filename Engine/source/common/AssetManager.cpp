@@ -31,8 +31,6 @@ Texture AssetManager::LoadTexture(std::string const& inFilePath)
         }
         else
         {
-            //UploadTexture(filePath, errorTexture, glm::ivec2(2, 2));
-            //texture = textures.find(inFilePath)->second;
             printf("[AssetManager]: image %s does not exist. \n", inFilePath.c_str());
         }
     }

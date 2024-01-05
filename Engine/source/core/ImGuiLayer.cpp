@@ -113,6 +113,7 @@ void ImGuiLayer::Init()
 
     Editor::Init();
 }
+
 void ImGuiLayer::UpdateWindow(const float inDt)
 {
     static bool mFirstTime = true;

@@ -23,7 +23,7 @@ public:
 	ComPtr<ID3D12Resource>& GetDepthBuffer();
 	static constexpr uint32_t BackBufferCount = 3;
 
-	int m_renderTargetsID[BackBufferCount];
+	int m_renderTargetsID;
 private:
 	void SetupSwapchain(int inWidth, int inHeight);
 	void SetupDepthBuffer(int inWidth, int inHeight);
