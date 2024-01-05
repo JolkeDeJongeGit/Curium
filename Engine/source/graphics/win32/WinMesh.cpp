@@ -7,8 +7,6 @@
 #include "graphics/win32/WinDevice.h"
 #include "graphics/win32/WinCommandList.h"
 
-Texture::Texture(const Texture& copy) = default;
-
 Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize): m_descriptorIndex(0),
 	m_path(inPath), m_imageSize(inImageSize)
 {
