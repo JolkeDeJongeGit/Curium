@@ -54,12 +54,13 @@ void Editor::MainMenu()
 void Editor::Viewport()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin(std::string(ICON_FA_EYE + std::string(" Viewport")).c_str());
+    ImGui::Begin("Viewport");
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
     auto value = WinUtil::GetSwapchain()->m_renderTargetsID;
-    //WinUtil::GetSwapchain()->ResizeBuffer(viewportSize.x, viewportSize.y);
-    Renderer::GetCamera()->SetAspect(viewportSize.x / viewportSize.y);
-    Renderer::Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+
+    if((viewportSize.x / viewportSize.y) != Renderer::GetCamera()->GetAspectRatio())
+        Renderer::GetCamera()->UpdateProjection(viewportSize.x / viewportSize.y);
+
     ImGui::Image((ImTextureID)WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(value).ptr, viewportSize);
     ImGui::End();
     ImGui::PopStyleVar();
@@ -85,9 +86,9 @@ void Editor::SplitEditor()
             ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
         }
 
-        if (ImGui::DockBuilderGetNode(ImGui::GetID(std::string(ICON_FA_EYE + std::string(" Viewport")).c_str())) == NULL)
+        if (ImGui::DockBuilderGetNode(ImGui::GetID("Viewport")) == NULL)
         {
-            ImGui::DockBuilderDockWindow(std::string(ICON_FA_EYE + std::string(" Viewport")).c_str(), dock_id_up);
+            ImGui::DockBuilderDockWindow("Viewport", dock_id_up);
         }
 
         if (ImGui::DockBuilderGetNode(ImGui::GetID("Profiler")) == NULL)
