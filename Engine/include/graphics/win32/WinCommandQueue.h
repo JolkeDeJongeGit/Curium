@@ -1,5 +1,6 @@
 #pragma once
 #include "WinCommandList.h"
+#include <optional>
 class CommandQueue
 {
 public:
@@ -10,7 +11,7 @@ public:
 	void OpenCommandList();
 	void CloseCommandList();
 
-	void UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource, D3D12_RESOURCE_STATES inInitialState);
+	void UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource, D3D12_RESOURCE_STATES inInitialState, std::optional<D3D12_RESOURCE_STATES> inFinaState = {});
 
 	void ExecuteCommandList();
 	CommandList& GetCommandList();
