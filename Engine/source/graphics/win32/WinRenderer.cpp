@@ -73,11 +73,11 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	// @TODO::Needs to load in scene 
 	const Transform transformWorld(glm::vec3(0, -1.f, 2.f), glm::vec3(0), glm::vec3(100.f));
 	Scene::AddSceneObject("World", GameObject(transformWorld, { Mesh(false) }));
-	//Scene::AddSceneObject("Sphere", GameObject(transformWorld, { Mesh(true) }));
 
 	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
 	command_queue->CloseCommandList();
 }
+
 void Renderer::Update()
 {
 	PROFILE_FUNCTION()
@@ -93,6 +93,7 @@ void Renderer::Update()
 	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	command_queue->OpenCommandList();
+	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
 
@@ -109,7 +110,6 @@ void Renderer::Update()
 	}
 
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
-	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
 	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0f};
 	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
@@ -139,14 +139,16 @@ void Renderer::Render()
 	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
 	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
 	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+
 	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	
+	commandList->ResourceBarrier(1, &presentBarrier);
+	ImGuiLayer::NewFrame();
+	ImGuiLayer::UpdateWindow(1.f / 60.f);
 	ImGuiLayer::Render(commandList.Get());
 
-	commandList->ResourceBarrier(1, &presentBarrier);
 	ThrowIfFailed(commandList->Close());
-
 	command_queue->ExecuteCommandList();
+
 	swapchain->Present();
 	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
 }

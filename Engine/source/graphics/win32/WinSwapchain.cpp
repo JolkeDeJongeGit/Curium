@@ -148,9 +148,6 @@ void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
 		rtvDesc.Texture2D.MipSlice = 0;
 		rtvDesc.Texture2D.PlaneSlice = 0;
 
-		//D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		//devices->CreateRenderTargetView(m_renderTargets[i].Get(), &rtvDesc, rtvHandle);
-
 		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap->GetCpuHandleAt(heap->GetNextIndex());
 		ThrowIfFailed(m_swapchain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])));
 		devices.Get()->CreateRenderTargetView(m_renderTargets[i].Get(), &rtvDesc, rtvHandle);

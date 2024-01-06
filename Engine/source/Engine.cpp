@@ -34,9 +34,7 @@ void Engine::Update(const float inDt)
 	PROFILE_FUNCTION()
 	UpdateInput(inDt);
 
-	ImGuiLayer::NewFrame();
 	Renderer::Update();
-	ImGuiLayer::UpdateWindow(inDt);
 
 	if (!Debug::Paused())
 	{

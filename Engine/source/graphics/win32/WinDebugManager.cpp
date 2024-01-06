@@ -18,13 +18,12 @@ void Debug::Update(const float inDt)
 {
 }
 
-bool Debug::Paused()
+bool& Debug::Paused()
 {
-    bool t = paused;
-    return t;
+    return paused;
 }
 
-bool Debug::IsWireframeMode()
+bool& Debug::IsWireframeMode()
 {
     return wireframe_mode;
 }

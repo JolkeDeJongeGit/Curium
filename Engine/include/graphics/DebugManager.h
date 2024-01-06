@@ -4,7 +4,7 @@ namespace Debug
 {
 	void Init();
 	void Update(const float inDt);
-	bool Paused();
-	bool IsWireframeMode();
+	bool& Paused();
+	bool& IsWireframeMode();
 	void Shutdown();
 }
