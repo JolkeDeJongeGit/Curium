@@ -52,6 +52,7 @@
 		float& GetMovementSpeed() { return m_movementSpeed; }
 
 		inline void SetAspect(const float inAspect) { m_aspectRatio = inAspect; }
+		inline float GetAspectRatio() const { return m_aspectRatio; };
 		
 		void ProcessMouseMovement(float inOffsetX, float inOffsetY);
 		void ProcessKeyMovement(Direction inDirection, const float inDeltaTime);
