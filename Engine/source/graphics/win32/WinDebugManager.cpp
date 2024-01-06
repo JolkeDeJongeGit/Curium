@@ -14,7 +14,7 @@ void Debug::Init()
 
 }
 
-void Debug::Update(const float inDt)
+void Debug::Update()
 {
 }
 

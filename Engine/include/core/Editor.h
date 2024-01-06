@@ -4,6 +4,6 @@
 namespace Editor
 {
 	void Init();
-	void Update(const float inDt);
+	void Update();
 	void Shutdown();
 }

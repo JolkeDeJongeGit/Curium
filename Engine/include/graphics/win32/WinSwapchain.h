@@ -18,19 +18,23 @@ public:
 	void UpdateFenceValue(); 
 	void WaitForFenceValue(const ComPtr<ID3D12CommandQueue>& inCommandQueue) const;
 
-	ComPtr<ID3D12Fence>& GetFence();
-	ComPtr<ID3D12Resource>& GetCurrentRenderTarget(const uint32_t inIndex);
-	ComPtr<ID3D12Resource>& GetDepthBuffer();
+	inline ComPtr<ID3D12Fence>& GetFence() { return m_fence; };
+	inline ComPtr<ID3D12Resource>& GetCurrentRenderTarget(const uint32_t inIndex) { return m_renderTargets[inIndex]; };
+	inline ComPtr<ID3D12Resource>& GetDepthBuffer() { return m_depthBuffer; };
+	inline ComPtr<ID3D12Resource>& GetRenderTextureBuffer() { return m_renderTextureBuffer; };
 	static constexpr uint32_t BackBufferCount = 3;
 
-	int m_renderTargetsID;
+	int m_renderTextureSrvID;
+	uint32_t m_renderTextureHeapID;
 private:
 	void SetupSwapchain(int inWidth, int inHeight);
 	void SetupDepthBuffer(int inWidth, int inHeight);
+	void SetupRenderTextureBuffer(int inWidth, int inHeight);
 
 	uint32_t m_currentBuffer = 0;
 	 
 	ComPtr<ID3D12Resource> m_renderTargets[BackBufferCount] {};
+	ComPtr<ID3D12Resource> m_renderTextureBuffer = nullptr;
 	ComPtr<ID3D12Resource> m_depthBuffer = nullptr;
 
 	ComPtr<ID3D12Fence> m_fence = nullptr;

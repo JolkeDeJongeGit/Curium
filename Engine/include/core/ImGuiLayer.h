@@ -4,7 +4,7 @@
 namespace ImGuiLayer
 {
 	void Init();
-	void UpdateWindow(const float inDt);
+	void UpdateWindow();
 	void NewFrame();
 	void Render(void* inCommandList);
 	void Shutdown();

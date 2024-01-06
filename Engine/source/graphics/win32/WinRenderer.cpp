@@ -42,6 +42,8 @@ namespace Renderer
 	std::vector<int> rootConstants{ 64, 64 };
 
 	CameraData cameraData;
+
+	void RenderImGui();
 }
 
 void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
@@ -51,7 +53,9 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	swapchain = new Swapchain;
 	
 	heap_handler = new HeapHandler;
-	heap_handler->CreateHeaps(Swapchain::BackBufferCount);
+
+	heap_handler->CreateHeaps(Swapchain::BackBufferCount + 1);
+
 	// Reference of heaps
 	cbv_heap = heap_handler->GetCbvHeap();
 	rtv_heap = heap_handler->GetRtvHeap();
@@ -84,17 +88,15 @@ void Renderer::Update()
 	const ComPtr<ID3D12GraphicsCommandList>& commandList = command_queue->GetCommandList().GetList();
 	ID3D12DescriptorHeap* pDescriptorHeaps[] = { cbv_heap->GetDescriptorHeap().Get() };
 
-	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
-	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	ID3D12Resource* renderTarget = swapchain->GetRenderTextureBuffer().Get();
 
-	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(backBufferIndex);
+	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(swapchain->m_renderTextureHeapID);
 	const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsv_heap->GetCpuHandleAt(0);
-	
-	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	command_queue->OpenCommandList();
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
+	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
 
 	commandList->ClearRenderTargetView(rtvHandle, color_rgba, 0, nullptr);
@@ -136,21 +138,40 @@ void Renderer::Update()
 
 void Renderer::Render()
 {
-	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
-	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	const ComPtr<ID3D12GraphicsCommandList> commandlist = command_queue->GetCommandList().GetList();
+	ID3D12Resource* renderTarget = swapchain->GetRenderTextureBuffer().Get();
 
-	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	commandList->ResourceBarrier(1, &presentBarrier);
-	ImGuiLayer::NewFrame();
-	ImGuiLayer::UpdateWindow(1.f / 60.f);
-	ImGuiLayer::Render(commandList.Get());
+	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandlist->ResourceBarrier(1, &presentBarrier);
 
-	ThrowIfFailed(commandList->Close());
+	RenderImGui();
+
+	ThrowIfFailed(commandlist->Close());
 	command_queue->ExecuteCommandList();
 
 	swapchain->Present();
 	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
+}
+
+void Renderer::RenderImGui()
+{
+	const ComPtr<ID3D12GraphicsCommandList> commandlist = command_queue->GetCommandList().GetList();
+
+	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
+	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(backBufferIndex);
+
+	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	commandlist->ResourceBarrier(1, &renderTargetBarrier);
+
+	commandlist->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+	ImGuiLayer::NewFrame();
+	ImGuiLayer::UpdateWindow();
+	ImGuiLayer::Render(commandlist.Get());
+
+	const CD3DX12_RESOURCE_BARRIER presentImguiBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	commandlist->ResourceBarrier(1, &presentImguiBarrier);
 }
 
 void Renderer::Shutdown()

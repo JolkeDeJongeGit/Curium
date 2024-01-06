@@ -114,11 +114,11 @@ void ImGuiLayer::Init()
     Editor::Init();
 }
 
-void ImGuiLayer::UpdateWindow(const float inDt)
+void ImGuiLayer::UpdateWindow()
 {
     static bool mFirstTime = true;
 
-    Debug::Update(inDt);
+    Debug::Update();
 
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
@@ -149,7 +149,7 @@ void ImGuiLayer::UpdateWindow(const float inDt)
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
     }
 
-    Editor::Update(inDt);
+    Editor::Update();
 
     ImGui::End();
     // ToDo Needs to go to the editor

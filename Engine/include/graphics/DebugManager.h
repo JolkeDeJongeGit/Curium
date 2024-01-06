@@ -3,7 +3,7 @@ class GameObject;
 namespace Debug
 {
 	void Init();
-	void Update(const float inDt);
+	void Update();
 	bool& Paused();
 	bool& IsWireframeMode();
 	void Shutdown();

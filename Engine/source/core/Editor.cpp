@@ -56,7 +56,7 @@ void Editor::Viewport()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("Viewport");
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-    auto value = WinUtil::GetSwapchain()->m_renderTargetsID;
+    auto value = WinUtil::GetSwapchain()->m_renderTextureSrvID;
 
     if((viewportSize.x / viewportSize.y) != Renderer::GetCamera()->GetAspectRatio())
         Renderer::GetCamera()->UpdateProjection(viewportSize.x / viewportSize.y);
@@ -105,7 +105,7 @@ void Editor::Init()
 {
 }
 
-void Editor::Update(const float inDt)
+void Editor::Update()
 {
     PROFILE_FUNCTION();
 

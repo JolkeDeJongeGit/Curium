@@ -18,59 +18,6 @@
 #include "Engine.h"
 #include "core/ImGuiLayer.h"
 
-namespace ImGuiLayer
-{
-    ComPtr<ID3D12Resource> imgui_render_target;
-    ID3D12DescriptorHeap* rtv_heap;
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle;
-    void CreateRenderTarget();
-};
-
-void ImGuiLayer::CreateRenderTarget()
-{
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    auto& devices = WinUtil::GetDevice()->GetDevice();
-
-    // Describe and create a render target texture
-    D3D12_RESOURCE_DESC textureDesc = {};
-    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    textureDesc.Width = static_cast<UINT>(io.DisplaySize.x);
-    textureDesc.Height = static_cast<UINT>(io.DisplaySize.y);
-    textureDesc.DepthOrArraySize = 1;
-    textureDesc.MipLevels = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Adjust format as needed
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
-    D3D12_HEAP_PROPERTIES heapProps = {};
-    heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-    devices->CreateCommittedResource(
-        &heapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &textureDesc,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        nullptr,
-        IID_PPV_ARGS(&imgui_render_target)
-    );
-
-    // Create a render target view
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = 1;
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-    devices->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtv_heap));
-
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Match the texture format
-    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-
-    rtv_handle = rtv_heap->GetCPUDescriptorHandleForHeapStart();
-    devices->CreateRenderTargetView(imgui_render_target.Get(), &rtvDesc, rtv_handle);
-}
-
 void ImGuiLayer::_Init()
 {
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -109,8 +56,6 @@ void ImGuiLayer::_Init()
         srvHeap->GetGPUDescriptorHandleForHeapStart()
     );
 
-    // Create the ImGui render target
-    CreateRenderTarget();
 }
 
 void ImGuiLayer::NewFrame()
@@ -119,9 +64,6 @@ void ImGuiLayer::NewFrame()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
-    auto& commandList = WinUtil::GetCommandQueue()->GetCommandList().GetList();
-
-    commandList->OMSetRenderTargets(1, &rtv_handle, true, nullptr);
 }
 
 void ImGuiLayer::Render(void* inCommandList)
