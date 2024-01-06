@@ -29,7 +29,7 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 	subresource.RowPitch = inImageSize.x * sizeof(uint32_t);
 	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint32_t);
 	m_data->SetName(std::wstring(inPath.begin(), inPath.end()).c_str());
-	commands->UploadData(m_data, subresource, D3D12_RESOURCE_STATE_COMMON);
+	commands->UploadData(m_data, subresource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -39,8 +39,7 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 
 	m_descriptorIndex = srvHeap->GetNextIndex();
 	device->CreateShaderResourceView(m_data.Get(), &srvDesc, srvHeap->GetCpuHandleAt(m_descriptorIndex));
-
-	SetState(D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+	m_currentState = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
 }
 
 void Texture::SetState(D3D12_RESOURCE_STATES inSetState)
@@ -291,7 +290,6 @@ void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 	{
 		auto& texture = heightmapTexture->second;
 		auto descriptorIndex = texture.GetDescriptorIndex();
-		//texture.SetState(D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
 	}
 

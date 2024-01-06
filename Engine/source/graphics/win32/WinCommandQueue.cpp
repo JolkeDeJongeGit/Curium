@@ -51,12 +51,12 @@ void CommandQueue::ExecuteCommandList()
 	WinUtil::GetSwapchain()->UpdateFenceValue();
 }
 
-void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource, D3D12_RESOURCE_STATES inInitialState)
+void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource, D3D12_RESOURCE_STATES inInitialState, std::optional<D3D12_RESOURCE_STATES> inFinaState)
 {
 	auto& list = m_commandList.GetList();
 	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 	CD3DX12_RESOURCE_BARRIER copyBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), inInitialState, D3D12_RESOURCE_STATE_COPY_DEST);
-	CD3DX12_RESOURCE_BARRIER pixelBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, inInitialState);
+	CD3DX12_RESOURCE_BARRIER finalBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, inFinaState.value_or(inInitialState));
 
 	list->ResourceBarrier(1, &copyBarrier);
 
@@ -76,7 +76,7 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOUR
 	));
 
 	UpdateSubresources(list.Get(), inResource.Get(), intermediate.Get(), 0, 0, 1, &inSubresource);
-	list->ResourceBarrier(1, &pixelBarrier);
+	list->ResourceBarrier(1, &finalBarrier);
 	m_intermediateResources.push_back(intermediate);
 }
 
