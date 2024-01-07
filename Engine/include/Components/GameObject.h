@@ -20,7 +20,7 @@ public:
   virtual ~GameObject() = default;
 
   GameObject(const Transform& inTransform, const std::vector<Mesh>& inMeshes)
-    : m_meshes(inMeshes), m_transform(inTransform), m_material()
+    : m_meshes(inMeshes), m_transform(inTransform)
   {
   }
   
@@ -33,7 +33,7 @@ public:
   virtual void Init() {}
   virtual void Update() {}
   virtual void Shutdown() {}
-private:
+protected:
   std::vector<Mesh> m_meshes;
   Transform m_transform;
   Material m_material;

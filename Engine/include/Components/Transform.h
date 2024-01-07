@@ -18,6 +18,7 @@ public:
     Transform(const glm::vec3& inPosition, const glm::vec3& inEulerRotation, const glm::vec3& inScale);
     Transform(const Transform&) = default;
     Transform(Transform&&) = default;
+
     void SetPosition(const glm::vec3& inPosition);
     void AddPosition(const glm::vec3& inPosition);
     void SetEulerRotation(const glm::vec3& inEulerAnglesInRadians);
@@ -26,6 +27,7 @@ public:
     void Rotate(const glm::vec3& inRotation);
     void AddScale(const glm::vec3& inScale);
     void ScaleUniform(const float inScale);
+
     inline glm::vec3& GetPosition() {return m_position; }
     inline glm::vec3& GetEulerRotation() {return m_rotation; }
     inline glm::vec3& GetScale() {return m_scale; }
@@ -36,6 +38,7 @@ public:
     inline glm::vec3 GetUpVector() const { return m_up; }
     inline void SetUpVector(const glm::vec3& inUp) { m_up = inUp; }
     inline glm::mat4& GetModelMatrix() { UpdateModelMatrix(); return m_model; }
+
     Transform& operator = (const Transform&) = default;
     Transform& operator = (Transform&&) = default;
 private:
