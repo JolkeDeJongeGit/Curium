@@ -7,8 +7,9 @@
 #include "graphics/win32/WinDevice.h"
 #include "graphics/win32/WinCommandList.h"
 
+// @TODO:: Make seperate file
 Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize): m_descriptorIndex(0),
-	m_path(inPath), m_imageSize(inImageSize)
+	m_imageSize(inImageSize)
 {
 	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 	DescriptorHeap* srvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
@@ -139,7 +140,7 @@ void Mesh::CreateTexturesBuffer()
 
 void Mesh::SetupCube()
 {
-	int div = 8;
+	int div = 32;
 	for (int row = 0; row < div; row++)
 	{
 		for (int col = 0; col < div; col++)
@@ -180,13 +181,7 @@ void Mesh::SetupCube()
 		m_vertexData.push_back(VertexData(vertices[i], glm::vec3(0, 1, 0), textureCoords[i]));
 	}
 
-	//m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
-
 	m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/heightmap.png")));
-	//m_textureData.insert(std::pair("normal", AssetManager::LoadTexture("assets/textures/cube_normal.png")));
-	//m_textureData.insert(std::pair("height", AssetManager::LoadTexture("assets/textures/cube_height.png")));
-	//m_textureData.insert(std::pair("roughness", AssetManager::LoadTexture("assets/textures/cube_roughness.png")));
-	//m_textureData.insert(std::pair("ao", AssetManager::LoadTexture("assets/textures/cube_ao.png")));
 	
 	CreateVertexBuffer();
 	CreateIndexBuffer();
