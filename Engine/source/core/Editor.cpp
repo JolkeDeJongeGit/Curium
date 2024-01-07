@@ -17,6 +17,9 @@ namespace Editor
 {
 	bool show_profiler = true;
 	bool show_hierarchy = true;
+
+    bool viewport_hovered = false;
+
     void MainMenu();
 
     void Viewport();
@@ -54,14 +57,19 @@ void Editor::MainMenu()
 void Editor::Viewport()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin("Viewport");
+    ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus);
+
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
     auto value = WinUtil::GetSwapchain()->m_renderTextureSrvID;
 
     if((viewportSize.x / viewportSize.y) != Renderer::GetCamera()->GetAspectRatio())
         Renderer::GetCamera()->UpdateProjection(viewportSize.x / viewportSize.y);
 
+    viewport_hovered = ImGui::IsWindowHovered();
+
     ImGui::Image((ImTextureID)WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(value).ptr, viewportSize);
+    Scene::SceneGizmo(ImGui::GetWindowPos(), viewportSize);
+
     ImGui::End();
     ImGui::PopStyleVar();
 }
@@ -122,4 +130,9 @@ void Editor::Update()
 
 void Editor::Shutdown()
 {
+}
+
+bool Editor::ViewportHovered()
+{
+    return viewport_hovered;
 }

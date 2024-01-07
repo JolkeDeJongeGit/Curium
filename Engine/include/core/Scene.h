@@ -1,5 +1,6 @@
 #pragma once
 #include "Components/GameObject.h"
+#include "include/imgui.h"
 
 namespace Scene
 {
@@ -9,6 +10,8 @@ namespace Scene
 	void HierarchyWindow(bool& inShow);
 
 	GameObject* GetSelectedSceneObject();
+
+	void SceneGizmo(ImVec2 inPos, ImVec2 inSize);
 
 	std::unordered_map<std::string, GameObject>& AllSceneObjects();
 }

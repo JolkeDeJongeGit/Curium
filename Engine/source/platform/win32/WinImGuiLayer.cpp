@@ -24,6 +24,8 @@ void ImGuiLayer::_Init()
     io.WantCaptureMouse = true;
     io.DisplaySize = ImVec2(static_cast<float>(Engine::GetWindow()->GetWidth()), static_cast<float>(Engine::GetWindow()->GetHeight()));
 
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
+
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
     io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
@@ -63,7 +65,6 @@ void ImGuiLayer::NewFrame()
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGuizmo::BeginFrame();
 }
 
 void ImGuiLayer::Render(void* inCommandList)
@@ -76,8 +77,10 @@ void ImGuiLayer::Render(void* inCommandList)
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault(nullptr, inCommandList);
+        glfwMakeContextCurrent(backup_current_context);
     }
 }
 

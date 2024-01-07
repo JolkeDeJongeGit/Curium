@@ -1,6 +1,5 @@
 #include "precomp.h"
 #include "core/Scene.h"
-#include "include/imgui.h"
 #include "include/ImGuizmo.h"
 #include "graphics/DebugManager.h"
 #include "graphics/Renderer.h"
@@ -15,8 +14,6 @@ namespace Scene
 
     ImGuizmo::OPERATION m_current_gizmo_operation(ImGuizmo::TRANSLATE);
     ImGuizmo::MODE current_gizmo_mode(ImGuizmo::LOCAL);
-
-    void SceneGizmo();
 }
 
 void Scene::Init()
@@ -53,8 +50,6 @@ void Scene::AddSceneObject(std::string name, GameObject const& gameobject)
 
 void Scene::HierarchyWindow(bool& inShow)
 {
-    SceneGizmo();
-
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 10));
     ImGui::Begin("Hierarchy");
     ImGui::PushID(1);
@@ -66,15 +61,16 @@ void Scene::HierarchyWindow(bool& inShow)
     ImGui::PopStyleVar();
 }
 
-void  Scene::SceneGizmo()
+void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
 {
     ImGuiIO& io = ImGui::GetIO();
     if (GameObject* gameobject = GetSelectedSceneObject())
     {
+        ImGuizmo::BeginFrame();
         Transform& transform = gameobject->GetTransform();
-        ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
-        ImGuizmo::SetRect(ImGui::GetMainViewport()->Pos.x, ImGui::GetMainViewport()->Pos.y, ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y);
-        glm::mat4 model = transform.GetModelMatrix();
+        ImGuizmo::SetDrawlist();
+        ImGuizmo::SetRect(inPos.x, inPos.y, inSize.x, inSize.y);
+        glm::mat4& model = transform.GetModelMatrix();
         ImGuizmo::Manipulate(glm::value_ptr(Renderer::GetCamera()->GetView()), glm::value_ptr(Renderer::GetCamera()->GetProjection()), m_current_gizmo_operation, current_gizmo_mode, glm::value_ptr(model), nullptr);
 
         if (ImGuizmo::IsUsing())

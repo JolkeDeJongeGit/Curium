@@ -9,6 +9,7 @@
 #include "graphics/Camera.h"
 #include <core/ImGuiLayer.h>
 #include <core/Scene.h>
+#include <core/Editor.h>
 
 namespace Engine
 {
@@ -54,37 +55,40 @@ void Engine::Shutdown()
 
 void Engine::UpdateInput(const float inDt)
 {
-	//if(!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	if(ImGui::IsMouseDown(1))
 	{
-		if(glfwGetMouseButton(window->GetWindow(), GLFW_MOUSE_BUTTON_2))
+		//if (Editor::ViewportHovered())
 		{
-			if (glfwGetKey(window->GetWindow(), GLFW_KEY_W) == GLFW_PRESS)
+			if (ImGui::IsKeyDown(ImGuiKey_W))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::FORWARD, inDt);
-			
-			if (glfwGetKey(window->GetWindow(), GLFW_KEY_S) == GLFW_PRESS)
+
+			if (ImGui::IsKeyDown(ImGuiKey_S))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::BACKWARDS, inDt);
-			
-			if (glfwGetKey(window->GetWindow(), GLFW_KEY_A) == GLFW_PRESS)
+
+			if (ImGui::IsKeyDown(ImGuiKey_A))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::LEFT, inDt);
-			
-			if (glfwGetKey(window->GetWindow(), GLFW_KEY_D) == GLFW_PRESS)
+
+			if (ImGui::IsKeyDown(ImGuiKey_D))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::RIGHT, inDt);
-			
-			if (glfwGetKey(window->GetWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
+
+			if (ImGui::IsKeyDown(ImGuiKey_Space))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::UP, inDt);
 
-			if (glfwGetKey(window->GetWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+			if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::DOWN, inDt);
-			
-			glfwSetInputMode(window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+			glfwSetInputMode(window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 			normal_mouse = false;
+
 		}
-		else if(!normal_mouse)
-		{
-			normal_mouse = true;
-			glfwSetInputMode(window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		}
+	}
+	else if(!normal_mouse)
+	{
+		normal_mouse = true;
+		glfwSetInputMode(window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 }
 
