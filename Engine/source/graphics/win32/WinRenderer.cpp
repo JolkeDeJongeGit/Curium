@@ -14,6 +14,8 @@
 #include "Components/GameObject.h"
 #include "graphics/Camera.h"
 #include <graphics/win32/WinBuffer.h>
+#include <core/ImGuiLayer.h>
+#include "core/Scene.h"
 
 namespace Renderer
 {
@@ -36,13 +38,13 @@ namespace Renderer
 	Camera camera;
 
 	Buffer m_domainConstant;
-	// @TODO::Add this to a scene class
-	std::unordered_map<std::string, GameObject> scene;
 
 	std::vector<int> rootConstants{ 64, 64 };
+
+	CameraData cameraData;
+
+	void RenderImGui();
 }
-
-
 
 void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 {
@@ -51,7 +53,9 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	swapchain = new Swapchain;
 	
 	heap_handler = new HeapHandler;
-	heap_handler->CreateHeaps(Swapchain::BackBufferCount);
+
+	heap_handler->CreateHeaps(Swapchain::BackBufferCount + 1);
+
 	// Reference of heaps
 	cbv_heap = heap_handler->GetCbvHeap();
 	rtv_heap = heap_handler->GetRtvHeap();
@@ -60,61 +64,39 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 
 	viewport_width = inWidth;
 	viewport_height = inHeight;
-	
+
+	// Don't know but I have to do this to fix imgui
+	cbv_heap->GetNextIndex();
+
+	command_queue->OpenCommandList();
 	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
 	
 	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
-	// World creation
+	// @TODO::Needs to load in scene 
 	const Transform transformWorld(glm::vec3(0, -1.f, 2.f), glm::vec3(0), glm::vec3(100.f));
-	scene.insert(std::pair<std::string, GameObject>("World", GameObject(transformWorld, {Mesh(false)})));
-	scene["World"].Init();
+	Scene::AddSceneObject("World", GameObject(transformWorld, { Mesh(false) }));
 
-	m_domainConstant.CreateConstantBuffer(16 * sizeof(float));
-}
-
-void Renderer::Render()
-{
-	Debug::Render();
-
-	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
-	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
-	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	
-	commandList->ResourceBarrier(1, &presentBarrier);
-	ThrowIfFailed(commandList->Close());
-
-	command_queue->ExecuteCommandList();
-	swapchain->Present();
-	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
+	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
+	command_queue->CloseCommandList();
 }
 
 void Renderer::Update()
 {
 	PROFILE_FUNCTION()
-
-	Debug::EditProperties(scene);
-
-	ImGui::Render();
-
-	const ComPtr<ID3D12CommandAllocator> commandAllocator = command_queue->GetCommandList().GetAllocater();
-	const ComPtr<ID3D12GraphicsCommandList> commandList = command_queue->GetCommandList().GetList();
-	
+	const ComPtr<ID3D12GraphicsCommandList>& commandList = command_queue->GetCommandList().GetList();
 	ID3D12DescriptorHeap* pDescriptorHeaps[] = { cbv_heap->GetDescriptorHeap().Get() };
 
-	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
-	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	ID3D12Resource* renderTarget = swapchain->GetRenderTextureBuffer().Get();
 
-	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(backBufferIndex);
+	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(swapchain->m_renderTextureHeapID);
 	const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsv_heap->GetCpuHandleAt(0);
 
-	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	command_queue->OpenCommandList();
+	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
-	ThrowIfFailed(commandAllocator->Reset());
-	ThrowIfFailed(commandList->Reset(commandAllocator.Get(), nullptr));
-
+	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
 
 	commandList->ClearRenderTargetView(rtvHandle, color_rgba, 0, nullptr);
@@ -130,21 +112,21 @@ void Renderer::Update()
 	}
 
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
-	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
-	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0};
+	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0f};
 	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 	
 	commandList->SetGraphicsRoot32BitConstants(1, static_cast<UINT>(rootConstants.size()), rootConstants.data(), 0);
 
-
-	for(auto& [name, gameobject] : scene)
+	for(auto& [name, gameobject] : Scene::AllSceneObjects())
 	{
-		m_domainConstant.UpdateBuffer(&(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix())[0]);
+		cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
+		m_domainConstant.UpdateBuffer(&cameraData);
 		m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
 
 		for (const Mesh& mesh : gameobject.GetMeshes())
@@ -152,7 +134,44 @@ void Renderer::Update()
 			mesh.Draw(commandList);
 		}
 	}
-	
+}
+
+void Renderer::Render()
+{
+	const ComPtr<ID3D12GraphicsCommandList> commandlist = command_queue->GetCommandList().GetList();
+	ID3D12Resource* renderTarget = swapchain->GetRenderTextureBuffer().Get();
+
+	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandlist->ResourceBarrier(1, &presentBarrier);
+
+	RenderImGui();
+
+	ThrowIfFailed(commandlist->Close());
+	command_queue->ExecuteCommandList();
+
+	swapchain->Present();
+	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
+}
+
+void Renderer::RenderImGui()
+{
+	const ComPtr<ID3D12GraphicsCommandList> commandlist = command_queue->GetCommandList().GetList();
+
+	const UINT backBufferIndex = swapchain->GetCurrentBuffer();
+	ID3D12Resource* renderTarget = swapchain->GetCurrentRenderTarget(backBufferIndex).Get();
+	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtv_heap->GetCpuHandleAt(backBufferIndex);
+
+	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	commandlist->ResourceBarrier(1, &renderTargetBarrier);
+
+	commandlist->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+	ImGuiLayer::NewFrame();
+	ImGuiLayer::UpdateWindow();
+	ImGuiLayer::Render(commandlist.Get());
+
+	const CD3DX12_RESOURCE_BARRIER presentImguiBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	commandlist->ResourceBarrier(1, &presentImguiBarrier);
 }
 
 void Renderer::Shutdown()
@@ -167,16 +186,15 @@ void Renderer::Shutdown()
 	swapchain = nullptr;
 }
 
+void Renderer::Resize(uint32_t inWidth, uint32_t inHeight)
+{
+	viewport_width = inWidth;
+	viewport_height = inHeight;
+}
 
 Camera* Renderer::GetCamera()
 {
 	return &camera;
-}
-
-//TODO:: REMOVE THIS DEBUG ONLY
-std::vector<int>& Renderer::GetRootConstants()
-{
-	return rootConstants;
 }
 
 Device* WinUtil::GetDevice()

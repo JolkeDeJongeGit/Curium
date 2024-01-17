@@ -9,6 +9,14 @@
 		DOWN
 	};
 
+	struct CameraData
+	{
+		CameraData() = default;
+		CameraData(glm::mat4 const& view, glm::vec3 const& position);
+		float ViewProjectMatrix[4][4];
+		float Eye[4];
+	};
+
 	class Camera
 	{
 	public:
@@ -42,6 +50,9 @@
 
 		float& GetSensitivity() { return m_sensitivity; }
 		float& GetMovementSpeed() { return m_movementSpeed; }
+
+		inline void SetAspect(const float inAspect) { m_aspectRatio = inAspect; }
+		inline float GetAspectRatio() const { return m_aspectRatio; };
 		
 		void ProcessMouseMovement(float inOffsetX, float inOffsetY);
 		void ProcessKeyMovement(Direction inDirection, const float inDeltaTime);
@@ -59,5 +70,5 @@
 	    float m_far = 100.0f;
 	    float m_aspectRatio = 1.f;
 		float m_sensitivity = 0.003f;
-		float m_movementSpeed = 2.5f;
+		float m_movementSpeed = 8.5f;
 	};

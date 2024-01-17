@@ -8,5 +8,6 @@ namespace Engine
     void Shutdown();
     void UpdateInput(const float inDt);
     bool ShouldQuit();
+    void Close();
     WinWindow* GetWindow();
 }

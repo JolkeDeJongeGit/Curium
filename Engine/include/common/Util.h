@@ -10,3 +10,4 @@ inline void ThrowIfFailed(const HRESULT inHr)
     }
 }
 
+bool DecomposeTransform(const glm::mat4& inTransform, glm::vec3& outTransform, glm::vec3& outScale, glm::vec3& outRotation);

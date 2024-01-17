@@ -2,7 +2,6 @@
 #include "graphics/ShaderManager.h"
 #include <d3dcompiler.h>
 #include <filesystem>
-#include <comdef.h>
 
 void ShaderManager::Init()
 {

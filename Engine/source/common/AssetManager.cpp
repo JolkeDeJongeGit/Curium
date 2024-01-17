@@ -27,12 +27,10 @@ Texture AssetManager::LoadTexture(std::string const& inFilePath)
             buffer.shrink_to_fit();
             imageData.shrink_to_fit();
             stbi_image_free(data);
-            textures.emplace(std::make_pair(texture.GetPath(), texture));
+            textures.emplace(std::make_pair(inFilePath, texture));
         }
         else
         {
-            //UploadTexture(filePath, errorTexture, glm::ivec2(2, 2));
-            //texture = textures.find(inFilePath)->second;
             printf("[AssetManager]: image %s does not exist. \n", inFilePath.c_str());
         }
     }

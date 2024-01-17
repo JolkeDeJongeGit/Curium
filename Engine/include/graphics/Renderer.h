@@ -7,7 +7,7 @@ namespace Renderer
 	void Render();
 	void Update();
 	void Shutdown();
+	void Resize(uint32_t inWidth, uint32_t  inHeight);
 
 	Camera* GetCamera();
-	std::vector<int>& GetRootConstants();
 }

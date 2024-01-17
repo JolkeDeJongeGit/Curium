@@ -46,11 +46,6 @@ void Transform::Translate(const glm::vec3& inOffset)
 void Transform::Rotate(const glm::vec3& inRotation)
 {
     m_rotation += inRotation;
-
-    if (m_rotation.x > 1.4f) { m_rotation.x = 1.4f; }
-    if (m_rotation.x < -1.4f) { m_rotation.x = -1.4f; }
-
-    CalculateOrientation();
 }
 
 void Transform::AddScale(const glm::vec3& inScale)

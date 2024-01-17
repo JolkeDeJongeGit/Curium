@@ -5,18 +5,18 @@
 #include "graphics/win32/WinCommandQueue.h"
 #include "graphics/win32/WinDescriptorHeap.h"
 #include "graphics/win32/WinDevice.h"
+#include "graphics/win32/WinCommandList.h"
 
+// @TODO:: Make seperate file
 Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize): m_descriptorIndex(0),
-	m_path(inPath), m_imageSize(inImageSize)
+	m_imageSize(inImageSize)
 {
-
 	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 	DescriptorHeap* srvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
 	CommandQueue* commands = WinUtil::GetCommandQueue();
 
 	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, inImageSize.x, inImageSize.y);
-
 	ThrowIfFailed(device->CreateCommittedResource(
 		&properties,
 		D3D12_HEAP_FLAG_NONE,
@@ -26,11 +26,11 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 		IID_PPV_ARGS(&m_data)));
 
 	D3D12_SUBRESOURCE_DATA subresource;
-	subresource.pData = &inData[0];
-	subresource.RowPitch = inImageSize.x * sizeof(uint8_t);
-	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint8_t);
-
-	commands->UploadData(m_data, subresource);
+	subresource.pData = inData.data();
+	subresource.RowPitch = inImageSize.x * sizeof(uint32_t);
+	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint32_t);
+	m_data->SetName(std::wstring(inPath.begin(), inPath.end()).c_str());
+	commands->UploadData(m_data, subresource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -40,10 +40,24 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 
 	m_descriptorIndex = srvHeap->GetNextIndex();
 	device->CreateShaderResourceView(m_data.Get(), &srvDesc, srvHeap->GetCpuHandleAt(m_descriptorIndex));
+	m_currentState = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+}
+
+void Texture::SetState(D3D12_RESOURCE_STATES inSetState)
+{
+	if (m_currentState == inSetState)
+		return;
+
+	auto& commands = WinUtil::GetCommandQueue()->GetCommandList().GetList();
+	CD3DX12_RESOURCE_BARRIER changeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_data.Get(), m_currentState, inSetState);
+	commands->ResourceBarrier(1, &changeBarrier);
+	m_currentState = inSetState;
 }
 
 glm::ivec2 Texture::GetSize() const
-{ return m_imageSize; }
+{ 
+	return m_imageSize;
+}
 
 uint32_t Texture::GetDescriptorIndex() const
 {
@@ -126,7 +140,7 @@ void Mesh::CreateTexturesBuffer()
 
 void Mesh::SetupCube()
 {
-	int div = 1;
+	int div = 32;
 	for (int row = 0; row < div; row++)
 	{
 		for (int col = 0; col < div; col++)
@@ -167,11 +181,7 @@ void Mesh::SetupCube()
 		m_vertexData.push_back(VertexData(vertices[i], glm::vec3(0, 1, 0), textureCoords[i]));
 	}
 
-	m_textureData.insert(std::pair("albedo", AssetManager::LoadTexture("assets/textures/cube_albedo.png")));
-	//m_textureData.insert(std::pair("normal", AssetManager::LoadTexture("assets/textures/cube_normal.png")));
-	//m_textureData.insert(std::pair("height", AssetManager::LoadTexture("assets/textures/cube_height.png")));
-	//m_textureData.insert(std::pair("roughness", AssetManager::LoadTexture("assets/textures/cube_roughness.png")));
-	//m_textureData.insert(std::pair("ao", AssetManager::LoadTexture("assets/textures/cube_ao.png")));
+	m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/heightmap.png")));
 	
 	CreateVertexBuffer();
 	CreateIndexBuffer();
@@ -180,9 +190,9 @@ void Mesh::SetupCube()
 
 void Mesh::SetupSphere()
 {
-	constexpr float radius = 1.f;
-	constexpr float sectorCount = 36.f;
-	constexpr float stackCount = 18.f;
+	const float radius = 1.f;
+	const float sectorCount = 36.f;
+	const float stackCount = 18.f;
 	// clear memory of prev arrays
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
@@ -192,7 +202,7 @@ void Mesh::SetupSphere()
 	float nx, ny, nz, lengthInv = 1.0f / radius;    // vertex normal
 	float s, t;                                     // vertex texCoord
 
-	float sectorStep = 2 * glm::pi<float>() / sectorCount;
+	float sectorStep = 2.f * glm::pi<float>() / sectorCount;
 	float stackStep = glm::pi<float>() / stackCount;
 	float sectorAngle, stackAngle;
 
@@ -229,8 +239,8 @@ void Mesh::SetupSphere()
 	int k1, k2;
 	for(int i = 0; i < stackCount; ++i)
 	{
-		k1 = i * (sectorCount + 1);     // beginning of current stack
-		k2 = k1 + sectorCount + 1;      // beginning of next stack
+		k1 = i * static_cast<int>(sectorCount + 1);     // beginning of current stack
+		k2 = k1 + static_cast<int>(sectorCount) + 1;      // beginning of next stack
 
 		for(int j = 0; j < sectorCount; ++j, ++k1, ++k2)
 		{
@@ -271,13 +281,13 @@ void Mesh::SetupSphere()
 
 void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	auto descriptorIndex = m_textureData.at("albedo").GetDescriptorIndex();
-	auto descriptorHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
-	//inCommandList->SetGraphicsRootDescriptorTable(2, descriptorHeap->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
-	// inCommandList->SetGraphicsRootDescriptorTable(3, descriptorHeap->GetGpuHandleAt(descriptorIndex));
+	if (auto heightmapTexture = m_textureData.find("heightmap"); heightmapTexture != m_textureData.end())
+	{
+		auto& texture = heightmapTexture->second;
+		auto descriptorIndex = texture.GetDescriptorIndex();
+		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
+	}
+
 	inCommandList->IASetVertexBuffers(0, 1, &m_vertexView);
 	inCommandList->IASetIndexBuffer(&m_indexView);
 	inCommandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);

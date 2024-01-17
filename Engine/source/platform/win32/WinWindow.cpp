@@ -11,6 +11,7 @@
 #include <include/imgui.h>
 
 #include "graphics/Camera.h"
+#include <core/Editor.h>
 
 WinWindow::~WinWindow()
 {
@@ -34,7 +35,8 @@ void WinWindow::Create(const int inWidth, const int inHeight)
 
 void WinWindow::Update()
 {
-    SetActive(!glfwWindowShouldClose(m_window));
+    if(glfwWindowShouldClose(m_window))
+        SetActive(false);
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
@@ -84,9 +86,13 @@ void WinWindow::MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos
     lastX = static_cast<float>(inXPos);
     lastY = static_cast<float>(inYPos);
 
-    if(glfwGetMouseButton(inWindow, GLFW_MOUSE_BUTTON_2) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+    //if (Editor::ViewportHovered())
     {
-        Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
+        if(glfwGetMouseButton(inWindow, GLFW_MOUSE_BUTTON_2))
+        {
+            
+            Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
+        }
     }
 }
 #pragma warning( pop )

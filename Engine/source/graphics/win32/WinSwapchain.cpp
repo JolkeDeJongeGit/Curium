@@ -9,6 +9,7 @@
 #define GLFW_NATIVE_INCLUDE_NONE
 #include <GLFW3/include/GLFW/glfw3native.h>
 #include "Engine.h"
+#include "graphics/win32/WinCommandList.h"
 #include "graphics/win32/WinUtil.h"
 
 void Swapchain::Init(const int inWidth, const int inHeight)
@@ -17,6 +18,7 @@ void Swapchain::Init(const int inWidth, const int inHeight)
 
 	SetupSwapchain(inWidth, inHeight);
 	SetupDepthBuffer(inWidth, inHeight);
+	SetupRenderTextureBuffer(inWidth, inHeight);
 
 	ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 
@@ -36,7 +38,7 @@ Swapchain::~Swapchain()
 
 uint32_t Swapchain::GetCurrentBuffer() const
 {
-	return m_currentBuffer;
+	return m_swapchain->GetCurrentBackBufferIndex();
 }
 
 ComPtr<IDXGISwapChain4>& Swapchain::GetSwapchain()
@@ -53,7 +55,6 @@ void Swapchain::ResizeBuffer(int _width, int _height) const
 void Swapchain::Present()
 {
 	m_swapchain->Present(1, 0);
-	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 }
 
 void Swapchain::UpdateFenceValue()
@@ -72,24 +73,10 @@ void Swapchain::WaitForFenceValue(const ComPtr<ID3D12CommandQueue>& inCommandQue
 	}
 }
 
-ComPtr<ID3D12Fence>& Swapchain::GetFence()
-{
-	return m_fence;
-}
-
-ComPtr<ID3D12Resource>& Swapchain::GetCurrentRenderTarget(const uint32_t inIndex)
-{
-	return m_renderTargets[inIndex];
-}
-
-ComPtr<ID3D12Resource>& Swapchain::GetDepthBuffer()
-{
-	return m_depthBuffer;
-}
-
 void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
 {
 	const Device* device =  WinUtil::GetDevice();
+	const ComPtr<ID3D12GraphicsCommandList>& commandList = WinUtil::GetCommandQueue()->GetCommandList().GetList();
 	const ComPtr<ID3D12Device2>& devices = device->GetDevice();
 	const ComPtr<IDXGIFactory4>& factory = device->GetFactory();
 	const HWND hwnd = glfwGetWin32Window(Engine::GetWindow()->GetWindow());
@@ -113,12 +100,42 @@ void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
 	//delete swapchain;
 	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 
+	CommandQueue* commands = WinUtil::GetCommandQueue();
+
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	textureDesc.Width = inWidth; // adjust as needed
+	textureDesc.Height = inHeight; // adjust as needed
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.MipLevels = 1;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // adjust as needed
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
 	// This is setting up the render targets.
 	for (uint32_t i = 0; i < BackBufferCount; i++)
 	{
+		CD3DX12_HEAP_PROPERTIES heapp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+		ThrowIfFailed(devices->CreateCommittedResource(
+			&heapp,
+			D3D12_HEAP_FLAG_NONE,
+			&textureDesc,
+			D3D12_RESOURCE_STATE_COMMON,
+			nullptr,
+			IID_PPV_ARGS(&m_renderTargets[i])
+		));
+
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = textureDesc.Format;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+		rtvDesc.Texture2D.PlaneSlice = 0;
+		m_renderTargets[i]->SetName(L"SwapchainRTV");
 		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap->GetCpuHandleAt(heap->GetNextIndex());
 		ThrowIfFailed(m_swapchain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])));
-		devices.Get()->CreateRenderTargetView(m_renderTargets[i].Get(), nullptr, rtvHandle);
+		devices.Get()->CreateRenderTargetView(m_renderTargets[i].Get(), &rtvDesc, rtvHandle);
 	}
 }
 
@@ -132,8 +149,7 @@ void Swapchain::SetupDepthBuffer(const int inWidth, const int inHeight)
 	optimizedClearValue.DepthStencil = { 1.0f, 0 };
 
 	const CD3DX12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	const CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, inWidth, inHeight,
-	                                                                        1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+	const CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, inWidth, inHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
 	ThrowIfFailed(devices.Get()->CreateCommittedResource(
 		&properties,
@@ -151,4 +167,66 @@ void Swapchain::SetupDepthBuffer(const int inWidth, const int inHeight)
 	dsv.Flags = D3D12_DSV_FLAG_NONE;
 	devices.Get()->CreateDepthStencilView(m_depthBuffer.Get(), &dsv,
 		heap->GetCpuHandleAt(0));
+}
+
+void Swapchain::SetupRenderTextureBuffer(int inWidth, int inHeight)
+{
+	const Device* device = WinUtil::GetDevice();
+	const ComPtr<ID3D12Device2>& devices = device->GetDevice();
+	DescriptorHeap* heap = WinUtil::GetDescriptorHeap(HeapType::RTV);
+	DescriptorHeap* srvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
+
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	textureDesc.Width = inWidth; // adjust as needed
+	textureDesc.Height = inHeight; // adjust as needed
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.MipLevels = 1;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // adjust as needed
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+	D3D12_CLEAR_VALUE optimizedClearValue = {};
+	optimizedClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	optimizedClearValue.Color[0] = 0.2f;
+	optimizedClearValue.Color[1] = 0.2f;
+	optimizedClearValue.Color[2] = 0.2f;
+	optimizedClearValue.Color[3] = 1.0f;
+
+	CD3DX12_HEAP_PROPERTIES heapp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	ThrowIfFailed(devices->CreateCommittedResource(
+		&heapp,
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		&optimizedClearValue,
+		IID_PPV_ARGS(&m_renderTextureBuffer)
+	));
+
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.Texture2D.PlaneSlice = 0;
+
+	m_renderTextureHeapID = heap->GetNextIndex();
+	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap->GetCpuHandleAt(m_renderTextureHeapID);
+	devices.Get()->CreateRenderTargetView(m_renderTextureBuffer.Get(), &rtvDesc, rtvHandle);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+	m_renderTextureSrvID = srvHeap->GetNextIndex();
+	devices->CreateShaderResourceView(
+		m_renderTextureBuffer.Get(),
+		&srvDesc,
+		srvHeap->GetCpuHandleAt(m_renderTextureSrvID));
 }

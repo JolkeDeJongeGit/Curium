@@ -13,17 +13,20 @@ class Texture
 {
 public:
 	Texture() = default;
+
 	Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inImageSize);
 	~Texture() = default;
+
+	void SetState(D3D12_RESOURCE_STATES inSetState);
+
 	inline ID3D12Resource* GetTexture() const { return m_data.Get(); };
-	std::string GetPath() const { return m_path; };
 	glm::ivec2 GetSize() const;
 	[[nodiscard]] uint32_t  GetDescriptorIndex() const;
 private:
-	uint32_t m_descriptorIndex;
-	std::string m_path;
-	glm::ivec2 m_imageSize;
+	glm::ivec2 m_imageSize = glm::ivec2(0,0);
 	ComPtr<ID3D12Resource> m_data;
+	D3D12_RESOURCE_STATES m_currentState = D3D12_RESOURCE_STATE_COMMON;
+	uint32_t m_descriptorIndex = -1;
 };
 
 class Mesh
@@ -42,7 +45,7 @@ public:
 		}
 	}
 
-	Mesh(const std::vector<VertexData>& inVertexData, const std::vector<uint16_t>& inIndexData, const std::unordered_map<std::string, Texture>&)
+	Mesh(const std::vector<VertexData>& inVertexData, const std::vector<uint16_t>& inIndexData)
 		: m_vertexData(inVertexData), m_indexData(inIndexData)
 	{
 		CreateVertexBuffer();
@@ -57,11 +60,11 @@ public:
 	void SetupCube();
 	void SetupSphere();
 	void Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
-private:
+
 	std::vector<VertexData> m_vertexData;
 	std::vector<uint16_t>   m_indexData;
 	std::unordered_map<std::string, Texture>  m_textureData;
-
+private:
 	ComPtr<ID3D12Resource> m_vertexBuffer;
 	ComPtr<ID3D12Resource> m_indexBuffer;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexView{};

@@ -49,6 +49,7 @@ void Performance::EndTimer(const std::string& inName)
 
 void Performance::DebugImgui(bool& inShow)
 {
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetMainViewport()->Size.x, 500));
     ImGui::Begin("Profiler", &inShow, ImGuiWindowFlags_NoCollapse);
 
     for (auto& itr : m_times)

@@ -72,19 +72,22 @@ void PipelineState::SetupRootSignature()
 	CD3DX12_ROOT_PARAMETER1 dsObjCb;
 	ZeroMemory(&dsObjCb, sizeof(dsObjCb));
 	dsObjCb.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
-	dsObjCb.Descriptor = { 0, 0 }; // first register (b0) in first register space
-	dsObjCb.ShaderVisibility = D3D12_SHADER_VISIBILITY_DOMAIN; // only used in domain shader
+	dsObjCb.Descriptor = { 0, 1 }; // first register (b0) in first register space
+	dsObjCb.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // only used in domain shader
 
 	CD3DX12_ROOT_PARAMETER1 rootParameter[3];
 	rootParameter[0] = dsObjCb;
 	rootParameter[1] = hsTessFactorsCb;
-	rootParameter[2].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[2].InitAsDescriptorTable(1, &descRange[0]);
 
-
-	const CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	CD3DX12_STATIC_SAMPLER_DESC	descSamplers[1];
+	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	descSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	descSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	descSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init_1_1(_countof(rootParameter), rootParameter, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	rootSignatureDesc.Init_1_1(_countof(rootParameter), rootParameter, 1, &descSamplers[0], D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> signatureBlob;
 	ComPtr<ID3DBlob> errorBlob;
@@ -112,8 +115,10 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	PipelineStateStream pipelineStateStream;
 
 	D3D12_RT_FORMAT_ARRAY rtvFormats = {};
-	rtvFormats.NumRenderTargets = 1;
+	rtvFormats.NumRenderTargets = 3;
 	rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtvFormats.RTFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtvFormats.RTFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc{ CD3DX12_DEFAULT() };
 	depthStencilDesc.DepthEnable = inUseDepth;
@@ -140,7 +145,6 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	};
 
 	ThrowIfFailed(device->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&m_pipelineState)));
-
 
 	// Create wireframe version
 	CD3DX12_RASTERIZER_DESC rasterizer1{ CD3DX12_DEFAULT() };

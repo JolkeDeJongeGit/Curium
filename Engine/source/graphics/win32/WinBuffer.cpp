@@ -35,15 +35,15 @@ void Buffer::CreateConstantBuffer(uint32_t inSize)
 
 	m_index = cbv->GetNextIndex();
 
+	CD3DX12_RANGE range(0, 0);
+	ThrowIfFailed(m_buffer->Map(0, &range, reinterpret_cast<void**>(&m_pBuffer)));
+	m_buffer->Unmap(0, nullptr);
 	device->CreateConstantBufferView(&bufferDesc, cbv->GetCpuHandleAt(m_index));
 }
 
 void Buffer::UpdateBuffer(void* inData)
 {
-	CD3DX12_RANGE range(0, 0);
-	uint32_t* pBuffer;
-	ThrowIfFailed(m_buffer->Map(0, &range, reinterpret_cast<void**>(&pBuffer)));
-	memcpy(pBuffer, inData, m_size);
+	memcpy(m_pBuffer, inData, m_size);
 }
 
 void Buffer::SetGraphicsRootConstantBufferView(const ComPtr<ID3D12GraphicsCommandList>& inCommandList, uint32_t inRootParamIndex)

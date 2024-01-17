@@ -1,4 +1,6 @@
 #define NUM_CONTROL_POINTS 4
+#define MIN_DETAIL 4
+#define MAX_DETAIL 128
 
 struct PatchTesselationFactors
 {
@@ -6,6 +8,14 @@ struct PatchTesselationFactors
     int inside;
 };
 ConstantBuffer<PatchTesselationFactors> tessFactors : register(b0);
+
+struct Data
+{
+    float4x4 ViewProjection;
+    float4 Eye;
+}; // 48 bytes
+
+ConstantBuffer<Data> DataCB : register(b0, space1);
 
 struct VertexToHull
 {
@@ -27,16 +37,17 @@ struct HullToDomain
     float2 TextureCoord : TEXCOORD;
 };
 
-PatchConstantData calculatePatchConstants()
+PatchConstantData calculatePatchConstants(InputPatch<VertexToHull, NUM_CONTROL_POINTS> ip,
+	uint PatchID : SV_PrimitiveID)
 {
     PatchConstantData output;
 
-    output.edgeTessFactor[0] = tessFactors.edge;
-    output.edgeTessFactor[1] = tessFactors.edge;
-    output.edgeTessFactor[2] = tessFactors.edge;
-    output.edgeTessFactor[3] = tessFactors.edge;
-    output.insideTessFactor[0] = tessFactors.inside;
-    output.insideTessFactor[1] = tessFactors.inside;
+    output.edgeTessFactor[0] = 16;
+    output.edgeTessFactor[1] = 16;
+    output.edgeTessFactor[2] = 16;
+    output.edgeTessFactor[3] = 16;
+    output.insideTessFactor[0] = 16;
+    output.insideTessFactor[1] = 16;
 
     return output;
 }

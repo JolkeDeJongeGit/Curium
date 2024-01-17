@@ -3,8 +3,12 @@
 struct Data
 {
     float4x4 ViewProjection;
-};
-ConstantBuffer<Data> DataCB : register(b0);
+    float4 eye;
+    //float4 frustum[6];
+    //float dummy;
+}; // 48 bytes
+ConstantBuffer<Data> DataCB : register(b0, space1);
+//ConstantBuffer<Data> DataCB : register(b0);
 
 struct PatchConstantData
 {
@@ -25,6 +29,9 @@ struct DomainToPixel
     float4 Normal : NORMAL;
     float2 TextureCoord : TEXCOORD;
 };
+
+Texture2D HeightMap : register(t0);
+SamplerState LinearSampler : register(s0);
 
 [domain("quad")]
 DomainToPixel main(PatchConstantData input, float2 domain : SV_DomainLocation, const OutputPatch<HullToDomain, NUM_CONTROL_POINTS> patch, uint patchID : SV_PrimitiveID)
@@ -60,9 +67,16 @@ DomainToPixel main(PatchConstantData input, float2 domain : SV_DomainLocation, c
     float4 nor =leftNor + u * (rightNor - leftNor);
     
     DomainToPixel output;
-    output.Position = pos;
+    
+    float height = HeightMap.SampleLevel(LinearSampler, texCoord, 0.0f).x;
+
+    float3 worldPos = pos.xyz + float3(0, height/29.f, 0); // Displace the vertex along the y-axis
+    output.Position = float4(worldPos,1.f);
+    
     output.Position = mul(DataCB.ViewProjection, output.Position);
+    
     output.Normal = nor;
+    
     output.TextureCoord = texCoord;
 
     return output;
