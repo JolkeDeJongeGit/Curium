@@ -50,6 +50,7 @@ void Engine::Shutdown()
 {
 	ImGuiLayer::Shutdown();
 	Debug::Shutdown();
+	Editor::Shutdown();
 	Renderer::Shutdown();
 }
 

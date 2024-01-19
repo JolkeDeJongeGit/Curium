@@ -79,6 +79,21 @@ VertexData::VertexData(const glm::vec3& inPosition, const glm::vec3& inNormal, c
 	}
 }
 
+void Mesh::Shutdown()
+{
+	if (m_vertexBuffer)
+	{
+		m_vertexBuffer->Release();
+		m_vertexBuffer = nullptr;
+	}
+
+	if (m_indexBuffer)
+	{
+		m_indexBuffer->Release();
+		m_indexBuffer = nullptr;
+	}
+}
+
 void Mesh::CreateVertexBuffer()
 {
 	const UINT bufferSize = static_cast<UINT>(m_vertexData.size() * sizeof(VertexData));
@@ -108,7 +123,6 @@ void Mesh::CreateVertexBuffer()
 
 void Mesh::CreateIndexBuffer()
 {
-	
 	const UINT bufferSize = static_cast<UINT>(m_indexData.size() * sizeof(uint16_t));
 
 	const D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);

@@ -6,6 +6,7 @@ namespace Scene
 {
 	void Init();
 	void Update(const float inDt);
+	void Shutdown();
 	void AddSceneObject(std::string name, GameObject const& gameobject);
 	void HierarchyWindow(bool& inShow);
 

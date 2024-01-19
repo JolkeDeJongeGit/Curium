@@ -4,6 +4,7 @@
 #include "graphics/DebugManager.h"
 #include "graphics/Renderer.h"
 #include "graphics/Camera.h"
+#include <components/terrain/TerrainQuadTree.h>
 
 namespace Scene
 {
@@ -14,10 +15,16 @@ namespace Scene
 
     ImGuizmo::OPERATION m_current_gizmo_operation(ImGuizmo::TRANSLATE);
     ImGuizmo::MODE current_gizmo_mode(ImGuizmo::LOCAL);
+
+    TerrainQuadTree tree;
 }
 
 void Scene::Init()
 {
+    auto world = &gameobjects["World"];
+    tree = TerrainQuadTree(static_cast<Terrain*>(world));
+    tree.Init();
+
     for (auto& [name, gameobject] : gameobjects)
         gameobject.Init();
 }
@@ -25,6 +32,7 @@ void Scene::Init()
 void Scene::Update(const float inDt)
 {
     names.clear();
+
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Right))
     {
@@ -43,6 +51,13 @@ void Scene::Update(const float inDt)
     }
 }
 
+void Scene::Shutdown()
+{
+    tree.~TerrainQuadTree();
+    names.clear();
+    gameobjects.clear();
+}
+
 void Scene::AddSceneObject(std::string name, GameObject const& gameobject)
 {
     gameobjects.insert(std::pair<std::string, GameObject>(name, gameobject));
@@ -57,12 +72,15 @@ void Scene::HierarchyWindow(bool& inShow)
     ImGui::ListBox("", &selected_game_object, names.data(), static_cast<int>(names.size()), static_cast<int>(names.size()));
     ImGui::PopItemWidth();
     ImGui::PopID();
+    ImGui::Checkbox("Stop subdividing", &tree.m_stopSubdivide);
     ImGui::End();
     ImGui::PopStyleVar();
 }
 
 void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
 {
+    tree.Update();
+
     ImGuiIO& io = ImGui::GetIO();
     if (GameObject* gameobject = GetSelectedSceneObject())
     {

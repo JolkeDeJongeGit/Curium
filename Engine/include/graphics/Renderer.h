@@ -8,6 +8,8 @@ namespace Renderer
 	void Update();
 	void Shutdown();
 	void Resize(uint32_t inWidth, uint32_t  inHeight);
+	void DrawCameraPropertyWindow();
+	void AddRemovedMesh(Mesh mesh);
 
 	Camera* GetCamera();
 }

@@ -16,6 +16,7 @@
 #include <graphics/win32/WinBuffer.h>
 #include <core/ImGuiLayer.h>
 #include "core/Scene.h"
+#include <components/gameobjects/Terrain.h>
 
 namespace Renderer
 {
@@ -40,6 +41,8 @@ namespace Renderer
 	Buffer m_domainConstant;
 
 	std::vector<int> rootConstants{ 64, 64 };
+
+	std::vector<Mesh> removeMeshes;
 
 	CameraData cameraData;
 
@@ -75,8 +78,10 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
 	// @TODO::Needs to load in scene 
-	const Transform transformWorld(glm::vec3(0, -1.f, 2.f), glm::vec3(0), glm::vec3(100.f));
-	Scene::AddSceneObject("World", GameObject(transformWorld, { Mesh(false) }));
+	Terrain ter = Terrain(16);
+	const Transform transformWorld(glm::vec3(0, -100000.f, 0.f), glm::vec3(0), glm::vec3(1.f));
+	ter.SetTransform(transformWorld);
+	Scene::AddSceneObject("World", ter);
 
 	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
 	command_queue->CloseCommandList();
@@ -129,9 +134,9 @@ void Renderer::Update()
 		m_domainConstant.UpdateBuffer(&cameraData);
 		m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
 
-		for (const Mesh& mesh : gameobject.GetMeshes())
+		for (size_t i = 0; i < gameobject.GetMeshes().size(); i++)
 		{
-			mesh.Draw(commandList);
+			gameobject.GetMeshes()[i].Draw(commandList);
 		}
 	}
 }
@@ -151,6 +156,13 @@ void Renderer::Render()
 
 	swapchain->Present();
 	swapchain->WaitForFenceValue(command_queue->GetCommandQueue());
+
+	for (Mesh& mesh : removeMeshes)
+	{
+		mesh.Shutdown();
+	}
+
+	removeMeshes.clear();
 }
 
 void Renderer::RenderImGui()
@@ -190,6 +202,30 @@ void Renderer::Resize(uint32_t inWidth, uint32_t inHeight)
 {
 	viewport_width = inWidth;
 	viewport_height = inHeight;
+}
+
+void Renderer::DrawCameraPropertyWindow()
+{
+	ImGui::Begin("Camera Properties", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus);
+	ImGui::PushID("C");
+	ImGui::Text("Camera Speed: ");
+	ImGui::SameLine();
+	ImGui::SliderFloat(" ", &camera.GetMovementSpeed(), 5, 40000);
+	ImGui::PopID();
+
+	ImGui::PushID("R");
+	float farplane = camera.GetFarPlane();
+	ImGui::Text("Render Distance: ");
+	ImGui::SameLine();
+	ImGui::SliderFloat(" ", &farplane, 1000.0f, 5000000.0f);
+	camera.SetFarPlane(farplane);
+	ImGui::PopID();
+	ImGui::End();
+}
+
+void Renderer::AddRemovedMesh(Mesh inMesh)
+{
+	removeMeshes.push_back(inMesh);
 }
 
 Camera* Renderer::GetCamera()

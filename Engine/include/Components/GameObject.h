@@ -17,13 +17,14 @@ class GameObject
 {
 public:
   GameObject() = default;
-  virtual ~GameObject() = default;
+  virtual ~GameObject();
 
   GameObject(const Transform& inTransform, const std::vector<Mesh>& inMeshes)
     : m_meshes(inMeshes), m_transform(inTransform)
   {
   }
   
+
   Transform& GetTransform() { return m_transform; }
   const std::vector<Mesh>& GetMeshes() const { return m_meshes; }
   
