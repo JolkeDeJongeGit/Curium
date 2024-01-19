@@ -88,7 +88,7 @@ inline void TerrainQuadTree::Update()
 			std::string bozo = "MeshID: " + std::to_string(leafNode->m_meshIndex);
 			drawlist->AddText(ImVec2(worldPos.x, worldPos.y), IM_COL32_WHITE, bozo.c_str());
 
-			if (glm::distance(Renderer::GetCamera()->GetTransform().GetPosition(), glm::vec3(leafNode->m_point.x, m_terrain->GetTransform().GetPosition().y, leafNode->m_point.y)) <= leafNode->m_size * 1.5f )
+			if (leafNode->m_depth < MaxDepth && glm::distance(Renderer::GetCamera()->GetTransform().GetPosition(), glm::vec3(leafNode->m_point.x, m_terrain->GetTransform().GetPosition().y, leafNode->m_point.y)) <= leafNode->m_size * 1.5f)
 			{
 				Subdivide(leafNode);
 				return;
@@ -110,9 +110,6 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* inNode)
 	PROFILE_FUNCTION()
 	TerrainNode* node = inNode;
 
-	if (node->m_depth >= MaxDepth)
-		return;
-
 	m_terrain->ClearMesh(node->m_meshIndex);
 
 	m_leafNodes.erase(std::remove(m_leafNodes.begin(), m_leafNodes.end(), inNode), m_leafNodes.end());
@@ -124,7 +121,7 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* inNode)
 	}
 
 	uint16_t depth = node->m_depth;
-	float adjustedSize = node->m_size * .5f ;
+	float adjustedSize = node->m_size * .5f;
 
 	TerrainNode* topLeft = new TerrainNode(glm::dvec2(node->m_point.x - adjustedSize, node->m_point.y + adjustedSize), adjustedSize, depth + 1, node);
 	glm::vec3 v0 = glm::vec3(node->m_point.x - node->m_size, 0, node->m_point.y);
@@ -173,12 +170,7 @@ inline void TerrainQuadTree::UnSubdivide(TerrainNode* inNode)
 		auto& deleteNode = inNode->m_terrainNodes[i];
 		m_terrain->ClearMesh(deleteNode->m_meshIndex);
 
-		auto rem = std::remove(m_leafNodes.begin(), m_leafNodes.end(), deleteNode);
-
-		if (rem != m_leafNodes.end())
-		{
-			m_leafNodes.erase(rem, rem + 1);
-		}
+		m_leafNodes.erase(std::remove(m_leafNodes.begin(), m_leafNodes.end(), deleteNode), m_leafNodes.end());
 
 		for (TerrainNode* terrain : m_leafNodes)
 		{
@@ -192,6 +184,7 @@ inline void TerrainQuadTree::UnSubdivide(TerrainNode* inNode)
 			deleteNode = nullptr;
 		}
 	}
+
 	glm::vec3 v0 = glm::vec3(inNode->m_point.x - inNode->m_size, 0.0f, inNode->m_point.y - inNode->m_size);
 	glm::vec3 v1 = glm::vec3(inNode->m_point.x - inNode->m_size, 0.0f, inNode->m_point.y + inNode->m_size);
 	glm::vec3 v2 = glm::vec3(inNode->m_point.x + inNode->m_size, 0.0f, inNode->m_point.y + inNode->m_size);
