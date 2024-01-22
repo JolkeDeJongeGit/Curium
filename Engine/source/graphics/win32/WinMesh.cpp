@@ -81,17 +81,8 @@ VertexData::VertexData(const glm::vec3& inPosition, const glm::vec3& inNormal, c
 
 void Mesh::Shutdown()
 {
-	if (m_vertexBuffer)
-	{
-		m_vertexBuffer->Release();
-		m_vertexBuffer = nullptr;
-	}
-
-	if (m_indexBuffer)
-	{
-		m_indexBuffer->Release();
-		m_indexBuffer = nullptr;
-	}
+	m_vertexBuffer.Reset();
+	m_indexBuffer.Reset();
 }
 
 void Mesh::CreateVertexBuffer()

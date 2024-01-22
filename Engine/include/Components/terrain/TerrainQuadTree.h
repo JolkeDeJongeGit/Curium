@@ -20,11 +20,42 @@ struct TerrainNode
 		: m_point(inPoint), m_size(inSize), m_depth(inDepth), m_parentNode(inParentNode)
 	{
 	}
+
+	void Reset(Terrain* inTerrain, std::vector<TerrainNode*>& list)
+	{
+		for (size_t i = 0; i < 4; i++)
+		{
+			auto& node = m_terrainNodes[i];
+			if (node)
+			{
+				node->Reset(inTerrain, list);
+
+				delete node;
+				node = nullptr;
+			}
+		}
+
+		if (m_meshIndex != -1)
+		{
+			inTerrain->ClearMesh(m_meshIndex);
+
+			list.erase(std::remove(list.begin(), list.end(), this), list.end());
+
+			for (TerrainNode*& terrain : list)
+			{
+				if (terrain->m_meshIndex > m_meshIndex)
+					terrain->m_meshIndex--;
+			}
+
+			m_meshIndex = -1;
+		}
+	};
+
 	glm::dvec2 m_point = glm::dvec2(0);
 	float m_size = -1;
 	int16_t m_depth = -1;
 	TerrainNode* m_parentNode = nullptr;
-	TerrainNode* m_terrainNodes[4];
+	TerrainNode* m_terrainNodes[4] = { nullptr, nullptr, nullptr, nullptr};
 	int16_t m_meshIndex = -1;
 };
 
@@ -83,10 +114,24 @@ inline void TerrainQuadTree::Update()
 		for (size_t i = 0; i < m_leafNodes.size(); i++)
 		{
 			auto leafNode = m_leafNodes[i];
-			auto worldPos = WorldToScreen(glm::vec3(leafNode->m_point.x, m_terrain->GetTransform().GetPosition().y, leafNode->m_point.y), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
-			//std::string bozo = "Half size: " + std::to_string(leafNode->m_size);
-			std::string bozo = "MeshID: " + std::to_string(leafNode->m_meshIndex);
-			drawlist->AddText(ImVec2(worldPos.x, worldPos.y), IM_COL32_WHITE, bozo.c_str());
+			//auto worldPos = WorldToScreen(glm::vec3(leafNode->m_point.x, m_terrain->GetTransform().GetPosition().y, leafNode->m_point.y), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
+			//std::string bozo1 = "MeshID: " + std::to_string(leafNode->m_meshIndex) + " Point " + std::to_string(i);
+
+			//auto v0 = m_terrain->GetMeshes()[leafNode->m_meshIndex].m_vertexData[0].Position;
+			//auto world = WorldToScreen(glm::vec3(v0[0], m_terrain->GetTransform().GetPosition().y + 500 * i, v0[2]), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
+			//drawlist->AddText(ImVec2(world.x, world.y), IM_COL32_WHITE, bozo1.c_str());
+
+			//v0 = m_terrain->GetMeshes()[leafNode->m_meshIndex].m_vertexData[8].Position;
+			//world = WorldToScreen(glm::vec3(v0[0], m_terrain->GetTransform().GetPosition().y + 1000 * i, v0[2]), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
+			//drawlist->AddText(ImVec2(world.x, world.y), IM_COL32_WHITE, bozo1.c_str());
+
+			//v0 = m_terrain->GetMeshes()[leafNode->m_meshIndex].m_vertexData[80].Position;
+			//world = WorldToScreen(glm::vec3(v0[0], m_terrain->GetTransform().GetPosition().y + 2000 * i, v0[2]), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
+			//drawlist->AddText(ImVec2(world.x, world.y), IM_COL32_WHITE, bozo1.c_str());
+
+			//v0 = m_terrain->GetMeshes()[leafNode->m_meshIndex].m_vertexData[72].Position;
+			//world = WorldToScreen(glm::vec3(v0[0], m_terrain->GetTransform().GetPosition().y + 3000 * i, v0[2]), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
+			//drawlist->AddText(ImVec2(world.x, world.y), IM_COL32_WHITE, bozo1.c_str());
 
 			if (leafNode->m_depth < MaxDepth && glm::distance(Renderer::GetCamera()->GetTransform().GetPosition(), glm::vec3(leafNode->m_point.x, m_terrain->GetTransform().GetPosition().y, leafNode->m_point.y)) <= leafNode->m_size * 1.5f)
 			{
@@ -110,11 +155,11 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* inNode)
 	PROFILE_FUNCTION()
 	TerrainNode* node = inNode;
 
-	m_terrain->ClearMesh(node->m_meshIndex);
+	m_terrain->ClearMesh(inNode->m_meshIndex);
 
 	m_leafNodes.erase(std::remove(m_leafNodes.begin(), m_leafNodes.end(), inNode), m_leafNodes.end());
 
-	for (TerrainNode* terrain : m_leafNodes)
+	for (TerrainNode*& terrain : m_leafNodes)
 	{
 		if (terrain->m_meshIndex > node->m_meshIndex)
 			terrain->m_meshIndex--;
@@ -168,20 +213,10 @@ inline void TerrainQuadTree::UnSubdivide(TerrainNode* inNode)
 	for (size_t i = 0; i < 4; i++)
 	{
 		auto& deleteNode = inNode->m_terrainNodes[i];
-		m_terrain->ClearMesh(deleteNode->m_meshIndex);
-
-		m_leafNodes.erase(std::remove(m_leafNodes.begin(), m_leafNodes.end(), deleteNode), m_leafNodes.end());
-
-		for (TerrainNode* terrain : m_leafNodes)
-		{
-			if (terrain->m_meshIndex > deleteNode->m_meshIndex)
-				terrain->m_meshIndex--;
-		}
 
 		if (deleteNode)
 		{
-			delete deleteNode;
-			deleteNode = nullptr;
+			deleteNode->Reset(m_terrain, m_leafNodes);
 		}
 	}
 
