@@ -9,9 +9,8 @@
 namespace Scene
 {
     std::unordered_map<std::string, GameObject*> gameobjects;
-    std::vector<std::string> names;
 
-    int selected_game_object;
+    GameObject* selected_game_object = nullptr;
 
     ImGuizmo::OPERATION m_current_gizmo_operation(ImGuizmo::TRANSLATE);
     ImGuizmo::MODE current_gizmo_mode(ImGuizmo::LOCAL);
@@ -31,9 +30,6 @@ void Scene::Init()
 
 void Scene::Update(const float inDt)
 {
-    names.clear();
-
-
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Right))
     {
         if (ImGui::IsKeyPressed(ImGuiKey_W))
@@ -46,15 +42,12 @@ void Scene::Update(const float inDt)
 
     for (auto& [name, gameobject] : gameobjects)
     {
-        names.push_back(name.c_str());
         gameobject->Update();
     }
 }
 
 void Scene::Shutdown()
 {
-    tree.~TerrainQuadTree();
-    names.clear();
     for (auto obj : gameobjects)
     {
         delete obj.second;
@@ -74,12 +67,25 @@ void Scene::HierarchyWindow(bool& inShow)
     ImGui::PushID(1);
     ImGui::PushItemWidth(-1);
     std::vector<const char*> itemNames;
-    itemNames.reserve(names.size());
-    for (const auto& name : names)
+    itemNames.reserve(gameobjects.size());
+
+    int selectedId = -1;
+    int currentId = 0;
+    for (const auto& obj : gameobjects)
     {
-        itemNames.push_back(name.c_str());
+        const std::string& name = obj.first;
+
+        if (selected_game_object == obj.second)
+            selectedId = currentId;
+
+        itemNames.push_back(obj.first.c_str());
+
+        currentId++;
     }
-    ImGui::ListBox("", &selected_game_object, itemNames.data(), static_cast<int>(itemNames.size()), static_cast<int>(names.size()));
+    ImGui::ListBox("", &selectedId, itemNames.data(), static_cast<int>(itemNames.size()));
+    if (selectedId >= 0)
+        selected_game_object = gameobjects[itemNames[selectedId]];
+
     ImGui::PopItemWidth();
     ImGui::PopID();
     ImGui::Checkbox("Stop subdividing", &tree.m_stopSubdivide);
@@ -118,13 +124,7 @@ void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
 
 GameObject* Scene::GetSelectedSceneObject()
 {
-    if (names.size() > selected_game_object)
-    {
-        const std::string& name = names[selected_game_object];
-        if (gameobjects.find(name) != gameobjects.end())
-            return gameobjects[name];
-    }
-    return nullptr;
+    return selected_game_object;
 }
 
 std::unordered_map<std::string, GameObject*>& Scene::AllSceneObjects()
