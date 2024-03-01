@@ -7,12 +7,12 @@ namespace Scene
 	void Init();
 	void Update(const float inDt);
 	void Shutdown();
-	void AddSceneObject(std::string name, GameObject const& gameobject);
+	void AddSceneObject(std::string name, GameObject* gameobject);
 	void HierarchyWindow(bool& inShow);
 
 	GameObject* GetSelectedSceneObject();
 
 	void SceneGizmo(ImVec2 inPos, ImVec2 inSize);
 
-	std::unordered_map<std::string, GameObject>& AllSceneObjects();
+	std::unordered_map<std::string, GameObject*>& AllSceneObjects();
 }

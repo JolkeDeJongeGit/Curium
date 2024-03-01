@@ -58,7 +58,7 @@ void Transform::ScaleUniform(const float inScale)
     m_scale += glm::vec3(inScale);
 }
 
-void Transform::UpdateModelMatrix()
+void Transform::UpdateModelMatrix() const
 {
     const glm::mat4 xRotate = glm::rotate(m_rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
     const glm::mat4 yRotate = glm::rotate(m_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
