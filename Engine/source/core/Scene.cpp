@@ -8,10 +8,9 @@
 
 namespace Scene
 {
-    std::unordered_map<std::string, GameObject> gameobjects;
-    std::vector<const char*> names;
+    std::unordered_map<std::string, GameObject*> gameobjects;
 
-    int selected_game_object;
+    GameObject* selected_game_object = nullptr;
 
     ImGuizmo::OPERATION m_current_gizmo_operation(ImGuizmo::TRANSLATE);
     ImGuizmo::MODE current_gizmo_mode(ImGuizmo::LOCAL);
@@ -21,19 +20,16 @@ namespace Scene
 
 void Scene::Init()
 {
-    auto world = &gameobjects["World"];
-    tree = TerrainQuadTree(static_cast<Terrain*>(world));
+    auto world = gameobjects["World"];
+    tree = TerrainQuadTree(dynamic_cast<Terrain*>(world));
     tree.Init();
 
     for (auto& [name, gameobject] : gameobjects)
-        gameobject.Init();
+        gameobject->Init();
 }
 
 void Scene::Update(const float inDt)
 {
-    names.clear();
-
-
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Right))
     {
         if (ImGui::IsKeyPressed(ImGuiKey_W))
@@ -46,21 +42,22 @@ void Scene::Update(const float inDt)
 
     for (auto& [name, gameobject] : gameobjects)
     {
-        names.push_back(name.c_str());
-        gameobject.Update();
+        gameobject->Update();
     }
 }
 
 void Scene::Shutdown()
 {
-    tree.~TerrainQuadTree();
-    names.clear();
+    for (auto obj : gameobjects)
+    {
+        delete obj.second;
+    }
     gameobjects.clear();
 }
 
-void Scene::AddSceneObject(std::string name, GameObject const& gameobject)
+void Scene::AddSceneObject(std::string name, GameObject* gameobject)
 {
-    gameobjects.insert(std::pair<std::string, GameObject>(name, gameobject));
+    gameobjects.insert({ name, gameobject });
 }
 
 void Scene::HierarchyWindow(bool& inShow)
@@ -69,7 +66,26 @@ void Scene::HierarchyWindow(bool& inShow)
     ImGui::Begin("Hierarchy");
     ImGui::PushID(1);
     ImGui::PushItemWidth(-1);
-    ImGui::ListBox("", &selected_game_object, names.data(), static_cast<int>(names.size()), static_cast<int>(names.size()));
+    std::vector<const char*> itemNames;
+    itemNames.reserve(gameobjects.size());
+
+    int selectedId = -1;
+    int currentId = 0;
+    for (const auto& obj : gameobjects)
+    {
+        const std::string& name = obj.first;
+
+        if (selected_game_object == obj.second)
+            selectedId = currentId;
+
+        itemNames.push_back(obj.first.c_str());
+
+        currentId++;
+    }
+    ImGui::ListBox("", &selectedId, itemNames.data(), static_cast<int>(itemNames.size()));
+    if (selectedId >= 0)
+        selected_game_object = gameobjects[itemNames[selectedId]];
+
     ImGui::PopItemWidth();
     ImGui::PopID();
     ImGui::Checkbox("Stop subdividing", &tree.m_stopSubdivide);
@@ -85,11 +101,12 @@ void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
     if (GameObject* gameobject = GetSelectedSceneObject())
     {
         ImGuizmo::BeginFrame();
-        Transform& transform = gameobject->GetTransform();
+        Transform transform = gameobject->GetTransform();
         ImGuizmo::SetDrawlist();
         ImGuizmo::SetRect(inPos.x, inPos.y, inSize.x, inSize.y);
-        glm::mat4& model = transform.GetModelMatrix();
+        glm::mat4 model = transform.GetModelMatrix();
         ImGuizmo::Manipulate(glm::value_ptr(Renderer::GetCamera()->GetView()), glm::value_ptr(Renderer::GetCamera()->GetProjection()), m_current_gizmo_operation, current_gizmo_mode, glm::value_ptr(model), nullptr);
+
 
         if (ImGuizmo::IsUsing())
         {
@@ -99,22 +116,18 @@ void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
             transform.SetPosition(translation);
             transform.SetScale(scale);
             transform.Rotate(deltaRotation);
+
+            gameobject->SetTransform(transform);
         }
     }
 }
 
 GameObject* Scene::GetSelectedSceneObject()
 {
-    if (names.size() > selected_game_object)
-    {
-        std::string name = names[selected_game_object];
-        if(gameobjects.find(name) != gameobjects.end())
-            return &gameobjects[name];
-    }
-    return nullptr;
+    return selected_game_object;
 }
 
-std::unordered_map<std::string, GameObject>& Scene::AllSceneObjects()
+std::unordered_map<std::string, GameObject*>& Scene::AllSceneObjects()
 {
     return gameobjects;
 }

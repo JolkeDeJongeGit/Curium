@@ -25,7 +25,7 @@ public:
   }
   
 
-  Transform& GetTransform() { return m_transform; }
+  const Transform& GetTransform() const { return m_transform; }
   const std::vector<Mesh>& GetMeshes() const { return m_meshes; }
   
   void SetTransform(const Transform& inTransform) { m_transform = inTransform; }

@@ -78,9 +78,9 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
 	// @TODO::Needs to load in scene 
-	Terrain ter = Terrain(16);
+	Terrain* ter = new Terrain(16);
 	const Transform transformWorld(glm::vec3(0, -100000.f, 0.f), glm::vec3(0), glm::vec3(1.f));
-	ter.SetTransform(transformWorld);
+	ter->SetTransform(transformWorld);
 	Scene::AddSceneObject("World", ter);
 
 	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
@@ -130,13 +130,13 @@ void Renderer::Update()
 
 	for(auto& [name, gameobject] : Scene::AllSceneObjects())
 	{
-		cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject.GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
+		cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject->GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
 		m_domainConstant.UpdateBuffer(&cameraData);
 		m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
 
-		for (size_t i = 0; i < gameobject.GetMeshes().size(); i++)
+		for (size_t i = 0; i < gameobject->GetMeshes().size(); i++)
 		{
-			gameobject.GetMeshes()[i].Draw(commandList);
+			gameobject->GetMeshes()[i].Draw(commandList);
 		}
 	}
 }
