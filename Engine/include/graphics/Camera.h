@@ -49,7 +49,9 @@
 		inline void SetFarPlane(const float inFar) { m_far = inFar; }
 
 		float& GetSensitivity() { return m_sensitivity; }
+
 		float& GetMovementSpeed() { return m_movementSpeed; }
+		void SetMovementSpeed(const float inSpeed) { m_movementSpeed = inSpeed > 8.5f ? inSpeed : 8.5f; }
 
 		inline void SetAspect(const float inAspect) { m_aspectRatio = inAspect; }
 		inline float GetAspectRatio() const { return m_aspectRatio; };
@@ -70,5 +72,5 @@
 	    float m_far = 500000.0f;
 	    float m_aspectRatio = 1.f;
 		float m_sensitivity = 0.003f;
-		float m_movementSpeed = 8.5f;
+		float m_movementSpeed = 15000.f;
 	};

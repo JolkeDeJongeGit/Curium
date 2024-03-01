@@ -31,6 +31,7 @@ void WinWindow::Create(const int inWidth, const int inHeight)
     m_window = glfwCreateWindow(inWidth, inHeight, m_title.c_str(), nullptr, nullptr);
     glfwMakeContextCurrent(m_window);
     glfwSetCursorPosCallback(m_window, MouseCallback);
+    glfwSetScrollCallback(m_window, ScrollCallback);
 }
 
 void WinWindow::Update()
@@ -94,5 +95,9 @@ void WinWindow::MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos
             Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
         }
     }
+}
+void WinWindow::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    Renderer::GetCamera()->SetMovementSpeed(Renderer::GetCamera()->GetMovementSpeed() + yoffset * 80.f);
 }
 #pragma warning( pop )

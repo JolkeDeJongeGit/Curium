@@ -58,6 +58,8 @@ void Engine::UpdateInput(const float inDt)
 {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
+
+
 	if(ImGui::IsMouseDown(1))
 	{
 		//if (Editor::ViewportHovered())
@@ -79,6 +81,8 @@ void Engine::UpdateInput(const float inDt)
 
 			if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::DOWN, inDt);
+
+			
 
 			glfwSetInputMode(window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
