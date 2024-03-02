@@ -17,6 +17,92 @@
 		float Eye[4];
 	};
 
+	struct Plane {
+		glm::vec3 normal;
+		float distance;
+	};
+
+	class Frustum {
+	private:
+		std::vector<Plane> m_planes;
+
+	public:
+		Frustum() {
+			m_planes.resize(6); // Frustum typically has 6 planes
+
+			// Initialize frustum planes
+			for (int i = 0; i < 6; ++i) {
+				m_planes[i] = { glm::vec3(0.0f), 0.0f };
+			}
+		}
+
+		void Update(const glm::mat4& viewProjectionMatrix) {
+			// Extract frustum planes from the view-projection matrix
+
+			glm::mat4 viewProjTranspose = glm::transpose(viewProjectionMatrix);
+
+			// Right plane
+			m_planes[0] = {
+				glm::vec3(viewProjTranspose[3][0] - viewProjTranspose[0][0],
+						  viewProjTranspose[3][1] - viewProjTranspose[0][1],
+						  viewProjTranspose[3][2] - viewProjTranspose[0][2]),
+				viewProjTranspose[3][3] - viewProjTranspose[0][3]
+				};
+
+			// Left plane
+			m_planes[1] = {
+				glm::vec3(viewProjTranspose[3][0] + viewProjTranspose[0][0],
+						  viewProjTranspose[3][1] + viewProjTranspose[0][1],
+						  viewProjTranspose[3][2] + viewProjTranspose[0][2]),
+				viewProjTranspose[3][3] + viewProjTranspose[0][3]
+				};
+
+			// Bottom plane
+			m_planes[2] = {
+				glm::vec3(viewProjTranspose[3][0] + viewProjTranspose[1][0],
+						  viewProjTranspose[3][1] + viewProjTranspose[1][1],
+						  viewProjTranspose[3][2] + viewProjTranspose[1][2]),
+				viewProjTranspose[3][3] + viewProjTranspose[1][3]
+				};
+
+			// Top plane
+			m_planes[3] = {
+				glm::vec3(viewProjTranspose[3][0] - viewProjTranspose[1][0],
+						  viewProjTranspose[3][1] - viewProjTranspose[1][1],
+						  viewProjTranspose[3][2] - viewProjTranspose[1][2]),
+				viewProjTranspose[3][3] - viewProjTranspose[1][3]
+				};
+
+			// Far plane
+			m_planes[4] = {
+				glm::vec3(viewProjTranspose[3][0] - viewProjTranspose[2][0],
+						  viewProjTranspose[3][1] - viewProjTranspose[2][1],
+						  viewProjTranspose[3][2] - viewProjTranspose[2][2]),
+				viewProjTranspose[3][3] - viewProjTranspose[2][3]
+				};
+
+			// Near plane
+			m_planes[5] = {
+				glm::vec3(viewProjTranspose[3][0] + viewProjTranspose[2][0],
+						  viewProjTranspose[3][1] + viewProjTranspose[2][1],
+						  viewProjTranspose[3][2] + viewProjTranspose[2][2]),
+				viewProjTranspose[3][3] + viewProjTranspose[2][3]
+				};
+
+			// Normalize the planes
+			for (auto& plane : m_planes) {
+				float length = 1.f / glm::length(plane.normal);
+				plane.normal *= length;
+				plane.distance *= length;
+			}
+		}
+
+		const std::vector<Plane>& GetPlanes() const {
+			return m_planes;
+		}
+	};
+
+
 	class Camera
 	{
 	public:
@@ -38,6 +124,9 @@
 
 	    Transform GetTransform() const { return m_objectTransform; }
 	    inline void SetTransform(const Transform& inTransform) { m_objectTransform = inTransform; }
+
+		Frustum GetFrustrum() const { return m_frustum; }
+		inline void SetTransform(const Frustum& inFrustrum) { m_frustum = inFrustrum; }
 
 	    float GetFovDegrees() const { return m_fovDegrees; }
 	    inline void SetFovDegrees(const float inFov) { m_fovDegrees = inFov; }
@@ -64,6 +153,8 @@
 
 	    glm::mat4 m_projection;
 	    glm::mat4 m_view;
+
+		Frustum m_frustum;
 
 	    Transform m_objectTransform;
 

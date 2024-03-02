@@ -15,6 +15,7 @@ Camera::Camera(const Transform& inTransform, const float inAspectRatio, const fl
 void Camera::UpdateView()
 {
     m_view = glm::lookAt(m_objectTransform.GetPosition(), m_objectTransform.GetPosition() + m_objectTransform.GetForwardVector(), m_objectTransform.GetUpVector());
+    m_frustum.Update(m_projection * m_view);
 }
 
 void Camera::UpdateProjection(const float inAspectRatio)

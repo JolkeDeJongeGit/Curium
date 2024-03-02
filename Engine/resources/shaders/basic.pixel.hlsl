@@ -17,8 +17,8 @@ PixelOutput main(PixelInput Input)
 {
     PixelOutput Output;
 
-    Output.Color = HeightMap.Sample(LinearSampler, Input.TextureCoord);
-    //Output.Color = Input.Normal;
+    //Output.Color = HeightMap.Sample(LinearSampler, Input.TextureCoord);
+    Output.Color = float4(255, 165, 0, 1);
     
     return Output;
 }
