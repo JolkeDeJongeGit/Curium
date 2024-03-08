@@ -98,6 +98,6 @@ void WinWindow::MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos
 }
 void WinWindow::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    Renderer::GetCamera()->SetMovementSpeed(Renderer::GetCamera()->GetMovementSpeed() + yoffset * 80.f);
+    Renderer::GetCamera()->SetMovementSpeed(Renderer::GetCamera()->GetMovementSpeed() + static_cast<float>(yoffset) * 80.f);
 }
 #pragma warning( pop )

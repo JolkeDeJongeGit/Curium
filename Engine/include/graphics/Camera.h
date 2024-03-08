@@ -125,7 +125,7 @@
 	    Transform GetTransform() const { return m_objectTransform; }
 	    inline void SetTransform(const Transform& inTransform) { m_objectTransform = inTransform; }
 
-		Frustum GetFrustrum() const { return m_frustum; }
+		Frustum GetFrustum() const { return m_frustum; }
 		inline void SetTransform(const Frustum& inFrustrum) { m_frustum = inFrustrum; }
 
 	    float GetFovDegrees() const { return m_fovDegrees; }
@@ -147,6 +147,8 @@
 		
 		void ProcessMouseMovement(float inOffsetX, float inOffsetY);
 		void ProcessKeyMovement(Direction inDirection, const float inDeltaTime);
+
+		bool m_updateFrustum = false;
 	private:
 	    float m_yaw = 0.0f;
 	    float m_pitch = 0.0f;

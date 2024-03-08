@@ -4,7 +4,7 @@
 #include <components/gameobjects/Terrain.h>
 #include <common/PerformanceManager.h>
 
-static constexpr uint16_t MaxDepth = 8;
+static constexpr uint16_t MaxDepth = 4;
 
 static constexpr uint16_t NORTH = 0;
 static constexpr uint16_t EAST = 1;
@@ -109,7 +109,7 @@ inline void TerrainQuadTree::Init()
 }
 
 
-bool IsNodeInsideFrustum(const glm::vec3& nodePos, const std::vector<Plane>& frustumPlanes, const glm::vec3& cameraPos, float distanceThreshold) {
+bool IsNodeInsideFrustum(const glm::vec3& nodePos, const std::vector<Plane>& frustumPlanes) {
     for (const auto& plane : frustumPlanes) {
         // Compute the signed distance from the node's position to the plane
         float distance = glm::dot(plane.normal, nodePos) + plane.distance;
@@ -127,31 +127,41 @@ inline void TerrainQuadTree::Update()
     // Distance check
     auto drawlist = ImGui::GetWindowDrawList();
 
-    if (!m_stopSubdivide)
+    std::vector<Plane> frustumPlanes = Renderer::GetCamera()->GetFrustum().GetPlanes(); // Function to get frustum planes
+    const auto sseThreshold = 0.3f;
+
+    const float distanceThreshold = 10.0f; // Adjust this threshold as needed
+    auto& cameraPos = Renderer::GetCamera()->GetTransform().GetPosition();
+    auto& terrainPos = m_terrain->GetTransform().GetPosition();
+
+    Renderer::GetCamera()->m_updateFrustum = !m_stopSubdivide;
+
+    for (size_t i = 0; i < m_leafNodes.size(); i++) 
     {
-        std::vector<Plane> frustumPlanes = Renderer::GetCamera()->GetFrustrum().GetPlanes(); // Function to get frustum planes
-        const auto sseThreshold = 0.14f;
+        auto leafNode = m_leafNodes[i];
 
-        const float distanceThreshold = 10.0f; // Adjust this threshold as needed
-        auto& cameraPos = Renderer::GetCamera()->GetTransform().GetPosition();
-        auto& terrainPos = m_terrain->GetTransform().GetPosition();
+        const auto nodePos1 = glm::vec3{ leafNode->m_point.x, 0.0f, leafNode->m_point.y } + terrainPos;
 
-        for (size_t i = 0; i < m_leafNodes.size(); i++) {
-            auto leafNode = m_leafNodes[i];
+        // Compute the distance from the camera to the node's center
 
-            auto& cameraPos = Renderer::GetCamera()->GetTransform().GetPosition();
-            auto& terrainPos = m_terrain->GetTransform().GetPosition();
-            const auto nodePos1 = glm::vec3{ leafNode->m_point.x, 0.0f, leafNode->m_point.y } + terrainPos;
+        if (IsNodeInsideFrustum(nodePos1, frustumPlanes))
+        {
+            auto worldPos = WorldToScreen(glm::vec3(leafNode->m_point.x, m_terrain->GetTransform().GetPosition().y, leafNode->m_point.y), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
+            std::string bozo1 = "In Frustrum";
+            auto v0 = leafNode->m_point;
+            auto world = WorldToScreen(glm::vec3(v0[0] - 100, m_terrain->GetTransform().GetPosition().y + 500 * i, v0[1]), Renderer::GetCamera()->GetView(), Renderer::GetCamera()->GetProjection());
+            drawlist->AddText(ImVec2(world.x, world.y), IM_COL32(170, 0, 255, 255), bozo1.c_str());
+        }
 
-            // Compute the distance from the camera to the node's center
+        if (!IsNodeInsideFrustum(nodePos1, frustumPlanes))
+            continue;
 
-            if (!IsNodeInsideFrustum(nodePos1, frustumPlanes, cameraPos, distanceThreshold))
-                continue;
+        const auto d1 = glm::length(cameraPos - nodePos1);
 
-            const auto d1 = glm::length(cameraPos - nodePos1);
-
-            // Compute the screen space error of the node
-            const auto sse = leafNode->m_size / d1;
+        // Compute the screen space error of the node
+        const auto sse = leafNode->m_size / d1;
+        if (!m_stopSubdivide)
+        {
 
             if (leafNode->m_depth < MaxDepth && sse > sseThreshold) {
                 Subdivide(leafNode);
