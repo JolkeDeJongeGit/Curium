@@ -56,6 +56,8 @@ public:
 	std::unordered_map<std::string, Texture>  m_textureData;
 	ComPtr<ID3D12Resource> m_vertexBuffer;
 	ComPtr<ID3D12Resource> m_indexBuffer;
+
+	bool m_cull = false;
 private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexView{};
 	D3D12_INDEX_BUFFER_VIEW m_indexView{};

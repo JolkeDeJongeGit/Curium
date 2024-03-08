@@ -134,9 +134,10 @@ void Renderer::Update()
 		m_domainConstant.UpdateBuffer(&cameraData);
 		m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
 
-		for (size_t i = 0; i < gameobject->GetMeshes().size(); i++)
+		for (auto& mesh : gameobject->GetMeshes())
 		{
-			gameobject->GetMeshes()[i].Draw(commandList);
+			if(!mesh.m_cull)
+				mesh.Draw(commandList);
 		}
 	}
 }
