@@ -6,7 +6,7 @@
 #include "graphics/Camera.h"
 #include "graphics/Renderer.h"
 
-static constexpr uint16_t MaxDepth = 16;
+static constexpr uint16_t MaxDepth = 4;
 
 static constexpr uint16_t NORTH = 0;
 static constexpr uint16_t EAST = 1;
@@ -48,11 +48,8 @@ struct TerrainNode
 
             list.erase(std::remove(list.begin(), list.end(), this), list.end());
 
-            for (TerrainNode* terrain : list)
-            {
-                if (terrain->m_meshIndex > m_meshIndex)
-                    terrain->m_meshIndex--;
-            }
+
+            inTerrain->FixMeshIndex(m_meshIndex);
 
             m_meshIndex = -1;
         }
@@ -80,7 +77,7 @@ public:
     inline void Update();
     inline void Subdivide(TerrainNode* inNode);
     inline void UnSubdivide(TerrainNode* inNode);
-
+    inline void FixMeshIndex(int16_t inIndex);
     bool m_stopSubdivide = false;
 private:
     PlanetTerrain* m_terrain;
@@ -122,21 +119,20 @@ inline void TerrainQuadTree::Init(float inSize, glm::vec3 inNormal)
     glm::vec3 forward = glm::cross(right, inNormal);
 
     // Define vertices of the terrain plane using the calculated vectors
-    glm::vec3 v0 = -inSize * right - inSize * forward;
-    glm::vec3 v1 = -inSize * right + inSize * forward;
-    glm::vec3 v2 = inSize * right + inSize * forward;
-    glm::vec3 v3 = inSize * right - inSize * forward;
+    glm::vec3 v0 = -inSize * right - inSize * forward + m_terrain->m_origin;
+    glm::vec3 v1 = -inSize * right + inSize * forward + m_terrain->m_origin;
+    glm::vec3 v2 = inSize * right + inSize * forward + m_terrain->m_origin;
+    glm::vec3 v3 = inSize * right - inSize * forward + m_terrain->m_origin;
 
     // Set the point of the root node (assuming it's at the center for simplicity)
     m_rootNode->m_point = m_terrain->m_origin;
 
     // Generate terrain using the calculated vertices
-    m_rootNode->m_meshIndex = m_terrain->GenerateTerrain(v0 + m_terrain->m_origin, v1 + m_terrain->m_origin, v2 + m_terrain->m_origin, v3 + m_terrain->m_origin);
+    m_rootNode->m_meshIndex = m_terrain->GenerateTerrain(v0 , v1 , v2, v3);
 
     // Add the root node to the leaf nodes list
     m_leafNodes.push_back(m_rootNode);
 }
-
 
 //bool IsNodeInsideFrustum(const glm::vec3& nodePos, const std::vector<Plane>& frustumPlanes) {
 //    for (const auto& plane : frustumPlanes) {
@@ -190,7 +186,7 @@ inline void TerrainQuadTree::Update()
         if (!m_stopSubdivide)
         {
             if (leafNode->m_depth < MaxDepth && sse > sseThreshold) {
-                //Subdivide(leafNode);
+                Subdivide(leafNode);
             }
             else if (leafNode->m_parentNode) {
                 // Compute the world-space position of the parent node
@@ -199,8 +195,8 @@ inline void TerrainQuadTree::Update()
 
                 // Compute the screen space error of the parent node
                 const auto sseParent = leafNode->m_parentNode->m_size / d2;
-                if (sseParent < sseThreshold) {
-                    //UnSubdivide(leafNode->m_parentNode);
+                if (sseParent > sseThreshold) {
+                    UnSubdivide(leafNode->m_parentNode);
                 }
             }
         }
@@ -215,11 +211,7 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* node)
 
     m_leafNodes.erase(std::remove(m_leafNodes.begin(), m_leafNodes.end(), node), m_leafNodes.end());
 
-    for (TerrainNode* terrain : m_leafNodes)
-    {
-        if (terrain->m_meshIndex > node->m_meshIndex)
-            terrain->m_meshIndex--;
-    }
+    m_terrain->FixMeshIndex(node->m_meshIndex);
 
     int16_t depth = static_cast<int16_t>(node->m_depth + 1);
     float adjustedSize = node->m_size * 0.5f;
@@ -231,6 +223,10 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* node)
     glm::vec3 right;
     if (normal == glm::vec3(0, 1, 0)) {
         right = glm::vec3(1, 0, 0);
+    }
+    else if (normal == glm::vec3(0, -1, 0))
+    {
+        right = glm::vec3(-1, 0, 0);
     }
     else {
         // Calculate right vector based on the normal
@@ -249,7 +245,7 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* node)
     glm::vec3 v1 = point - node->m_size * right + node->m_size * forward;
     glm::vec3 v2 = point + node->m_size * forward;
     glm::vec3 v3 = point;
-    topLeft->m_meshIndex = m_terrain->GenerateTerrain(v0 , v1, v2, v3);
+    topLeft->m_meshIndex = m_terrain->GenerateTerrain(v0, v1, v2, v3);
 
     TerrainNode* topRight = new TerrainNode(point + adjustedSize * right + adjustedSize * forward, adjustedSize, depth, node);
     v0 = point;
@@ -273,12 +269,12 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* node)
     bottomLeft->m_meshIndex = m_terrain->GenerateTerrain(v0, v1, v2, v3);
 
     node->m_terrainNodes[0] = topLeft;
-    //node->m_terrainNodes[1] = topRight;
+    node->m_terrainNodes[1] = topRight;
     node->m_terrainNodes[2] = bottomRight;
     node->m_terrainNodes[3] = bottomLeft;
 
     m_leafNodes.push_back(topLeft);
-    //m_leafNodes.push_back(topRight);
+    m_leafNodes.push_back(topRight);
     m_leafNodes.push_back(bottomRight);
     m_leafNodes.push_back(bottomLeft);
 
@@ -287,23 +283,6 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* node)
 
 inline void TerrainQuadTree::UnSubdivide(TerrainNode* inNode)
 {
-    //for (size_t i = 0; i < 4; i++)
-    //{
-    //    auto& deleteNode = inNode->m_terrainNodes[i];
-
-    //    if (deleteNode)
-    //    {
-    //        deleteNode->Reset(m_terrain, m_leafNodes);
-    //    }
-    //}
-
-    //glm::vec3 v0 = glm::vec3(inNode->m_point.x - inNode->m_size, 0.0f, inNode->m_point.y - inNode->m_size);
-    //glm::vec3 v1 = glm::vec3(inNode->m_point.x - inNode->m_size, 0.0f, inNode->m_point.y + inNode->m_size);
-    //glm::vec3 v2 = glm::vec3(inNode->m_point.x + inNode->m_size, 0.0f, inNode->m_point.y + inNode->m_size);
-    //glm::vec3 v3 = glm::vec3(inNode->m_point.x + inNode->m_size, 0.0f, inNode->m_point.y - inNode->m_size);
-    //inNode->m_meshIndex = m_terrain->GenerateTerrain(v0, v1, v2, v3);
-
-    //m_leafNodes.push_back(inNode);
     for (size_t i = 0; i < 4; i++)
     {
         auto& deleteNode = inNode->m_terrainNodes[i];
@@ -322,6 +301,10 @@ inline void TerrainQuadTree::UnSubdivide(TerrainNode* inNode)
     if (normal == glm::vec3(0, 1, 0)) {
         right = glm::vec3(1, 0, 0);
     }
+    else if (normal == glm::vec3(0, -1, 0))
+    {
+        right = glm::vec3(-1, 0, 0);
+    }
     else {
         // Calculate right vector based on the normal
         glm::vec3 up(0, 1, 0);
@@ -337,4 +320,13 @@ inline void TerrainQuadTree::UnSubdivide(TerrainNode* inNode)
     inNode->m_meshIndex = m_terrain->GenerateTerrain(v0, v1, v2, v3);
 
     m_leafNodes.push_back(inNode);
+}
+
+inline void TerrainQuadTree::FixMeshIndex(int16_t inIndex)
+{
+    for (TerrainNode* terrain : m_leafNodes)
+    {
+        if (terrain->m_meshIndex > inIndex)
+            terrain->m_meshIndex--;
+    }
 }

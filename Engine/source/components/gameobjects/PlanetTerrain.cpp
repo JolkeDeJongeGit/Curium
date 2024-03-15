@@ -22,6 +22,11 @@ void PlanetTerrain::ClearMesh(uint16_t inIndex)
 	m_planet->ClearMesh(inIndex);
 }
 
+void PlanetTerrain::FixMeshIndex(uint16_t inIndex)
+{
+	m_planet->FixMeshIndex(inIndex);
+}
+
 uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, glm::vec3 inPoint3, glm::vec3 inPoint4)
 {
 	int div = m_detail;
@@ -60,6 +65,7 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 			glm::vec3 crntVec = v0 + i * dir03 + j * acrossj;
 			// Position
 			vertices.emplace_back(glm::normalize(glm::vec3(crntVec.x, crntVec.y, crntVec.z)) * m_planet->m_size);
+			//vertices.emplace_back(glm::vec3(crntVec.x, crntVec.y, crntVec.z));
 			// Tex UV
 			textureCoords.emplace_back(glm::vec2(float(j) * m_inverseDetail, float(i) * m_inverseDetail));
 		}
@@ -69,6 +75,8 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 	{
 		mesh.m_vertexData.emplace_back(VertexData(vertices[i], glm::vec3(0, 1, 0), textureCoords[i]));
 	}
+
+	mesh.m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/base.png")));
 
 	mesh.CreateVertexBuffer();
 	mesh.CreateIndexBuffer();

@@ -2,6 +2,7 @@
 #include "components/terrain/TerrainQuadTree.h"
 #include "graphics/Renderer.h"
 #include "components/gameobjects/Planet.h"
+#include <core/Scene.h>
 
 Planet::Planet(int inDetail, float inSize)
 	: m_detail(inDetail), m_size(inSize)
@@ -36,6 +37,7 @@ void Planet::Update()
 	for (size_t i = 0; i < 6; i++)
 	{
 		m_quadTree[i]->Update();
+		m_quadTree[i]->m_stopSubdivide = Scene::StopSubdivide();
 	}
 }
 
@@ -49,5 +51,13 @@ void Planet::ClearMesh(uint16_t inIndex)
 	{
 		Renderer::AddRemovedMesh(m_meshes[inIndex]);
 		m_meshes.erase(m_meshes.begin() + inIndex);
+	}
+}
+
+void Planet::FixMeshIndex(uint16_t inIndex)
+{
+	for (size_t i = 0; i < 6; i++)
+	{
+		m_quadTree[i]->FixMeshIndex(inIndex);
 	}
 }

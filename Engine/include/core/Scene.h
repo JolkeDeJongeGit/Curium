@@ -10,6 +10,8 @@ namespace Scene
 	void AddSceneObject(std::string name, GameObject* gameobject);
 	void HierarchyWindow(bool& inShow);
 
+	bool StopSubdivide();
+
 	GameObject* GetSelectedSceneObject();
 
 	void SceneGizmo(ImVec2 inPos, ImVec2 inSize);

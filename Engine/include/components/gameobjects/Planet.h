@@ -12,6 +12,7 @@ public:
 	void Update() override;
 	void Shutdown() override;
 	void ClearMesh(uint16_t inIndex);
+	void FixMeshIndex(uint16_t inIndex);
 	float m_size;
 private:
 	int m_detail;

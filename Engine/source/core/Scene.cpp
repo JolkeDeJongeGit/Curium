@@ -11,11 +11,9 @@ namespace Scene
     std::unordered_map<std::string, GameObject*> gameobjects;
 
     GameObject* selected_game_object = nullptr;
-
+    bool stop_subdivide = false;
     ImGuizmo::OPERATION m_current_gizmo_operation(ImGuizmo::TRANSLATE);
     ImGuizmo::MODE current_gizmo_mode(ImGuizmo::LOCAL);
-
-    TerrainQuadTree tree;
 }
 
 void Scene::Init()
@@ -84,15 +82,18 @@ void Scene::HierarchyWindow(bool& inShow)
 
     ImGui::PopItemWidth();
     ImGui::PopID();
-    ImGui::Checkbox("Stop subdividing", &tree.m_stopSubdivide);
+    ImGui::Checkbox("Stop subdividing", &stop_subdivide);
     ImGui::End();
     ImGui::PopStyleVar();
 }
 
+bool Scene::StopSubdivide()
+{
+    return stop_subdivide;
+}
+
 void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
 {
-    tree.Update();
-
     ImGuiIO& io = ImGui::GetIO();
     if (GameObject* gameobject = GetSelectedSceneObject())
     {

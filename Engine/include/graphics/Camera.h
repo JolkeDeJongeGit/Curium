@@ -162,8 +162,8 @@
 
 	    float m_fovDegrees = 80.f;
 	    float m_near = 0.1f;
-	    float m_far = 500000.0f;
+	    float m_far = 5000000.0f;
 	    float m_aspectRatio = 1.f;
 		float m_sensitivity = 0.003f;
-		float m_movementSpeed = 15000.f;
+		float m_movementSpeed = 400000.f;
 	};
