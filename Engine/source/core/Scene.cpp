@@ -3,8 +3,8 @@
 #include "include/ImGuizmo.h"
 #include "graphics/DebugManager.h"
 #include "graphics/Renderer.h"
-#include "graphics/Camera.h"
-#include <components/terrain/TerrainQuadTree.h>
+#include "components/terrain/TerrainQuadTree.h"
+#include "components/gameobjects/Planet.h"
 
 namespace Scene
 {
@@ -20,10 +20,6 @@ namespace Scene
 
 void Scene::Init()
 {
-    auto world = gameobjects["World"];
-    tree = TerrainQuadTree(dynamic_cast<Terrain*>(world));
-    tree.Init();
-
     for (auto& [name, gameobject] : gameobjects)
         gameobject->Init();
 }

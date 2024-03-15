@@ -24,7 +24,6 @@ public:
   {
   }
   
-
   const Transform& GetTransform() const { return m_transform; }
   std::vector<Mesh>& GetMeshes() { return m_meshes; }
   

@@ -156,7 +156,10 @@
     <ClCompile Include="source\core\Editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\components\gameobjects\Terrain.cpp">
+    <ClCompile Include="source\components\gameobjects\PlanetTerrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\gameobjects\Planet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -236,10 +239,13 @@
     <ClInclude Include="include\core\Editor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\components\gameobjects\Terrain.h">
+    <ClInclude Include="include\components\gameobjects\PlanetTerrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\components\terrain\TerrainQuadTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\components\gameobjects\Planet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

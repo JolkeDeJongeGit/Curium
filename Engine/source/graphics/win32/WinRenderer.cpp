@@ -16,7 +16,8 @@
 #include <graphics/win32/WinBuffer.h>
 #include <core/ImGuiLayer.h>
 #include "core/Scene.h"
-#include <components/gameobjects/Terrain.h>
+#include <components/gameobjects/PlanetTerrain.h>
+#include <components/gameobjects/Planet.h>
 
 namespace Renderer
 {
@@ -78,8 +79,8 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
 	// @TODO::Needs to load in scene 
-	Terrain* ter = new Terrain(16);
-	const Transform transformWorld(glm::vec3(0, -100000.f, 0.f), glm::vec3(0), glm::vec3(1.f));
+	Planet* ter = new Planet(8, 1000000);
+	const Transform transformWorld(glm::vec3(0, -1000000.f, 0.f), glm::vec3(0), glm::vec3(1.f));
 	ter->SetTransform(transformWorld);
 	Scene::AddSceneObject("World", ter);
 
