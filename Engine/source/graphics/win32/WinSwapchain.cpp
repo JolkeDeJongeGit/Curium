@@ -19,13 +19,6 @@ void Swapchain::Init(const int inWidth, const int inHeight)
 	SetupSwapchain(inWidth, inHeight);
 	SetupDepthBuffer(inWidth, inHeight);
 	SetupRenderTextureBuffer(inWidth, inHeight);
-
-	ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-
-	m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-
-	if (m_fenceEvent == nullptr)
-		ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 }
 
 Swapchain::Swapchain() = default;
@@ -33,7 +26,6 @@ Swapchain::Swapchain() = default;
 
 Swapchain::~Swapchain()
 {
-	CloseHandle(m_fenceEvent);
 }
 
 uint32_t Swapchain::GetCurrentBuffer() const
@@ -54,23 +46,15 @@ void Swapchain::ResizeBuffer(int _width, int _height) const
 
 void Swapchain::Present()
 {
+	auto commandqueue = WinUtil::GetCommandQueue();
 	m_swapchain->Present(1, 0);
-}
 
-void Swapchain::UpdateFenceValue()
-{
-	m_fenceValue++;
-}
+	m_fenceValues[m_currentBuffer] = commandqueue->Signal();
 
-void Swapchain::WaitForFenceValue(const ComPtr<ID3D12CommandQueue>& inCommandQueue) const
-{
-	ThrowIfFailed(inCommandQueue->Signal(m_fence.Get(), m_fenceValue));
+	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 
-	if (m_fence->GetCompletedValue() < m_fenceValue)
-	{
-		ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
-		WaitForSingleObject(m_fenceEvent, INFINITE);
-	}
+	auto fenceValue = m_fenceValues[m_currentBuffer];
+	commandqueue->WaitForFence(fenceValue);
 }
 
 void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)

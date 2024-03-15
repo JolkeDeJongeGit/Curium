@@ -157,50 +157,50 @@ inline void TerrainQuadTree::Update()
 
     Renderer::GetCamera()->m_updateFrustum = !m_stopSubdivide;
 
-    for (size_t i = 0; i < m_leafNodes.size(); i++) 
-    {
-        auto leafNode = m_leafNodes[i];
+    //for (size_t i = 0; i < m_leafNodes.size(); i++) 
+    //{
+    //    auto leafNode = m_leafNodes[i];
 
-        const auto nodePos1 = leafNode->m_point + terrainPos;
+    //    const auto nodePos1 = leafNode->m_point + terrainPos;
 
-        //const auto topLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
-        //const auto topRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
-        //const auto bottomLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
-        //const auto bottomRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
+    //    //const auto topLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
+    //    //const auto topRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
+    //    //const auto bottomLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
+    //    //const auto bottomRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
 
-        //if (!IsNodeInsideFrustum(topLeft, frustumPlanes)
-        //    && !IsNodeInsideFrustum(topRight, frustumPlanes)
-        //    && !IsNodeInsideFrustum(bottomLeft, frustumPlanes)
-        //    && !IsNodeInsideFrustum(bottomRight, frustumPlanes))
-        //{
-        //    //m_terrain->GetMeshes()[leafNode->m_meshIndex].m_cull = true;
-        //    continue;
-        //}
+    //    //if (!IsNodeInsideFrustum(topLeft, frustumPlanes)
+    //    //    && !IsNodeInsideFrustum(topRight, frustumPlanes)
+    //    //    && !IsNodeInsideFrustum(bottomLeft, frustumPlanes)
+    //    //    && !IsNodeInsideFrustum(bottomRight, frustumPlanes))
+    //    //{
+    //    //    //m_terrain->GetMeshes()[leafNode->m_meshIndex].m_cull = true;
+    //    //    continue;
+    //    //}
 
-        //m_terrain->GetMeshes()[leafNode->m_meshIndex].m_cull = false;
+    //    //m_terrain->GetMeshes()[leafNode->m_meshIndex].m_cull = false;
 
-        const auto d1 = glm::length(cameraPos - nodePos1);
+    //    const auto d1 = glm::length(cameraPos - nodePos1);
 
-        // Compute the screen space error of the node
-        const auto sse = leafNode->m_size / d1;
-        if (!m_stopSubdivide)
-        {
-            if (leafNode->m_depth < MaxDepth && sse > sseThreshold) {
-                Subdivide(leafNode);
-            }
-            else if (leafNode->m_parentNode) {
-                // Compute the world-space position of the parent node
-                const auto nodePos2 = leafNode->m_parentNode->m_point + terrainPos;
-                const auto d2 = glm::length(cameraPos - nodePos2);
+    //    // Compute the screen space error of the node
+    //    const auto sse = leafNode->m_size / d1;
+    //    if (!m_stopSubdivide)
+    //    {
+    //        if (leafNode->m_depth < MaxDepth && sse > sseThreshold) {
+    //            Subdivide(leafNode);
+    //        }
+    //        else if (leafNode->m_parentNode) {
+    //            // Compute the world-space position of the parent node
+    //            const auto nodePos2 = leafNode->m_parentNode->m_point + terrainPos;
+    //            const auto d2 = glm::length(cameraPos - nodePos2);
 
-                // Compute the screen space error of the parent node
-                const auto sseParent = leafNode->m_parentNode->m_size / d2;
-                if (sseParent > sseThreshold) {
-                    UnSubdivide(leafNode->m_parentNode);
-                }
-            }
-        }
-    }
+    //            // Compute the screen space error of the parent node
+    //            const auto sseParent = leafNode->m_parentNode->m_size / d2;
+    //            if (sseParent > sseThreshold) {
+    //                UnSubdivide(leafNode->m_parentNode);
+    //            }
+    //        }
+    //    }
+    //}
 }
 
 inline void TerrainQuadTree::Subdivide(TerrainNode* node)

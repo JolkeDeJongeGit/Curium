@@ -17,6 +17,8 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 
 	D3D12_HEAP_PROPERTIES properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, inImageSize.x, inImageSize.y);
+	desc.MipLevels = 1;
+
 	ThrowIfFailed(device->CreateCommittedResource(
 		&properties,
 		D3D12_HEAP_FLAG_NONE,

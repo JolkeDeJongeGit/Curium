@@ -91,8 +91,7 @@ void WinWindow::MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos
     {
         if(glfwGetMouseButton(inWindow, GLFW_MOUSE_BUTTON_2))
         {
-            
-            Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset, MouseYOffset);
+            Renderer::GetCamera()->ProcessMouseMovement(MouseXOffset * 100.f * ImGui::GetIO().DeltaTime, MouseYOffset * 100.f * ImGui::GetIO().DeltaTime);
         }
     }
 }

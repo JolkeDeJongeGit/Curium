@@ -5,6 +5,7 @@
 #include "graphics/Renderer.h"
 #include "components/terrain/TerrainQuadTree.h"
 #include "components/gameobjects/Planet.h"
+#include "graphics/win32/WinCommandQueue.h"
 
 namespace Scene
 {
@@ -18,8 +19,13 @@ namespace Scene
 
 void Scene::Init()
 {
+    auto commandqueue = WinUtil::GetCommandQueue();
+    commandqueue->OpenCommandList();
+
     for (auto& [name, gameobject] : gameobjects)
         gameobject->Init();
+
+    commandqueue->CloseCommandList();
 }
 
 void Scene::Update(const float inDt)

@@ -28,6 +28,7 @@ void Engine::Init()
 	Scene::Init();
 	Debug::Init();
 	ImGuiLayer::Init();
+
 }
 
 void Engine::Update(const float inDt)
@@ -58,8 +59,6 @@ void Engine::UpdateInput(const float inDt)
 {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-
-
 	if(ImGui::IsMouseDown(1))
 	{
 		//if (Editor::ViewportHovered())
@@ -82,12 +81,9 @@ void Engine::UpdateInput(const float inDt)
 			if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
 				Renderer::GetCamera()->ProcessKeyMovement(Direction::DOWN, inDt);
 
-			
-
 			glfwSetInputMode(window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 			normal_mouse = false;
-
 		}
 	}
 	else if(!normal_mouse)

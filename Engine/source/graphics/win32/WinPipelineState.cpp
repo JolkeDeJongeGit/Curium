@@ -83,8 +83,8 @@ void PipelineState::SetupRootSignature()
 	CD3DX12_STATIC_SAMPLER_DESC	descSamplers[1];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
 	descSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	descSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	descSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	descSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	descSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init_1_1(_countof(rootParameter), rootParameter, 1, &descSamplers[0], D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
