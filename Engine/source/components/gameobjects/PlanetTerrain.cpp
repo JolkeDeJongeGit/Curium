@@ -31,6 +31,7 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 {
 	int div = m_detail;
 	m_inverseDetail = 1.f / m_detail;
+	float inverseSize = 1.f / m_planet->m_size;
 
 	auto& meshes = m_planet->GetMeshes();
 	meshes.emplace_back(Mesh());
@@ -70,10 +71,11 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 			textureCoords.emplace_back(glm::vec2(float(j) * m_inverseDetail, float(i) * m_inverseDetail));
 		}
 	}
-
+	
 	for (size_t i = 0; i < vertices.size(); i++)
 	{
-		mesh.m_vertexData.emplace_back(VertexData(vertices[i], glm::vec3(0, 1, 0), textureCoords[i]));
+		glm::vec3 normal = (vertices[i]- m_planet->GetTransform().GetPosition() ) * inverseSize;
+		mesh.m_vertexData.emplace_back(VertexData(vertices[i], normal, textureCoords[i]));
 	}
 
 	mesh.m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/base.png")));

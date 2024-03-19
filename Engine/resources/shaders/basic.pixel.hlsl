@@ -25,10 +25,18 @@ SamplerState LinearSampler : register(s0);
 PixelOutput main(PixelInput Input)
 {
     PixelOutput Output;
-
-    float4 albedo = pow(Color.Sample(LinearSampler, Input.TextureCoord * 10000.f), 2.2f);
-    Output.Color = albedo;
-    //Output.Color = float4(255, 165, 0, 1);
+    float4 lightDir = float4(0, 0.5f, 1.f, 1.f);
+    float4 lightColor = float4(1, 1, 1, 1);
     
+    float ambientStrength = 0.01f;
+    float4 ambient = ambientStrength * lightColor;
+    
+    
+    float diff = max(dot(Input.Normal, lightDir), 0.0);
+    float4 diffuse = diff * lightColor;
+    
+    
+    float4 albedo = pow(Color.Sample(LinearSampler, Input.TextureCoord), 2.2f);
+    Output.Color = (ambient + diffuse) * albedo;
     return Output;
 }
