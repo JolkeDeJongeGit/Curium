@@ -1,12 +1,14 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
+#include "components/gameobjects/Planet.h"
 #include "components/gameobjects/PlanetTerrain.h"
 #include "common/PerformanceManager.h"
 #include "graphics/Camera.h"
 #include "graphics/Renderer.h"
+#include "../ImGui/include/imgui.h"
 
-static constexpr uint16_t MaxDepth = 4;
+static constexpr uint16_t MaxDepth = 16;
 
 static constexpr uint16_t NORTH = 0;
 static constexpr uint16_t EAST = 1;
@@ -119,10 +121,10 @@ inline void TerrainQuadTree::Init(float inSize, glm::vec3 inNormal)
     glm::vec3 forward = glm::cross(right, inNormal);
 
     // Define vertices of the terrain plane using the calculated vectors
-    glm::vec3 v0 = -inSize * right - inSize * forward + m_terrain->m_origin;
-    glm::vec3 v1 = -inSize * right + inSize * forward + m_terrain->m_origin;
-    glm::vec3 v2 = inSize * right + inSize * forward + m_terrain->m_origin;
-    glm::vec3 v3 = inSize * right - inSize * forward + m_terrain->m_origin;
+    glm::vec3 v0 = -inSize * right - inSize * forward ;
+    glm::vec3 v1 = -inSize * right + inSize * forward ;
+    glm::vec3 v2 = inSize * right + inSize * forward ;
+    glm::vec3 v3 = inSize * right - inSize * forward;
 
     // Set the point of the root node (assuming it's at the center for simplicity)
     m_rootNode->m_point = m_terrain->m_origin;
@@ -146,61 +148,54 @@ inline void TerrainQuadTree::Init(float inSize, glm::vec3 inNormal)
 //    return true;
 //}
 
+
+        //const auto topLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
+        //const auto topRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
+        //const auto bottomLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
+        //const auto bottomRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
+
+        //if (!IsNodeInsideFrustum(topLeft, frustumPlanes)
+        //    && !IsNodeInsideFrustum(topRight, frustumPlanes)
+        //    && !IsNodeInsideFrustum(bottomLeft, frustumPlanes)
+        //    && !IsNodeInsideFrustum(bottomRight, frustumPlanes))
+        //{
+        //    continue;
+        //}
+
+
 inline void TerrainQuadTree::Update()
 {
     PROFILE_FUNCTION();
-    std::vector<Plane> frustumPlanes = Renderer::GetCamera()->GetFrustum().GetPlanes(); // Function to get frustum planes
-    const auto sseThreshold = 0.4f;
+    //std::vector<Plane> frustumPlanes = Renderer::GetCamera()->GetFrustum().GetPlanes(); // Function to get frustum planes
 
     auto& cameraPos = Renderer::GetCamera()->GetTransform().GetPosition();
-    auto& terrainPos = m_terrain->m_origin;
+    auto& terrainPos = m_terrain->m_planet->GetTransform().GetPosition();
 
     Renderer::GetCamera()->m_updateFrustum = !m_stopSubdivide;
+    auto drawlist = ImGui::GetWindowDrawList();
 
-    //for (size_t i = 0; i < m_leafNodes.size(); i++) 
-    //{
-    //    auto leafNode = m_leafNodes[i];
+    for (size_t i = 0; i < m_leafNodes.size(); i++) 
+    {
+        if (!m_stopSubdivide)
+        {
+            auto leafNode = m_leafNodes[i];
+            const auto nodePos1 = leafNode->m_point + terrainPos;
 
-    //    const auto nodePos1 = leafNode->m_point + terrainPos;
+            const float d1 = glm::distance(cameraPos, nodePos1);
+  
+            if (leafNode->m_depth < MaxDepth && d1 < leafNode->m_size * 3.f) {
+                Subdivide(leafNode);
+            }
+            else if (leafNode->m_parentNode) {
+                const auto nodePos2 = leafNode->m_parentNode->m_point + terrainPos;
+                const auto d2 = glm::distance(cameraPos, nodePos2);
 
-    //    //const auto topLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
-    //    //const auto topRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
-    //    //const auto bottomLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
-    //    //const auto bottomRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
-
-    //    //if (!IsNodeInsideFrustum(topLeft, frustumPlanes)
-    //    //    && !IsNodeInsideFrustum(topRight, frustumPlanes)
-    //    //    && !IsNodeInsideFrustum(bottomLeft, frustumPlanes)
-    //    //    && !IsNodeInsideFrustum(bottomRight, frustumPlanes))
-    //    //{
-    //    //    //m_terrain->GetMeshes()[leafNode->m_meshIndex].m_cull = true;
-    //    //    continue;
-    //    //}
-
-    //    //m_terrain->GetMeshes()[leafNode->m_meshIndex].m_cull = false;
-
-    //    const auto d1 = glm::length(cameraPos - nodePos1);
-
-    //    // Compute the screen space error of the node
-    //    const auto sse = leafNode->m_size / d1;
-    //    if (!m_stopSubdivide)
-    //    {
-    //        if (leafNode->m_depth < MaxDepth && sse > sseThreshold) {
-    //            Subdivide(leafNode);
-    //        }
-    //        else if (leafNode->m_parentNode) {
-    //            // Compute the world-space position of the parent node
-    //            const auto nodePos2 = leafNode->m_parentNode->m_point + terrainPos;
-    //            const auto d2 = glm::length(cameraPos - nodePos2);
-
-    //            // Compute the screen space error of the parent node
-    //            const auto sseParent = leafNode->m_parentNode->m_size / d2;
-    //            if (sseParent > sseThreshold) {
-    //                UnSubdivide(leafNode->m_parentNode);
-    //            }
-    //        }
-    //    }
-    //}
+                if (d2 > leafNode->m_parentNode->m_size * 3.f) {
+                    UnSubdivide(leafNode->m_parentNode);
+                }
+            }
+        }
+    }
 }
 
 inline void TerrainQuadTree::Subdivide(TerrainNode* node)

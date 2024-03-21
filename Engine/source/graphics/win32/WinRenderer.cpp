@@ -79,7 +79,7 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
 	// @TODO::Needs to load in scene 
-	Planet* ter = new Planet(128, 100000);
+	Planet* ter = new Planet(16, 100000);
 	const Transform transformWorld(glm::vec3(0, -103000.f, 0.f), glm::vec3(0), glm::vec3(1.f));
 	ter->SetTransform(transformWorld);
 	Scene::AddSceneObject("World", ter);
@@ -151,6 +151,8 @@ void Renderer::Render()
 	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	commandlist->ResourceBarrier(1, &presentBarrier);
 
+	ImGuiLayer::NewFrame();
+
 	RenderImGui();
 
 	ThrowIfFailed(commandlist->Close());
@@ -179,7 +181,6 @@ void Renderer::RenderImGui()
 
 	commandlist->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
-	ImGuiLayer::NewFrame();
 	ImGuiLayer::UpdateWindow();
 	ImGuiLayer::Render(commandlist.Get());
 

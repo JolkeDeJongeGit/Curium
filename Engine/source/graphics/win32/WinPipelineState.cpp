@@ -149,7 +149,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	// Create wireframe version
 	CD3DX12_RASTERIZER_DESC rasterizer1{ CD3DX12_DEFAULT() };
 	rasterizer1.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	rasterizer1.CullMode = D3D12_CULL_MODE_NONE;
+	rasterizer1.CullMode = D3D12_CULL_MODE_BACK;
 
 	PipelineStateStream wirePipelineStateStream;
 

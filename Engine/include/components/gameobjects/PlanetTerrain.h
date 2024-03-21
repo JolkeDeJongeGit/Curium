@@ -15,7 +15,7 @@ public:
 	uint16_t GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, glm::vec3 inPoint3, glm::vec3 inPoint4);
 	glm::vec3 m_origin;
 	int m_detail;
-private:
 	class Planet* m_planet;
+private:
 	float m_inverseDetail;
 };

@@ -40,10 +40,7 @@ void Scene::Update(const float inDt)
             m_current_gizmo_operation = ImGuizmo::SCALE;
     }
 
-    for (auto& [name, gameobject] : gameobjects)
-    {
-        gameobject->Update();
-    }
+
 }
 
 void Scene::Shutdown()
@@ -101,6 +98,11 @@ bool Scene::StopSubdivide()
 void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
 {
     ImGuiIO& io = ImGui::GetIO();
+    for (auto& [name, gameobject] : gameobjects)
+    {
+        gameobject->Update();
+    }
+
     if (GameObject* gameobject = GetSelectedSceneObject())
     {
         ImGuizmo::BeginFrame();
