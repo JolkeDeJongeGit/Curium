@@ -11,10 +11,10 @@ void Buffer::CreateConstantBuffer(uint32_t inSize)
 	DescriptorHeap* cbv = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
 
 	m_size = inSize;
-	int t = inSize * inverse;
+	float t = inSize * inverse;
 	int rem = inSize % 256;
 
-	uint32_t bufferSize = t * 256;
+	uint32_t bufferSize = static_cast<uint32_t>(t) * 256;
 	if (rem > 0)
 	{
 		bufferSize += 256;

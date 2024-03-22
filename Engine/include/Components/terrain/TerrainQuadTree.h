@@ -95,7 +95,7 @@ inline TerrainQuadTree::~TerrainQuadTree()
 
 inline void TerrainQuadTree::Init(float inSize, glm::vec3 inNormal)
 {
-    for (size_t i = 0; i < 3; i++)
+    for (glm::vec<3, float, glm::packed_highp>::length_type i = 0; i < 3; i++)
     {
         m_normal[i] = static_cast<int16_t>(inNormal[i]) + 2;
     }
@@ -136,37 +136,9 @@ inline void TerrainQuadTree::Init(float inSize, glm::vec3 inNormal)
     m_leafNodes.push_back(m_rootNode);
 }
 
-//bool IsNodeInsideFrustum(const glm::vec3& nodePos, const std::vector<Plane>& frustumPlanes) {
-//    for (const auto& plane : frustumPlanes) {
-//        // Compute the signed distance from the node's position to the plane
-//        float distance = glm::dot(plane.normal, nodePos) + plane.distance;
-//
-//        // If the node is behind any of the frustum planes, it's outside the frustum
-//        if (distance < 0.0f)
-//            return false;
-//    }
-//    return true;
-//}
-
-
-        //const auto topLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
-        //const auto topRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y + leafNode->m_size } + terrainPos;
-        //const auto bottomLeft = glm::vec3{ leafNode->m_point.x - leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
-        //const auto bottomRight = glm::vec3{ leafNode->m_point.x + leafNode->m_size, 0.0f, leafNode->m_point.y - leafNode->m_size } + terrainPos;
-
-        //if (!IsNodeInsideFrustum(topLeft, frustumPlanes)
-        //    && !IsNodeInsideFrustum(topRight, frustumPlanes)
-        //    && !IsNodeInsideFrustum(bottomLeft, frustumPlanes)
-        //    && !IsNodeInsideFrustum(bottomRight, frustumPlanes))
-        //{
-        //    continue;
-        //}
-
-
 inline void TerrainQuadTree::Update()
 {
     PROFILE_FUNCTION();
-    //std::vector<Plane> frustumPlanes = Renderer::GetCamera()->GetFrustum().GetPlanes(); // Function to get frustum planes
 
     auto& cameraPos = Renderer::GetCamera()->GetTransform().GetPosition();
     auto& terrainPos = m_terrain->m_planet->GetTransform().GetPosition();
@@ -233,7 +205,7 @@ inline void TerrainQuadTree::Subdivide(TerrainNode* node)
     glm::vec3 point(node->m_point);
 
     // Array to store the terrain nodes
-    TerrainNode* terrainNodes[4];
+    TerrainNode* terrainNodes[4] {};
 
     TerrainNode* topLeft = new TerrainNode(point - adjustedSize * right + adjustedSize * forward, adjustedSize, depth, node);
     glm::vec3 v0 = point - node->m_size * right;

@@ -13,6 +13,7 @@ struct PipelineStateStream
 	CD3DX12_PIPELINE_STATE_STREAM_PS PS;
 	CD3DX12_PIPELINE_STATE_STREAM_HS HS;
 	CD3DX12_PIPELINE_STATE_STREAM_DS DS;
+	//CD3DX12_PIPELINE_STATE_STREAM_CS CS;
 	CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL DepthStencil;
 	CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
 	CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
@@ -27,6 +28,7 @@ PipelineState::PipelineState(const std::string& inVertexName, const std::string&
 	shader.LoadShader(inPixelName.c_str(), std::string("resources/shaders/").c_str());
 	shader.LoadShader("basic.hull", std::string("resources/shaders/").c_str());
 	shader.LoadShader("basic.domain", std::string("resources/shaders/").c_str());
+	shader.LoadShader("basic.compute", std::string("resources/shaders/").c_str());
 
 	m_vertexName = inVertexName.c_str();
 	m_pixelName = inPixelName.c_str();
@@ -135,6 +137,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_pixelName).ShaderBlob.Get());
 	pipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.hull").ShaderBlob.Get());
 	pipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.domain").ShaderBlob.Get());
+	//pipelineStateStream.CS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.compute").ShaderBlob.Get());
 	pipelineStateStream.DepthStencil = depthStencilDesc;
 	pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	pipelineStateStream.RTVFormats = rtvFormats;
@@ -160,6 +163,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	wirePipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_pixelName).ShaderBlob.Get());
 	wirePipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.hull").ShaderBlob.Get());
 	wirePipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.domain").ShaderBlob.Get());
+	//wirePipelineStateStream.CS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.compute").ShaderBlob.Get());
 	wirePipelineStateStream.DepthStencil = depthStencilDesc;
 	wirePipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	wirePipelineStateStream.RTVFormats = rtvFormats;
