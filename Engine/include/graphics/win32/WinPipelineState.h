@@ -5,13 +5,14 @@ public:
 	PipelineState() = default; 
 	PipelineState(const std::string& vertexName, const std::string& pixelName, D3D12_PRIMITIVE_TOPOLOGY_TYPE type, bool useDepth = true);
 
-	ComPtr<ID3D12PipelineState>& GetPipelineState();
-	ComPtr<ID3D12PipelineState>& GetWireframePipelineState();
-	ComPtr<ID3D12RootSignature>& GetRootSignature();
+	inline ComPtr<ID3D12PipelineState>& GetPipelineState() { return m_pipelineState; };
+	inline ComPtr<ID3D12PipelineState>& GetWireframePipelineState() {return m_wireframePipelineState; };
+	inline ComPtr<ID3D12RootSignature>& GetRootSignature() { return m_rootSignature; };
 private:
 	virtual void SetupRootSignature();
 	virtual void SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, bool inUseDepth);
 
+protected:
 	ComPtr<ID3D12PipelineState> m_pipelineState;
 	ComPtr<ID3D12PipelineState> m_wireframePipelineState;
 	ComPtr<ID3D12RootSignature> m_rootSignature;

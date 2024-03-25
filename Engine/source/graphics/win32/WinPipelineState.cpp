@@ -4,52 +4,21 @@
 #include "graphics/win32/WinPipelineState.h"
 
 
-struct PipelineStateStream
-{
-	CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE pRootSignature;
-	CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
-	CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
-	CD3DX12_PIPELINE_STATE_STREAM_VS VS;
-	CD3DX12_PIPELINE_STATE_STREAM_PS PS;
-	CD3DX12_PIPELINE_STATE_STREAM_HS HS;
-	CD3DX12_PIPELINE_STATE_STREAM_DS DS;
-	//CD3DX12_PIPELINE_STATE_STREAM_CS CS;
-	CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL DepthStencil;
-	CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
-	CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
-	CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER Rasterizer;
-};
+
 
 PipelineState::PipelineState(const std::string& inVertexName, const std::string& inPixelName, const D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, const bool inUseDepth)
 {
-	auto& shader = ShaderManager::Get();
-	shader.Init();
-	shader.LoadShader(inVertexName.c_str(), std::string("resources/shaders/").c_str());
-	shader.LoadShader(inPixelName.c_str(), std::string("resources/shaders/").c_str());
-	shader.LoadShader("basic.hull", std::string("resources/shaders/").c_str());
-	shader.LoadShader("basic.domain", std::string("resources/shaders/").c_str());
-	shader.LoadShader("basic.compute", std::string("resources/shaders/").c_str());
+	auto shader = WinUtil::GetShaderManager();
+	shader->LoadShader(inVertexName.c_str(), std::string("resources/shaders/").c_str());
+	shader->LoadShader(inPixelName.c_str(), std::string("resources/shaders/").c_str());
+	shader->LoadShader("basic.hull", std::string("resources/shaders/").c_str());
+	shader->LoadShader("basic.domain", std::string("resources/shaders/").c_str());
 
 	m_vertexName = inVertexName.c_str();
 	m_pixelName = inPixelName.c_str();
 
 	SetupRootSignature();
 	SetupPipelineState(inType, inUseDepth);
-}
-
-ComPtr<ID3D12PipelineState>& PipelineState::GetPipelineState()
-{
-	return m_pipelineState;
-}
-
-ComPtr<ID3D12PipelineState>& PipelineState::GetWireframePipelineState()
-{
-	return m_wireframePipelineState;
-}
-
-ComPtr<ID3D12RootSignature>& PipelineState::GetRootSignature()
-{
-	return m_rootSignature;
 }
 
 void PipelineState::SetupRootSignature()
@@ -107,11 +76,26 @@ void PipelineState::SetupRootSignature()
 void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, bool inUseDepth)
 {
 	ComPtr<ID3D12Device2> device =  WinUtil::GetDevice()->GetDevice();
-	auto& shader = ShaderManager::Get();
+	auto shader = WinUtil::GetShaderManager();
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
+
+	struct PipelineStateStream
+	{
+		CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE pRootSignature;
+		CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
+		CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
+		CD3DX12_PIPELINE_STATE_STREAM_VS VS;
+		CD3DX12_PIPELINE_STATE_STREAM_PS PS;
+		CD3DX12_PIPELINE_STATE_STREAM_HS HS;
+		CD3DX12_PIPELINE_STATE_STREAM_DS DS;
+		CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL DepthStencil;
+		CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
+		CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
+		CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER Rasterizer;
 	};
 
 	PipelineStateStream pipelineStateStream;
@@ -133,10 +117,10 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	pipelineStateStream.pRootSignature = m_rootSignature.Get();
 	pipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	pipelineStateStream.PrimitiveTopologyType = inType;
-	pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_vertexName).ShaderBlob.Get());
-	pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_pixelName).ShaderBlob.Get());
-	pipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.hull").ShaderBlob.Get());
-	pipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.domain").ShaderBlob.Get());
+	pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_vertexName).ShaderBlob.Get());
+	pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_pixelName).ShaderBlob.Get());
+	pipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.hull").ShaderBlob.Get());
+	pipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.domain").ShaderBlob.Get());
 	//pipelineStateStream.CS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.compute").ShaderBlob.Get());
 	pipelineStateStream.DepthStencil = depthStencilDesc;
 	pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
@@ -159,10 +143,10 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	wirePipelineStateStream.pRootSignature = m_rootSignature.Get();
 	wirePipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	wirePipelineStateStream.PrimitiveTopologyType = inType;
-	wirePipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_vertexName).ShaderBlob.Get());
-	wirePipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader.GetShader(m_pixelName).ShaderBlob.Get());
-	wirePipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.hull").ShaderBlob.Get());
-	wirePipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.domain").ShaderBlob.Get());
+	wirePipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_vertexName).ShaderBlob.Get());
+	wirePipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_pixelName).ShaderBlob.Get());
+	wirePipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.hull").ShaderBlob.Get());
+	wirePipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.domain").ShaderBlob.Get());
 	//wirePipelineStateStream.CS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.compute").ShaderBlob.Get());
 	wirePipelineStateStream.DepthStencil = depthStencilDesc;
 	wirePipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;

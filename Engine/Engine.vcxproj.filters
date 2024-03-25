@@ -162,7 +162,7 @@
     <ClCompile Include="source\components\gameobjects\Planet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateCS.cpp">
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -251,7 +251,7 @@
     <ClInclude Include="include\components\gameobjects\Planet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateCS.h">
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateScreen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -265,5 +265,7 @@
     <FxCompile Include="resources\shaders\basic.hull.hlsl" />
     <FxCompile Include="resources\shaders\basic.domain.hlsl" />
     <FxCompile Include="resources\shaders\basic.compute.hlsl" />
+    <FxCompile Include="resources\shaders\screen.pixel.hlsl" />
+    <FxCompile Include="resources\shaders\screen.vertex.hlsl" />
   </ItemGroup>
 </Project>

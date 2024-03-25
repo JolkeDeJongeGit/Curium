@@ -51,6 +51,9 @@ public:
 	void SetupSphere();
 	void Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
 
+	inline D3D12_VERTEX_BUFFER_VIEW& GetVertexView() { return m_vertexView;  }
+	inline D3D12_INDEX_BUFFER_VIEW& GetIndexView() { return m_indexView;  }
+
 	std::vector<VertexData> m_vertexData;
 	std::vector<uint16_t>   m_indexData;
 	std::unordered_map<std::string, Texture>  m_textureData;

@@ -2,7 +2,6 @@
 #include "graphics/win32/WinDevice.h"
 #include "graphics/win32/WinCommandQueue.h"
 #include "graphics/win32/WinSwapchain.h"
-#include "graphics/win32/WinPipelineState.h"
 #include "graphics/win32/WinDescriptorHeap.h"
 #include "graphics/win32/WinHeapHandler.h"
 #include "graphics/win32/WinUtil.h"
@@ -18,6 +17,8 @@
 #include "core/Scene.h"
 #include <components/gameobjects/PlanetTerrain.h>
 #include <components/gameobjects/Planet.h>
+#include "graphics/win32/Pipeline/WinPipelineStateScreen.h"
+#include <graphics/ShaderManager.h>
 
 namespace Renderer
 {
@@ -26,9 +27,13 @@ namespace Renderer
 	Swapchain* swapchain = nullptr;
 	PipelineState* pipeline_state = nullptr;
 
+	PipelineStateScreen* pipeline_screen = nullptr;
+
 	DescriptorHeap* cbv_heap;
 	DescriptorHeap* rtv_heap;
 	DescriptorHeap* dsv_heap;
+
+	ShaderManager* shader_manager;
 
 	HeapHandler* heap_handler;
 
@@ -64,7 +69,12 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	cbv_heap = heap_handler->GetCbvHeap();
 	rtv_heap = heap_handler->GetRtvHeap();
 	dsv_heap = heap_handler->GetDsvHeap();
+
+	shader_manager = new ShaderManager();
+	shader_manager->Init();
+
 	pipeline_state = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
+	pipeline_screen = new PipelineStateScreen("screen.vertex", "screen.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 
 	viewport_width = inWidth;
 	viewport_height = inHeight;
@@ -137,7 +147,7 @@ void Renderer::Update()
 
 		for (auto& mesh : gameobject->GetMeshes())
 		{
-			if(!mesh.m_cull)
+			//if(!mesh.m_cull)
 				mesh.Draw(commandList);
 		}
 	}
@@ -148,8 +158,7 @@ void Renderer::Render()
 	const ComPtr<ID3D12GraphicsCommandList> commandlist = command_queue->GetCommandList().GetList();
 	ID3D12Resource* renderTarget = swapchain->GetRenderTextureBuffer().Get();
 
-	const CD3DX12_RESOURCE_BARRIER presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	commandlist->ResourceBarrier(1, &presentBarrier);
+	pipeline_screen->Render(commandlist);
 
 	ImGuiLayer::NewFrame();
 
@@ -248,6 +257,11 @@ Swapchain* WinUtil::GetSwapchain()
 CommandQueue* WinUtil::GetCommandQueue()
 {
 	return Renderer::command_queue;
+}
+
+ShaderManager* WinUtil::GetShaderManager()
+{
+	return Renderer::shader_manager;
 }
 
 WinWindow* WinUtil::GetWindow()

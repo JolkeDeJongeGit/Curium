@@ -6,6 +6,7 @@ class CommandQueue;
 class WinWindow;
 class DescriptorHeap;
 class PipelineState;
+class ShaderManager;
 
 /// <summary>
 /// namespace with functions that access the user to
@@ -29,5 +30,6 @@ namespace WinUtil
 	Swapchain* GetSwapchain();
 	CommandQueue* GetCommandQueue();
 	WinWindow* GetWindow();
+	ShaderManager* GetShaderManager();
 	DescriptorHeap* GetDescriptorHeap(HeapType inType);
 }
