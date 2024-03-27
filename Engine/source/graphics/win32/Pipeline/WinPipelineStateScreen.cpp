@@ -5,6 +5,9 @@
 #include <graphics/Mesh.h>
 #include "graphics/win32/WinSwapchain.h"
 #include "graphics/win32/WinDescriptorHeap.h"
+#include "graphics/win32/WinBuffer.h"
+#include "graphics/Renderer.h"
+#include "graphics/Camera.h"
 
 PipelineStateScreen::PipelineStateScreen(const std::string& inVertexName, const std::string& inPixelName, const D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, const bool inUseDepth)
 {
@@ -19,46 +22,66 @@ PipelineStateScreen::PipelineStateScreen(const std::string& inVertexName, const 
 	SetupPipelineState(inType, inUseDepth);
 
 	SetupMesh();
+
+	m_cameraConstant = new Buffer();
+	m_cameraConstant->CreateConstantBuffer(8 * sizeof(float));
 }
 
 void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 {
-	DescriptorHeap* DsvHeap = WinUtil::GetDescriptorHeap(HeapType::DSV);
-	DescriptorHeap* SrvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
-	DescriptorHeap* RtvHeap = WinUtil::GetDescriptorHeap(HeapType::RTV);
-	const UINT backBufferIndex = WinUtil::GetSwapchain()->GetCurrentBuffer();
+	DescriptorHeap* dsvHeap = WinUtil::GetDescriptorHeap(HeapType::DSV);
+	DescriptorHeap* srvHeap = WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
+	DescriptorHeap* rtvHeap = WinUtil::GetDescriptorHeap(HeapType::RTV);
 
 	ID3D12Resource* renderTarget = WinUtil::GetSwapchain()->GetRenderTextureBuffer().Get();
-	auto value = WinUtil::GetSwapchain()->m_renderTextureSrvID;
-	auto valueHeap = WinUtil::GetSwapchain()->m_renderTextureHeapID;
-	auto renderTexture = SrvHeap->GetGpuHandleAt(value);
-	auto depthView = DsvHeap->GetCpuHandleAt(0);
 
-	// Transition render target to the render target state for rendering
+	uint32_t renderTextureID = WinUtil::GetSwapchain()->m_renderTextureSrvID;
+	uint32_t depthTextureID = WinUtil::GetSwapchain()->m_depthTextureSrvID;
+	uint32_t renderTextureHeapIndex = WinUtil::GetSwapchain()->m_renderTextureHeapID;
+
+	// -- Gather the GPU/CPU Handle(s)
+	CD3DX12_GPU_DESCRIPTOR_HANDLE renderTexture = srvHeap->GetGpuHandleAt(renderTextureID);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE depthTexture = srvHeap->GetGpuHandleAt(depthTextureID);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE depthView = dsvHeap->GetCpuHandleAt(0);
+
 	const CD3DX12_RESOURCE_BARRIER renderTargetToRTBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	commandList->ResourceBarrier(1, &renderTargetToRTBarrier);
 
+	// -- Set Pipeline State
 	commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 	commandList->SetPipelineState(m_pipelineState.Get());
 
-	// Clear depth stencil view
+	// -- Clear Depth Stencil View
 	commandList->ClearDepthStencilView(depthView, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	// Set render target as shader resource
-	commandList->SetGraphicsRootDescriptorTable(0, renderTexture);
+	// -- Set Root Descriptor Table
+	// commandList->SetGraphicsRootDescriptorTable(0, renderTexture);
+	// commandList->SetGraphicsRootDescriptorTable(1, depthTexture);
+	
+	// -- Update Camera data
+	struct camData
+	{
+		float eye[4];
+		float dir[4];
+	};
+	Camera* camera = Renderer::GetCamera();
+	// -- World position Camera
+	glm::vec4 eye = camera->GetProjection() * camera->GetView() * glm::vec4(camera->GetTransform().GetPosition(), 0.f);
+	glm::vec4 dir = glm::vec4(camera->GetTransform().GetForwardVector(), 0.f);
+	camData cameraData = { {eye.x, eye.y, eye.z, eye.w}, {dir.x, dir.y, dir.z, dir.w} };
+	m_cameraConstant->UpdateBuffer(&cameraData);
+	m_cameraConstant->SetGraphicsRootConstantBufferView(commandList, 2);
 
 	const CD3DX12_RESOURCE_BARRIER renderTargetToRTBarrier1 = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &renderTargetToRTBarrier1);
 
-	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = RtvHeap->GetCpuHandleAt(valueHeap);
-	commandList->OMSetRenderTargets(1, &rtvHandle, false, &depthView);
-	commandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	// -- Draw Screen Quad
 	commandList->IASetVertexBuffers(0, 1, &m_meshScreen->GetVertexView());
 	commandList->IASetIndexBuffer(&m_meshScreen->GetIndexView());
-	commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	commandList->DrawIndexedInstanced(m_meshScreen->m_indexData.size(), 1, 0, 0, 0);
 
-	// Transition render target back to the render target state after rendering
 	const CD3DX12_RESOURCE_BARRIER RTToShaderResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	commandList->ResourceBarrier(1, &RTToShaderResourceBarrier);
 }
@@ -73,12 +96,28 @@ void PipelineStateScreen::SetupRootSignature()
 	if (const HRESULT result = device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData));  FAILED(result))
 		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 
-	CD3DX12_DESCRIPTOR_RANGE1 descRange[1];
-	descRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	// -- Render Texture Descriptor
+	CD3DX12_DESCRIPTOR_RANGE1 descRenderRange[1];
+	descRenderRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-	CD3DX12_ROOT_PARAMETER1 rootParameter[1];
-	rootParameter[0].InitAsDescriptorTable(1, &descRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	// -- Depth Texture Descriptor
+	CD3DX12_DESCRIPTOR_RANGE1 descDepthRange[1];
+	descDepthRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 
+	// -- Constant Buffer for Camera Data
+	CD3DX12_ROOT_PARAMETER1 constantBufferCam;
+	ZeroMemory(&constantBufferCam, sizeof(constantBufferCam));
+	constantBufferCam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
+	constantBufferCam.Descriptor = { 0, 0 }; // first register (b0) in first register space
+	constantBufferCam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // only used in domain shader
+
+	// -- Setup Root Parameters
+	CD3DX12_ROOT_PARAMETER1 rootParameter[3];
+	rootParameter[0].InitAsDescriptorTable(1, &descRenderRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[1].InitAsDescriptorTable(1, &descDepthRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[2] = constantBufferCam;
+	
+	// -- Setup Texture Sampler
 	CD3DX12_STATIC_SAMPLER_DESC	descSamplers[1];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
 	descSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -133,7 +172,7 @@ void PipelineStateScreen::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inTyp
 	rtvFormats.RTFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc{ CD3DX12_DEFAULT() };
-	depthStencilDesc.DepthEnable = inUseDepth;
+	depthStencilDesc.DepthEnable = false;
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
@@ -159,12 +198,14 @@ void PipelineStateScreen::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inTyp
 
 void PipelineStateScreen::SetupMesh()
 {
+	// -- Setup Quad Vertices
 	std::vector<VertexData> screenVertex;
 	screenVertex.push_back(VertexData(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.f), glm::vec2(0.0f, 1.0f)));
 	screenVertex.push_back(VertexData(glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(0.f), glm::vec2(0.0f, 0.0f)));
 	screenVertex.push_back(VertexData(glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.f), glm::vec2(1.0f, 0.0f)));
 	screenVertex.push_back(VertexData(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.f), glm::vec2(1.0f, 1.0f)));
 
+	// -- Setup Simple Quad Indices
 	std::vector<uint16_t> screenIndices;
 	screenIndices.push_back(2);
 	screenIndices.push_back(1);
@@ -173,7 +214,7 @@ void PipelineStateScreen::SetupMesh()
 	screenIndices.push_back(2);
 	screenIndices.push_back(0);
 
+	// -- Creating the actual mesh
 	m_meshScreen = new Mesh(screenVertex, screenIndices);
-
 }
 
