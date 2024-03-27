@@ -62,11 +62,14 @@ float CalculateLight(float3 rayOrigin, float3 rayDir, float rayLength)
 float4 main(PixelIn pixelIn) : SV_TARGET
 {
     float4 screen = screenTexture.Sample(LinearSampler, pixelIn.TexCoord);
+    float4 depth = depthTexture.Sample(LinearSampler, pixelIn.TexCoord);
     
     float3 sphereOrigin = float3(0.f,0.f,0.f);
 
-    float2 hitData = RaySphere(sphereOrigin, 100.f, DataCB.eye.xyz, DataCB.dir.xyz);
+    float2 hitData = RaySphere(sphereOrigin, 10.f, DataCB.eye.xyz, DataCB.dir.xyz);
     
-    return hitData.x / (hitData.y * 2);
-    //return 1.f - screen;
+    //return float4(0.f, 0.f, 0.f, 0.f);
+    //return hitData.x / (hitData.y * 2);
+    return float4(1.f - screen.x, 1.f - screen.y, 1.f - screen.z, 1);
+    //return float4(1.f - depth.x, 1.f - depth.x, 1.f - depth.x, 1);
 }

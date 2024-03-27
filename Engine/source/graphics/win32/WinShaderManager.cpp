@@ -25,7 +25,7 @@ uint32_t ShaderManager::LoadShader(std::string inName, std::string inPath)
 
 	if (!temp.ShaderBlob)
 	{
-		printf("Failed in to load Shader %s, %s", inName, inPath);
+		printf("Failed in to load Shader %s, %s", inName.c_str(), inPath.c_str());
 		return 0;
 	}
 

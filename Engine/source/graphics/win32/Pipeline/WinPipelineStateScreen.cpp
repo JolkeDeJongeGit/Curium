@@ -34,6 +34,7 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	DescriptorHeap* rtvHeap = WinUtil::GetDescriptorHeap(HeapType::RTV);
 
 	ID3D12Resource* renderTarget = WinUtil::GetSwapchain()->GetRenderTextureBuffer().Get();
+	ID3D12Resource* depthTarget = WinUtil::GetSwapchain()->GetDepthBuffer().Get();
 
 	uint32_t renderTextureID = WinUtil::GetSwapchain()->m_renderTextureSrvID;
 	uint32_t depthTextureID = WinUtil::GetSwapchain()->m_depthTextureSrvID;
@@ -44,21 +45,23 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	CD3DX12_GPU_DESCRIPTOR_HANDLE depthTexture = srvHeap->GetGpuHandleAt(depthTextureID);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE depthView = dsvHeap->GetCpuHandleAt(0);
 
-	const CD3DX12_RESOURCE_BARRIER renderTargetToRTBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &renderTargetToRTBarrier);
+	//const CD3DX12_RESOURCE_BARRIER renderTargetToRTBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	//commandList->ResourceBarrier(1, &renderTargetToRTBarrier);
 
 	// -- Set Pipeline State
 	commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 	commandList->SetPipelineState(m_pipelineState.Get());
 
-	// -- Clear Depth Stencil View
-	commandList->ClearDepthStencilView(depthView, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	const CD3DX12_RESOURCE_BARRIER depthTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(depthTarget, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &depthTargetBarrier);
+
+	const CD3DX12_RESOURCE_BARRIER RenderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &RenderTargetBarrier);
 
 	// -- Set Root Descriptor Table
-	// commandList->SetGraphicsRootDescriptorTable(0, renderTexture);
-	// commandList->SetGraphicsRootDescriptorTable(1, depthTexture);
+	commandList->SetGraphicsRootDescriptorTable(0, renderTexture);
+	commandList->SetGraphicsRootDescriptorTable(1, depthTexture);
 	
-
 	// -- World position Camera
 	Camera* camera = Renderer::GetCamera();
 	glm::vec4 eye = camera->GetProjection() * camera->GetView() * glm::vec4(camera->GetTransform().GetPosition(), 0.f);
@@ -74,19 +77,21 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	// -- Update Camera data
 	m_cameraConstant->UpdateBuffer(&cameraData);
 	m_cameraConstant->SetGraphicsRootConstantBufferView(commandList, 2);
-
-	const CD3DX12_RESOURCE_BARRIER renderTargetToRTBarrier1 = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	commandList->ResourceBarrier(1, &renderTargetToRTBarrier1);
+	const CD3DX12_RESOURCE_BARRIER RenderTargetBarrierRT = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,  D3D12_RESOURCE_STATE_RENDER_TARGET );
+	commandList->ResourceBarrier(1, &RenderTargetBarrierRT);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// -- Draw Screen Quad
 	commandList->IASetVertexBuffers(0, 1, &m_meshScreen->GetVertexView());
 	commandList->IASetIndexBuffer(&m_meshScreen->GetIndexView());
-	commandList->DrawIndexedInstanced(m_meshScreen->m_indexData.size(), 1, 0, 0, 0);
+	commandList->DrawIndexedInstanced(static_cast<UINT>(m_meshScreen->m_indexData.size()), 1, 0, 0, 0);
 
 	const CD3DX12_RESOURCE_BARRIER RTToShaderResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	commandList->ResourceBarrier(1, &RTToShaderResourceBarrier);
+
+	const CD3DX12_RESOURCE_BARRIER depthTargetBarrierWrite = CD3DX12_RESOURCE_BARRIER::Transition(depthTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	commandList->ResourceBarrier(1, &depthTargetBarrierWrite);
 }
 
 void PipelineStateScreen::SetupRootSignature()
@@ -210,11 +215,11 @@ void PipelineStateScreen::SetupMesh()
 
 	// -- Setup Simple Quad Indices
 	std::vector<uint16_t> screenIndices;
-	screenIndices.push_back(2);
-	screenIndices.push_back(1);
 	screenIndices.push_back(0);
-	screenIndices.push_back(3);
+	screenIndices.push_back(1);
 	screenIndices.push_back(2);
+	screenIndices.push_back(2);
+	screenIndices.push_back(3);
 	screenIndices.push_back(0);
 
 	// -- Creating the actual mesh
