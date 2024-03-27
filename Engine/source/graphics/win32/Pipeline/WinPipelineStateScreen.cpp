@@ -58,17 +58,20 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	// commandList->SetGraphicsRootDescriptorTable(0, renderTexture);
 	// commandList->SetGraphicsRootDescriptorTable(1, depthTexture);
 	
-	// -- Update Camera data
+
+	// -- World position Camera
+	Camera* camera = Renderer::GetCamera();
+	glm::vec4 eye = camera->GetProjection() * camera->GetView() * glm::vec4(camera->GetTransform().GetPosition(), 0.f);
+	glm::vec4 dir = glm::vec4(camera->GetTransform().GetForwardVector(), 0.f);
+
 	struct camData
 	{
 		float eye[4];
 		float dir[4];
 	};
-	Camera* camera = Renderer::GetCamera();
-	// -- World position Camera
-	glm::vec4 eye = camera->GetProjection() * camera->GetView() * glm::vec4(camera->GetTransform().GetPosition(), 0.f);
-	glm::vec4 dir = glm::vec4(camera->GetTransform().GetForwardVector(), 0.f);
 	camData cameraData = { {eye.x, eye.y, eye.z, eye.w}, {dir.x, dir.y, dir.z, dir.w} };
+
+	// -- Update Camera data
 	m_cameraConstant->UpdateBuffer(&cameraData);
 	m_cameraConstant->SetGraphicsRootConstantBufferView(commandList, 2);
 
