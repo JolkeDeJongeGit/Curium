@@ -47,8 +47,6 @@ public:
 	void CreateIndexBuffer();
 	void CreateTexturesBuffer();
 	
-	void SetupCube();
-	void SetupSphere();
 	void Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
 
 	inline D3D12_VERTEX_BUFFER_VIEW& GetVertexView() { return m_vertexView;  }
