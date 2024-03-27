@@ -20,8 +20,9 @@ public:
 	inline ComPtr<ID3D12Resource>& GetRenderTextureBuffer() { return m_renderTextureBuffer; };
 	static constexpr uint32_t BackBufferCount = 3;
 
-	int m_renderTextureSrvID;
+	uint32_t m_renderTextureSrvID;
 	uint32_t m_renderTextureHeapID;
+	uint32_t m_depthTextureSrvID;
 private:
 	void SetupSwapchain(int inWidth, int inHeight);
 	void SetupDepthBuffer(int inWidth, int inHeight);
