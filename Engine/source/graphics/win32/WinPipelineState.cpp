@@ -117,11 +117,12 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	pipelineStateStream.pRootSignature = m_rootSignature.Get();
 	pipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	pipelineStateStream.PrimitiveTopologyType = inType;
+
 	pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_vertexName).ShaderBlob.Get());
 	pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_pixelName).ShaderBlob.Get());
 	pipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.hull").ShaderBlob.Get());
 	pipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.domain").ShaderBlob.Get());
-	//pipelineStateStream.CS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.compute").ShaderBlob.Get());
+
 	pipelineStateStream.DepthStencil = depthStencilDesc;
 	pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	pipelineStateStream.RTVFormats = rtvFormats;
@@ -138,16 +139,18 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	rasterizer1.FillMode = D3D12_FILL_MODE_WIREFRAME;
 	rasterizer1.CullMode = D3D12_CULL_MODE_BACK;
 
+	// -- Setup Wireframe Pipeline
 	PipelineStateStream wirePipelineStateStream;
 
 	wirePipelineStateStream.pRootSignature = m_rootSignature.Get();
 	wirePipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	wirePipelineStateStream.PrimitiveTopologyType = inType;
+
 	wirePipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_vertexName).ShaderBlob.Get());
 	wirePipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_pixelName).ShaderBlob.Get());
 	wirePipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.hull").ShaderBlob.Get());
 	wirePipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.domain").ShaderBlob.Get());
-	//wirePipelineStateStream.CS = CD3DX12_SHADER_BYTECODE(shader.GetShader("basic.compute").ShaderBlob.Get());
+
 	wirePipelineStateStream.DepthStencil = depthStencilDesc;
 	wirePipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	wirePipelineStateStream.RTVFormats = rtvFormats;

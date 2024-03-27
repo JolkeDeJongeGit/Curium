@@ -60,7 +60,6 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOUR
 	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 	CD3DX12_RESOURCE_BARRIER copyBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), inInitialState, D3D12_RESOURCE_STATE_COPY_DEST);
 	CD3DX12_RESOURCE_BARRIER finalBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, inFinaState.value_or(inInitialState));
-	//OpenCommandList();
 	list->ResourceBarrier(1, &copyBarrier);
 
 	const UINT64 size = GetRequiredIntermediateSize(inResource.Get(), 0, 1);
@@ -79,7 +78,6 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOUR
 	));
 
 	UpdateSubresources(list.Get(), inResource.Get(), intermediate.Get(), 0, 0, 1, &inSubresource);
-	//CloseCommandList();
 	list->ResourceBarrier(1, &finalBarrier);
 	m_intermediateResources.push_back(intermediate);
 }

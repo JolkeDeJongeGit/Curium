@@ -27,12 +27,15 @@ Texture::Texture(std::string inPath, std::vector<uint8_t> inData, glm::ivec2 inI
 		nullptr,
 		IID_PPV_ARGS(&m_data)));
 
+	// -- Upload subresource 
 	D3D12_SUBRESOURCE_DATA subresource;
 	subresource.pData = inData.data();
 	subresource.RowPitch = inImageSize.x * sizeof(uint32_t);
 	subresource.SlicePitch = inImageSize.x * inImageSize.y * sizeof(uint32_t);
-	m_data->SetName(std::wstring(inPath.begin(), inPath.end()).c_str());
 	commands->UploadData(m_data, subresource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	// -- Set Debug Name
+	m_data->SetName(std::wstring(inPath.begin(), inPath.end()).c_str());
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -49,11 +52,13 @@ void Texture::SetState(D3D12_RESOURCE_STATES inSetState)
 {
 	if (m_currentState == inSetState)
 		return;
+	
+	m_currentState = inSetState;
 
+	// -- Switch Resource Barrier
 	auto& commands = WinUtil::GetCommandQueue()->GetCommandList().GetList();
 	CD3DX12_RESOURCE_BARRIER changeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_data.Get(), m_currentState, inSetState);
 	commands->ResourceBarrier(1, &changeBarrier);
-	m_currentState = inSetState;
 }
 
 glm::ivec2 Texture::GetSize() const
@@ -155,7 +160,10 @@ void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
 	}
 
+	// -- Send over the Views
 	inCommandList->IASetVertexBuffers(0, 1, &m_vertexView);
 	inCommandList->IASetIndexBuffer(&m_indexView);
+
+	// -- Draw based on Indices
 	inCommandList->DrawIndexedInstanced(static_cast<uint32_t>(m_indexData.size()), 1, 0, 0, 0);
 }

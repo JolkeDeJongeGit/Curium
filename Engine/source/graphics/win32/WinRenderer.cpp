@@ -118,6 +118,12 @@ void Renderer::Update()
 	commandList->ClearRenderTargetView(rtvHandle, color_rgba, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	
+	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0f };
+	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &rect);
+	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
 	if (Debug::IsWireframeMode())
 	{
 		commandList->SetPipelineState(pipeline_state->GetWireframePipelineState().Get());
@@ -128,12 +134,6 @@ void Renderer::Update()
 	}
 
 	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
-
-	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0f};
-	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
-	commandList->RSSetViewports(1, &viewport);
-	commandList->RSSetScissorRects(1, &rect);
-	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 	
