@@ -18,6 +18,7 @@ namespace Editor
 	bool show_profiler = true;
 	bool show_hierarchy = true;
 	bool show_camera = true;
+	bool show_property = true;
 
     bool viewport_hovered = false;
 
@@ -89,12 +90,18 @@ void Editor::SplitEditor()
 
         auto dock_id_up = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.8f, nullptr, &dockspace_id);
         auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
+        auto dock_id_right = ImGui::DockBuilderSplitNode(dock_id_up, ImGuiDir_Right, 0.3f, nullptr, &dock_id_up);
         auto dock_id_down = ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Down, 0.2f, nullptr, &dock_id_left);
         auto Hierarchy_down = ImGui::DockBuilderSplitNode(dock_id_up, ImGuiDir_Down, 0.2f, nullptr, &dock_id_up);
 
         if (ImGui::DockBuilderGetNode(ImGui::GetID("Viewport")) == NULL)
         {
             ImGui::DockBuilderDockWindow("Viewport", dock_id_up);
+        }
+
+        if (ImGui::DockBuilderGetNode(ImGui::GetID("Property Window")) == NULL)
+        {
+            ImGui::DockBuilderDockWindow("Property Window", dock_id_right);
         }
 
         if (ImGui::DockBuilderGetNode(ImGui::GetID("Hierarchy")) == NULL)
@@ -137,6 +144,9 @@ void Editor::Update()
 
     if (show_camera)
         Renderer::DrawCameraPropertyWindow();
+
+    if (show_property)
+        Scene::PropertyWindow(show_property);
 }
 
 void Editor::Shutdown()

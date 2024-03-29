@@ -31,7 +31,7 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 {
 	int div = m_detail;
 	m_inverseDetail = 1.f / m_detail;
-	float inverseSize = 1.f / m_planet->m_size;
+	float inverseSize = 1.f / m_planet->m_planetRadius;
 
 	auto& meshes = m_planet->GetMeshes();
 	meshes.emplace_back(Mesh());
@@ -65,7 +65,7 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 			glm::vec3 acrossj = ((v1 + i * dir12) - (v0 + i * dir03)) * m_inverseDetail;
 			glm::vec3 crntVec = v0 + i * dir03 + j * acrossj;
 			// Position
-			vertices.emplace_back(glm::normalize(glm::vec3(crntVec.x, crntVec.y, crntVec.z)) * m_planet->m_size);
+			vertices.emplace_back(glm::normalize(glm::vec3(crntVec.x, crntVec.y, crntVec.z)) * m_planet->m_planetRadius);
 			//vertices.emplace_back(glm::vec3(crntVec.x, crntVec.y, crntVec.z));
 			// Tex UV
 			textureCoords.emplace_back(glm::vec2(float(j) * m_inverseDetail, float(i) * m_inverseDetail));

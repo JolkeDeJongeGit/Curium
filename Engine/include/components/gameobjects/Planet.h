@@ -13,7 +13,9 @@ public:
 	void Shutdown() override;
 	void ClearMesh(uint16_t inIndex);
 	void FixMeshIndex(uint16_t inIndex);
-	float m_size;
+	float m_planetRadius = 100000.f;
+	float m_atmosphereRadius = 130000.f;
+	float m_fallOff = 10.0f;
 private:
 	int m_detail;
 

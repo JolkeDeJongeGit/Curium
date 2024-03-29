@@ -254,6 +254,9 @@
     <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateScreen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\components\gameobjects\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\basic.pixel.hlsl">

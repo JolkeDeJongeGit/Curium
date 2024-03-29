@@ -9,6 +9,7 @@ namespace Scene
 	void Shutdown();
 	void AddSceneObject(std::string name, GameObject* gameobject);
 	void HierarchyWindow(bool& inShow);
+	void PropertyWindow(bool& inShow);
 
 	bool StopSubdivide();
 

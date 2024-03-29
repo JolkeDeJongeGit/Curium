@@ -39,8 +39,6 @@ void Scene::Update(const float inDt)
         if (ImGui::IsKeyPressed(ImGuiKey_R)) // r Key
             m_current_gizmo_operation = ImGuizmo::SCALE;
     }
-
-
 }
 
 void Scene::Shutdown()
@@ -90,6 +88,19 @@ void Scene::HierarchyWindow(bool& inShow)
     ImGui::PopStyleVar();
 }
 
+void Scene::PropertyWindow(bool& inShow)
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 10));
+    ImGui::Begin("Property Window");
+    Planet* gameObject = static_cast<Planet*>(Scene::AllSceneObjects()["World"]);
+    ImGui::LabelText("Planet", "");
+    ImGui::SliderFloat("Atmosphere Radius", &gameObject->m_atmosphereRadius, gameObject->m_planetRadius, 130000 + 15000);
+    ImGui::SliderFloat("Fall off Radius", &gameObject->m_fallOff, -100.f, 100.f);
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+}
+
 bool Scene::StopSubdivide()
 {
     return stop_subdivide;
@@ -111,7 +122,6 @@ void Scene::SceneGizmo(ImVec2 inPos, ImVec2 inSize)
         ImGuizmo::SetRect(inPos.x, inPos.y, inSize.x, inSize.y);
         glm::mat4 model = transform.GetModelMatrix();
         ImGuizmo::Manipulate(glm::value_ptr(Renderer::GetCamera()->GetView()), glm::value_ptr(Renderer::GetCamera()->GetProjection()), m_current_gizmo_operation, current_gizmo_mode, glm::value_ptr(model), nullptr);
-
 
         if (ImGuizmo::IsUsing())
         {

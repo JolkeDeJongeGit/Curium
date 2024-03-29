@@ -50,7 +50,6 @@ struct TerrainNode
 
             list.erase(std::remove(list.begin(), list.end(), this), list.end());
 
-
             inTerrain->FixMeshIndex(m_meshIndex);
 
             m_meshIndex = -1;

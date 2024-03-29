@@ -5,7 +5,7 @@
 #include <core/Scene.h>
 
 Planet::Planet(int inDetail, float inSize)
-	: m_detail(inDetail), m_size(inSize)
+	: m_detail(inDetail), m_planetRadius(inSize)
 {
 
 }
@@ -17,18 +17,18 @@ Planet::~Planet()
 void Planet::Init()
 {
 	glm::vec3 origin[6] = {
-		glm::vec3(0, m_size, 0),
-		glm::vec3(0, 0, m_size),
-		glm::vec3(0, 0, -m_size),
-		glm::vec3(m_size, 0, 0),
-		glm::vec3(-m_size, 0, 0),
-		glm::vec3(0, -m_size, 0),
+		glm::vec3(0, m_planetRadius, 0),
+		glm::vec3(0, 0, m_planetRadius),
+		glm::vec3(0, 0, -m_planetRadius),
+		glm::vec3(m_planetRadius, 0, 0),
+		glm::vec3(-m_planetRadius, 0, 0),
+		glm::vec3(0, -m_planetRadius, 0),
 	};
 	for (size_t i = 0; i < 6; i++)
 	{
 		m_quadTree[i] = new TerrainQuadTree(new PlanetTerrain(m_detail, this, origin[i]));
 
-		m_quadTree[i]->Init(m_size, glm::normalize(origin[i]));
+		m_quadTree[i]->Init(m_planetRadius, glm::normalize(origin[i]));
 	}
 }
 

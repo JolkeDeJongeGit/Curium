@@ -8,6 +8,8 @@
 #include "graphics/win32/WinBuffer.h"
 #include "graphics/Renderer.h"
 #include "graphics/Camera.h"
+#include <core/Scene.h>
+#include <components/gameobjects/Planet.h>
 
 PipelineStateScreen::PipelineStateScreen(const std::string& inVertexName, const std::string& inPixelName, const D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, const bool inUseDepth)
 {
@@ -23,8 +25,15 @@ PipelineStateScreen::PipelineStateScreen(const std::string& inVertexName, const 
 
 	SetupMesh();
 
+	// TODO Convert this to non hard coded values
 	m_cameraConstant = new Buffer();
-	m_cameraConstant->CreateConstantBuffer(8 * sizeof(float));
+	m_cameraConstant->CreateConstantBuffer(37 * sizeof(float));
+
+	m_planetConstant = new Buffer();
+	m_planetConstant->CreateConstantBuffer(6 * sizeof(float));
+
+	m_sunConstant = new Buffer();
+	m_sunConstant->CreateConstantBuffer(8 * sizeof(float));
 }
 
 void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
@@ -45,9 +54,6 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	CD3DX12_GPU_DESCRIPTOR_HANDLE depthTexture = srvHeap->GetGpuHandleAt(depthTextureID);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE depthView = dsvHeap->GetCpuHandleAt(0);
 
-	//const CD3DX12_RESOURCE_BARRIER renderTargetToRTBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	//commandList->ResourceBarrier(1, &renderTargetToRTBarrier);
-
 	// -- Set Pipeline State
 	commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 	commandList->SetPipelineState(m_pipelineState.Get());
@@ -64,19 +70,51 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	
 	// -- World position Camera
 	Camera* camera = Renderer::GetCamera();
-	glm::vec4 eye = camera->GetProjection() * camera->GetView() * glm::vec4(camera->GetTransform().GetPosition(), 0.f);
-	glm::vec4 dir = glm::vec4(camera->GetTransform().GetForwardVector(), 0.f);
 
 	struct camData
 	{
-		float eye[4];
-		float dir[4];
+		glm::mat4 viewMatrix;
+		glm::mat4 inverseviewMatrix;
+		glm::vec3 worldCam;
+		float _near;
+		float _far;
 	};
-	camData cameraData = { {eye.x, eye.y, eye.z, eye.w}, {dir.x, dir.y, dir.z, dir.w} };
+	camData cameraData{ glm::transpose(camera->GetView()), glm::inverse(camera->GetProjection()), camera->GetTransform().GetPosition() };
 
 	// -- Update Camera data
 	m_cameraConstant->UpdateBuffer(&cameraData);
 	m_cameraConstant->SetGraphicsRootConstantBufferView(commandList, 2);
+
+	struct PlanetData
+	{
+		glm::vec3 position;
+		float planetRadius;
+		float atmosphereRadius;
+		float atmosphereFalloff;
+	};
+
+	// I love Hard coding :(
+	Planet* gameObject = static_cast<Planet*>(Scene::AllSceneObjects()["World"]);
+	PlanetData worldData { gameObject->GetTransform().GetPosition(), gameObject->m_planetRadius, gameObject->m_atmosphereRadius, gameObject->m_fallOff };
+
+	// -- Update Camera data
+	m_planetConstant->UpdateBuffer(&worldData);
+	m_planetConstant->SetGraphicsRootConstantBufferView(commandList, 3);
+
+	struct Light
+	{
+		glm::vec3 position;
+		glm::vec3 direction;
+		float color;
+		float intensity;
+	};
+	GameObject* light = Scene::AllSceneObjects()["Sun"];
+	Light lightData{ light->GetTransform().GetPosition(), light->GetTransform().GetForwardVector(), 0xFFFFFF, 1.f};
+
+	// -- Update Camera data
+	m_sunConstant->UpdateBuffer(&lightData);
+	m_sunConstant->SetGraphicsRootConstantBufferView(commandList, 4);
+
 	const CD3DX12_RESOURCE_BARRIER RenderTargetBarrierRT = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,  D3D12_RESOURCE_STATE_RENDER_TARGET );
 	commandList->ResourceBarrier(1, &RenderTargetBarrierRT);
 
@@ -117,13 +155,27 @@ void PipelineStateScreen::SetupRootSignature()
 	ZeroMemory(&constantBufferCam, sizeof(constantBufferCam));
 	constantBufferCam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
 	constantBufferCam.Descriptor = { 0, 0 }; // first register (b0) in first register space
-	constantBufferCam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // only used in domain shader
+	constantBufferCam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // only used in _PIXEL shader
+
+	CD3DX12_ROOT_PARAMETER1 constantPlanet;
+	ZeroMemory(&constantPlanet, sizeof(constantPlanet));
+	constantPlanet.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
+	constantPlanet.Descriptor = { 1, 0 }; // first register (b1) in first register space
+	constantPlanet.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // only used in _PIXEL shader
+
+	CD3DX12_ROOT_PARAMETER1 constantLight;
+	ZeroMemory(&constantLight, sizeof(constantLight));
+	constantLight.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
+	constantLight.Descriptor = { 2, 0 }; // first register (b2) in first register space
+	constantLight.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // only used in _PIXEL shader
 
 	// -- Setup Root Parameters
-	CD3DX12_ROOT_PARAMETER1 rootParameter[3];
+	CD3DX12_ROOT_PARAMETER1 rootParameter[5];
 	rootParameter[0].InitAsDescriptorTable(1, &descRenderRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParameter[1].InitAsDescriptorTable(1, &descDepthRange[0], D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParameter[2] = constantBufferCam;
+	rootParameter[3] = constantPlanet;
+	rootParameter[4] = constantLight;
 	
 	// -- Setup Texture Sampler
 	CD3DX12_STATIC_SAMPLER_DESC	descSamplers[1];

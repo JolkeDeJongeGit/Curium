@@ -15,8 +15,8 @@
 #include <graphics/win32/WinBuffer.h>
 #include <core/ImGuiLayer.h>
 #include "core/Scene.h"
-#include <components/gameobjects/PlanetTerrain.h>
 #include <components/gameobjects/Planet.h>
+#include <components/gameobjects/Light.h>
 #include "graphics/win32/Pipeline/WinPipelineStateScreen.h"
 #include <graphics/ShaderManager.h>
 
@@ -94,6 +94,11 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	ter->SetTransform(transformWorld);
 	Scene::AddSceneObject("World", ter);
 
+	Light* sun = new Light();
+	const Transform transformWorld1(glm::vec3(0, 0.f, 0.f), glm::vec3(0), glm::vec3(1.f));
+	sun->SetTransform(transformWorld1);
+	Scene::AddSceneObject("Sun", sun);
+
 	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
 	command_queue->CloseCommandList();
 }
@@ -141,14 +146,17 @@ void Renderer::Update()
 
 	for(auto& [name, gameobject] : Scene::AllSceneObjects())
 	{
-		cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject->GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
-		m_domainConstant.UpdateBuffer(&cameraData);
-		m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
+		if (gameobject->GetMeshes().size() > 0)
+		{
+			cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject->GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
+			m_domainConstant.UpdateBuffer(&cameraData);
+			m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
+		}
 
 		for (auto& mesh : gameobject->GetMeshes())
 		{
 			//if(!mesh.m_cull)
-				mesh.Draw(commandList);
+			mesh.Draw(commandList);
 		}
 	}
 }

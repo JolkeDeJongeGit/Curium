@@ -36,5 +36,5 @@ public:
 protected:
   std::vector<Mesh> m_meshes;
   Transform m_transform;
-  Material m_material;
+  //Material m_material;
 };

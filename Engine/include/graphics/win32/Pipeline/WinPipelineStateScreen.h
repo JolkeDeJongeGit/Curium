@@ -20,7 +20,10 @@ private:
 	ComPtr<ID3D12PipelineState> m_pipelineState;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
 
+	// Need to design better
 	class Buffer* m_cameraConstant;
+	class Buffer* m_sunConstant;
+	class Buffer* m_planetConstant;
 
 	const char* m_vertexName;
 	const char* m_pixelName;
