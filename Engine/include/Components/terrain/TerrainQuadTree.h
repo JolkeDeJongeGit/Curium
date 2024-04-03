@@ -154,14 +154,14 @@ inline void TerrainQuadTree::Update()
 
             const float d1 = glm::distance(cameraPos, nodePos1);
   
-            if (leafNode->m_depth < MaxDepth && d1 < leafNode->m_size * 3.f) {
+            if (leafNode->m_depth < MaxDepth && d1 < leafNode->m_size * 4.f) {
                 Subdivide(leafNode);
             }
             else if (leafNode->m_parentNode) {
                 const auto nodePos2 = leafNode->m_parentNode->m_point + terrainPos;
                 const auto d2 = glm::distance(cameraPos, nodePos2);
 
-                if (d2 > leafNode->m_parentNode->m_size * 3.f) {
+                if (d2 > leafNode->m_parentNode->m_size * 4.f) {
                     UnSubdivide(leafNode->m_parentNode);
                 }
             }

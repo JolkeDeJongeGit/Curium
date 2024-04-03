@@ -78,7 +78,7 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 		mesh.m_vertexData.emplace_back(VertexData(vertices[i], normal, textureCoords[i]));
 	}
 
-	mesh.m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/base.png")));
+	mesh.m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/grass.png")));
 
 	mesh.CreateVertexBuffer();
 	mesh.CreateIndexBuffer();

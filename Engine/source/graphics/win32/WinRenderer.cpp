@@ -19,6 +19,7 @@
 #include <components/gameobjects/Light.h>
 #include "graphics/win32/Pipeline/WinPipelineStateScreen.h"
 #include <graphics/ShaderManager.h>
+#include <graphics/win32/Pipeline/WinPipelineStateSky.h>
 
 namespace Renderer
 {
@@ -28,6 +29,7 @@ namespace Renderer
 	PipelineState* pipeline_state = nullptr;
 
 	PipelineStateScreen* pipeline_screen = nullptr;
+	PipelineStateSky* pipeline_sky = nullptr;
 
 	DescriptorHeap* cbv_heap;
 	DescriptorHeap* rtv_heap;
@@ -73,8 +75,6 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	shader_manager = new ShaderManager();
 	shader_manager->Init();
 
-	pipeline_state = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
-	pipeline_screen = new PipelineStateScreen("screen.vertex", "screen.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 
 	viewport_width = inWidth;
 	viewport_height = inHeight;
@@ -83,13 +83,18 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	cbv_heap->GetNextIndex();
 
 	command_queue->OpenCommandList();
+
+	pipeline_sky = new PipelineStateSky("sky.vertex", "sky.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	pipeline_state = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
+	pipeline_screen = new PipelineStateScreen("screen.vertex", "screen.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+
 	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
 	
 	const Transform transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(1));
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
 	// @TODO::Needs to load in scene 
-	Planet* ter = new Planet(16, 100000);
+	Planet* ter = new Planet(4, 100000);
 	const Transform transformWorld(glm::vec3(0, -103000.f, 0.f), glm::vec3(0), glm::vec3(1.f));
 	ter->SetTransform(transformWorld);
 	Scene::AddSceneObject("World", ter);
@@ -116,6 +121,7 @@ void Renderer::Update()
 
 	command_queue->OpenCommandList();
 	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
+
 
 	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
@@ -165,7 +171,7 @@ void Renderer::Render()
 {
 	const ComPtr<ID3D12GraphicsCommandList> commandlist = command_queue->GetCommandList().GetList();
 	ID3D12Resource* renderTarget = swapchain->GetRenderTextureBuffer().Get();
-
+	pipeline_sky->Render(commandlist);
 	pipeline_screen->Render(commandlist);
 
 	ImGuiLayer::NewFrame();

@@ -36,7 +36,8 @@ PixelOutput main(PixelInput Input)
     float4 diffuse = diff * lightColor;
     
     
-    float4 albedo = pow(Color.Sample(LinearSampler, Input.TextureCoord), 2.2f);
+    //float4 albedo = Color.Sample(LinearSampler, Input.TextureCoord * 0.1);
+    float4 albedo = float4(0.5450, 0.2705, 0.075, 1 );
     Output.Color = (ambient + diffuse) * albedo;
     return Output;
 }
