@@ -60,25 +60,37 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 	// dir2 and dir3
 	for (float i = 0; i < div + 1; i++)
 	{
+		glm::vec3 acrossj = ((v1 + i * dir12) - (v0 + i * dir03)) * m_inverseDetail;
 		for (float j = 0; j < div + 1; j++)
 		{
-			glm::vec3 acrossj = ((v1 + i * dir12) - (v0 + i * dir03)) * m_inverseDetail;
 			glm::vec3 crntVec = v0 + i * dir03 + j * acrossj;
 			// Position
-			vertices.emplace_back(glm::normalize(glm::vec3(crntVec.x, crntVec.y, crntVec.z)) * m_planet->m_planetRadius);
-			//vertices.emplace_back(glm::vec3(crntVec.x, crntVec.y, crntVec.z));
+
+			glm::vec3 normVec = glm::normalize(glm::vec3(crntVec.x, crntVec.y, crntVec.z));
+
+			vertices.emplace_back(normVec * m_planet->m_planetRadius);
 			// Tex UV
-			textureCoords.emplace_back(glm::vec2(float(j) * m_inverseDetail, float(i) * m_inverseDetail));
+
+			float theta = std::atan2(normVec.z, normVec.x);
+			float phi = std::acos(normVec.y);
+
+			// Map theta and phi to UV coordinates
+			float u = theta / (2.0f * glm::pi<float>());
+			float v = phi / glm::pi<float>();
+
+			// Store the normalized UV coordinates
+			textureCoords.emplace_back(u, v);
 		}
 	}
 	
 	for (size_t i = 0; i < vertices.size(); i++)
 	{
-		glm::vec3 normal = (vertices[i]- m_planet->GetTransform().GetPosition() ) * inverseSize;
+		glm::vec3 normal = (vertices[i] - m_planet->GetTransform().GetPosition() ) * inverseSize;
+
 		mesh.m_vertexData.emplace_back(VertexData(vertices[i], normal, textureCoords[i]));
 	}
 
-	mesh.m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/grass.png")));
+	mesh.m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/planet.jpg")));
 
 	mesh.CreateVertexBuffer();
 	mesh.CreateIndexBuffer();

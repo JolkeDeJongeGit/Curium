@@ -94,7 +94,7 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	camera = Camera(transform, static_cast<float>(inWidth) / static_cast<float>(inHeight), 80.f);
 
 	// @TODO::Needs to load in scene 
-	Planet* ter = new Planet(4, 100000);
+	Planet* ter = new Planet(8, 100000);
 	const Transform transformWorld(glm::vec3(0, -103000.f, 0.f), glm::vec3(0), glm::vec3(1.f));
 	ter->SetTransform(transformWorld);
 	Scene::AddSceneObject("World", ter);

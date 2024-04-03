@@ -28,7 +28,7 @@ PixelOutput main(PixelInput Input)
     float4 lightDir = float4(0, 0.5f, 1.f, 1.f);
     float4 lightColor = float4(1, 1, 1, 1);
     
-    float ambientStrength = 0.01f;
+    float ambientStrength = 0.001f;
     float4 ambient = ambientStrength * lightColor;
     
     
@@ -36,8 +36,9 @@ PixelOutput main(PixelInput Input)
     float4 diffuse = diff * lightColor;
     
     
-    //float4 albedo = Color.Sample(LinearSampler, Input.TextureCoord * 0.1);
-    float4 albedo = float4(0.5450, 0.2705, 0.075, 1 );
+    float4 albedo = pow(Color.Sample(LinearSampler, Input.TextureCoord), 1.2);
+    //float4 albedo = float4(Input.TextureCoord, 0, 1.f);
+    //float4 albedo = float4(0.5450, 0.2705, 0.075, 1 );
     Output.Color = (ambient + diffuse) * albedo;
     return Output;
 }

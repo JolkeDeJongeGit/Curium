@@ -68,9 +68,9 @@ DomainToPixel main(PatchConstantData input, float2 domain : SV_DomainLocation, c
     
     DomainToPixel output;
     
-    //float height = HeightMap.SampleLevel(LinearSampler, texCoord, 0.0f).x;
+    float height =  HeightMap.SampleLevel(LinearSampler, texCoord, 0.0f).x;
 
-    //float3 worldPos = pos.xyz + float3(0, height/29.f, 0); // Displace the vertex along the y-axis
+    //float3 worldPos = pos.xyz + float3(height * 10000.f, height * 10000.f, height * 10000.f) * nor.xyz; // Displace the vertex along the y-axis
     float3 worldPos = pos.xyz; // Displace the vertex along the y-axis
     output.Position = float4(worldPos,1.f);
     
