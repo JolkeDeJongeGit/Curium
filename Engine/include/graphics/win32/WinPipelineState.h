@@ -17,6 +17,6 @@ protected:
 	ComPtr<ID3D12PipelineState> m_wireframePipelineState;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
 
-	const char* m_vertexName;
+	const char* m_computeName;
 	const char* m_pixelName;
 };

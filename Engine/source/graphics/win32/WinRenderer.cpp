@@ -20,6 +20,8 @@
 #include "graphics/win32/Pipeline/WinPipelineStateScreen.h"
 #include <graphics/ShaderManager.h>
 #include <graphics/win32/Pipeline/WinPipelineStateSky.h>
+#include <graphics/win32/Pipeline/WinPipelineStateCompute.h>
+#include "common/AssetManager.h"
 
 namespace Renderer
 {
@@ -30,6 +32,7 @@ namespace Renderer
 
 	PipelineStateScreen* pipeline_screen = nullptr;
 	PipelineStateSky* pipeline_sky = nullptr;
+	PipelineStateCompute* pipeline_compute = nullptr;
 
 	DescriptorHeap* cbv_heap;
 	DescriptorHeap* rtv_heap;
@@ -46,13 +49,12 @@ namespace Renderer
 
 	Camera camera;
 
-	Buffer m_domainConstant;
+	std::vector<int> root_constants{ 64, 64 };
 
-	std::vector<int> rootConstants{ 64, 64 };
+	std::vector<Mesh> remove_meshes;
 
-	std::vector<Mesh> removeMeshes;
-
-	CameraData cameraData;
+	glm::vec3 light_color(1.f,1.f,1.f);
+	glm::vec3 light_dir(0.f,.5f,1.f);
 
 	void RenderImGui();
 }
@@ -87,6 +89,7 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	pipeline_sky = new PipelineStateSky("sky.vertex", "sky.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 	pipeline_state = new PipelineState("basic.vertex", "basic.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
 	pipeline_screen = new PipelineStateScreen("screen.vertex", "screen.pixel", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	pipeline_compute = new PipelineStateCompute("basic.compute");
 
 	swapchain->Init(static_cast<int>(inWidth), static_cast<int>(inHeight));
 	
@@ -104,7 +107,6 @@ void Renderer::Init(const uint32_t inWidth, const uint32_t inHeight)
 	sun->SetTransform(transformWorld1);
 	Scene::AddSceneObject("Sun", sun);
 
-	m_domainConstant.CreateConstantBuffer(24 * sizeof(float));
 	command_queue->CloseCommandList();
 }
 
@@ -120,8 +122,9 @@ void Renderer::Update()
 	const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsv_heap->GetCpuHandleAt(0);
 
 	command_queue->OpenCommandList();
-	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
 
+	commandList->SetDescriptorHeaps(_countof(pDescriptorHeaps), pDescriptorHeaps);
+	pipeline_compute->Render(commandList, 2048 * 0.0625f, 2048 * 0.0625f, 1);
 
 	const CD3DX12_RESOURCE_BARRIER renderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &renderTargetBarrier);
@@ -131,10 +134,14 @@ void Renderer::Update()
 	
 	const D3D12_VIEWPORT viewport = { 0.f, 0.f, static_cast<float>(viewport_width), static_cast<float>(viewport_height), 0.0f, 1.0f };
 	const D3D12_RECT rect = { 0, 0, static_cast<long>(viewport_width), static_cast<long>(viewport_height) };
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
+
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &rect);
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
+	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
 	if (Debug::IsWireframeMode())
 	{
 		commandList->SetPipelineState(pipeline_state->GetWireframePipelineState().Get());
@@ -144,19 +151,29 @@ void Renderer::Update()
 		commandList->SetPipelineState(pipeline_state->GetPipelineState().Get());
 	}
 
-	commandList->SetGraphicsRootSignature(pipeline_state->GetRootSignature().Get());
+	// - Bind params
+	commandList->SetGraphicsRoot32BitConstants(2, static_cast<UINT>(root_constants.size()), root_constants.data(), 0);
+	commandList->SetGraphicsRootDescriptorTable(4, cbv_heap->GetGpuHandleAt(pipeline_compute->m_sharedIndex));
 
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
-	
-	commandList->SetGraphicsRoot32BitConstants(1, static_cast<UINT>(rootConstants.size()), rootConstants.data(), 0);
+	glm::mat4 vp = camera.GetProjection() * camera.GetView();
+	commandList->SetGraphicsRoot32BitConstants(0, 16, &vp, 0);
+	commandList->SetGraphicsRoot32BitConstants(1, 4, &camera.GetTransform().GetPosition(), 0);
+	commandList->SetGraphicsRoot32BitConstants(1, 4, &light_dir, 4);
+	commandList->SetGraphicsRoot32BitConstants(1, 4, &light_color, 8);
 
 	for(auto& [name, gameobject] : Scene::AllSceneObjects())
 	{
+		commandList->SetGraphicsRoot32BitConstants(0, 16, &gameobject->GetTransform().GetModelMatrix(), 16);
+
 		if (gameobject->GetMeshes().size() > 0)
 		{
-			cameraData = CameraData(camera.GetProjection() * camera.GetView() * gameobject->GetTransform().GetModelMatrix(), camera.GetTransform().GetPosition());
-			m_domainConstant.UpdateBuffer(&cameraData);
-			m_domainConstant.SetGraphicsRootConstantBufferView(commandList, 0);
+			auto& bozo = gameobject->GetMeshes()[0];
+			if (auto heightmapTexture = bozo.m_textureData.find("heightmap"); heightmapTexture != bozo.m_textureData.end())
+			{
+				auto& texture = heightmapTexture->second;
+				auto descriptorIndex = texture.GetDescriptorIndex();
+				commandList->SetGraphicsRootDescriptorTable(3, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
+			}
 		}
 
 		for (auto& mesh : gameobject->GetMeshes())
@@ -183,12 +200,12 @@ void Renderer::Render()
 
 	swapchain->Present();
 
-	for (Mesh& mesh : removeMeshes)
+	for (Mesh& mesh : remove_meshes)
 	{
 		mesh.Shutdown();
 	}
 
-	removeMeshes.clear();
+	remove_meshes.clear();
 }
 
 void Renderer::RenderImGui()
@@ -245,12 +262,24 @@ void Renderer::DrawCameraPropertyWindow()
 	ImGui::SliderFloat(" ", &farplane, 1000.0f, 5000000.0f);
 	camera.SetFarPlane(farplane);
 	ImGui::PopID();
+
+	ImGui::PushID("R4");
+	ImGui::Text("Light Color: ");
+	ImGui::SameLine();
+	ImGui::ColorEdit3(" ", &light_color[0]);
+	ImGui::PopID();
+
+	ImGui::PushID("R3");
+	ImGui::Text("Light Direction: ");
+	ImGui::SameLine();
+	ImGui::DragFloat3(" ", &light_dir[0], 0.01f, -1.f, 1.f);
+	ImGui::PopID();
 	ImGui::End();
 }
 
 void Renderer::AddRemovedMesh(Mesh inMesh)
 {
-	removeMeshes.push_back(inMesh);
+	remove_meshes.push_back(inMesh);
 }
 
 Camera* Renderer::GetCamera()

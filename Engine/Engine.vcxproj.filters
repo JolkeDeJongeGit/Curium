@@ -168,6 +168,9 @@
     <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateSky.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateCompute.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\precomp.h">
@@ -261,6 +264,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateSky.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateCompute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

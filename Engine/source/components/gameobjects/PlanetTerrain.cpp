@@ -3,9 +3,28 @@
 #include "components/gameobjects/Planet.h"
 #include "components/gameobjects/PlanetTerrain.h"
 
+std::vector<uint16_t> indexData;
+bool isDone = false; 
 PlanetTerrain::PlanetTerrain(int inDetail, Planet* inPlanet, glm::vec3 inOrigin)
 	: m_detail(inDetail), m_planet(inPlanet), m_origin(inOrigin)
 {
+	if (!isDone)
+	{
+		isDone = true;
+		int div = m_detail;
+
+		for (int row = 0; row < div; row++)
+		{
+			for (int col = 0; col < div; col++)
+			{
+				int index = row * (div + 1) + col;
+				indexData.emplace_back(index);
+				indexData.emplace_back(index + 1);
+				indexData.emplace_back(index + (div + 1) + 1);
+				indexData.emplace_back(index + (div + 1));
+			}
+		}
+	}
 }
 
 PlanetTerrain::~PlanetTerrain()
@@ -31,23 +50,15 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 {
 	int div = m_detail;
 	m_inverseDetail = 1.f / m_detail;
-	float inverseSize = 1.f / m_planet->m_planetRadius;
+	const float inverseSize = 1.f / m_planet->m_planetRadius;
+	constexpr float inversePi = 1.f / glm::pi<float>();
+	constexpr float inverse2Pi = 1.f / (2.0 * glm::pi<float>());
 
 	auto& meshes = m_planet->GetMeshes();
 	meshes.emplace_back(Mesh());
 	auto& mesh = meshes[meshes.size() - 1];
 
-	for (int row = 0; row < div; row++)
-	{
-		for (int col = 0; col < div; col++)
-		{
-			int index = row * (div + 1) + col;
-			mesh.m_indexData.emplace_back(index);
-			mesh.m_indexData.emplace_back(index + 1);
-			mesh.m_indexData.emplace_back(index + (div + 1) + 1);
-			mesh.m_indexData.emplace_back(index + (div + 1));
-		}
-	}
+	mesh.m_indexData = indexData;
 
 	glm::vec3 v0 = inPoint1;
 	glm::vec3 v1 = inPoint2;
@@ -64,32 +75,21 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 		for (float j = 0; j < div + 1; j++)
 		{
 			glm::vec3 crntVec = v0 + i * dir03 + j * acrossj;
-			// Position
-
 			glm::vec3 normVec = glm::normalize(glm::vec3(crntVec.x, crntVec.y, crntVec.z));
 
 			vertices.emplace_back(normVec * m_planet->m_planetRadius);
-			// Tex UV
 
-			float theta = std::atan2(normVec.z, normVec.x);
-			float phi = std::acos(normVec.y);
+			float u = 0.5f + std::atan2(normVec.z, normVec.x) * inverse2Pi;
+			float v = 0.5f - std::asin(normVec.y) * inversePi;
 
-			// Map theta and phi to UV coordinates
-			float u = theta / (2.0f * glm::pi<float>());
-			float v = phi / glm::pi<float>();
-
-			// Store the normalized UV coordinates
 			textureCoords.emplace_back(u, v);
+
+			glm::vec3 normal = (vertices[vertices.size() - 1] - m_planet->GetTransform().GetPosition()) * inverseSize;
+
+			mesh.m_vertexData.emplace_back(VertexData(vertices[vertices.size() - 1], normal, textureCoords[textureCoords.size() - 1]));
 		}
 	}
 	
-	for (size_t i = 0; i < vertices.size(); i++)
-	{
-		glm::vec3 normal = (vertices[i] - m_planet->GetTransform().GetPosition() ) * inverseSize;
-
-		mesh.m_vertexData.emplace_back(VertexData(vertices[i], normal, textureCoords[i]));
-	}
-
 	mesh.m_textureData.insert(std::pair("heightmap", AssetManager::LoadTexture("assets/textures/planet.jpg")));
 
 	mesh.CreateVertexBuffer();

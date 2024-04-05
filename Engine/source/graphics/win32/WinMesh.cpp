@@ -152,14 +152,6 @@ void Mesh::CreateTexturesBuffer()
 
 void Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const
 {
-	// -- Bad way of drawing a texture >:(
-	if (auto heightmapTexture = m_textureData.find("heightmap"); heightmapTexture != m_textureData.end())
-	{
-		auto& texture = heightmapTexture->second;
-		auto descriptorIndex = texture.GetDescriptorIndex();
-		inCommandList->SetGraphicsRootDescriptorTable(2, WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV)->GetGpuHandleAt(descriptorIndex));
-	}
-
 	// -- Send over the Views
 	inCommandList->IASetVertexBuffers(0, 1, &m_vertexView);
 	inCommandList->IASetIndexBuffer(&m_indexView);

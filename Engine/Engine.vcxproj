@@ -135,8 +135,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClInclude Include="include\components\gameobjects\Light.h" />
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateCompute.h" />
     <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateSky.h" />
     <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateScreen.h" />
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateCompute.cpp" />
     <ClCompile Include="source\components\gameobjects\Planet.cpp" />
     <ClCompile Include="source\components\gameobjects\PlanetTerrain.cpp" />
     <ClCompile Include="source\core\Editor.cpp" />

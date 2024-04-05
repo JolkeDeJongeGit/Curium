@@ -14,7 +14,7 @@ PipelineState::PipelineState(const std::string& inVertexName, const std::string&
 	shader->LoadShader("basic.hull", std::string("resources/shaders/").c_str());
 	shader->LoadShader("basic.domain", std::string("resources/shaders/").c_str());
 
-	m_vertexName = inVertexName.c_str();
+	m_computeName = inVertexName.c_str();
 	m_pixelName = inPixelName.c_str();
 
 	SetupRootSignature();
@@ -31,8 +31,11 @@ void PipelineState::SetupRootSignature()
 	if (const HRESULT result = device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData));  FAILED(result))
 		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 
-	CD3DX12_DESCRIPTOR_RANGE1 descRange[1];
-	descRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	CD3DX12_DESCRIPTOR_RANGE1 diffuseDecs[1];
+	diffuseDecs[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+	CD3DX12_DESCRIPTOR_RANGE1 heightmapRange[1];
+	heightmapRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 
 	CD3DX12_ROOT_PARAMETER1 hsTessFactorsCb;
 	ZeroMemory(&hsTessFactorsCb, sizeof(hsTessFactorsCb));
@@ -46,10 +49,12 @@ void PipelineState::SetupRootSignature()
 	dsObjCb.Descriptor = { 0, 1 }; // first register (b0) in first register space
 	dsObjCb.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // only used in domain shader
 
-	CD3DX12_ROOT_PARAMETER1 rootParameter[3];
-	rootParameter[0] = dsObjCb;
-	rootParameter[1] = hsTessFactorsCb;
-	rootParameter[2].InitAsDescriptorTable(1, &descRange[0]);
+	CD3DX12_ROOT_PARAMETER1 rootParameter[5];
+	rootParameter[0].InitAsConstants(32, 0, 1, D3D12_SHADER_VISIBILITY_DOMAIN); // VP, Model;
+	rootParameter[1].InitAsConstants(12, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL); // Camera Data;
+	rootParameter[2] = hsTessFactorsCb;
+	rootParameter[3].InitAsDescriptorTable(1, &diffuseDecs[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[4].InitAsDescriptorTable(1, &heightmapRange[0], D3D12_SHADER_VISIBILITY_DOMAIN);
 
 	CD3DX12_STATIC_SAMPLER_DESC	descSamplers[1];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -80,7 +85,8 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"FRAGPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	struct PipelineStateStream
@@ -118,7 +124,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	pipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	pipelineStateStream.PrimitiveTopologyType = inType;
 
-	pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_vertexName).ShaderBlob.Get());
+	pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_computeName).ShaderBlob.Get());
 	pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_pixelName).ShaderBlob.Get());
 	pipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.hull").ShaderBlob.Get());
 	pipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.domain").ShaderBlob.Get());
@@ -146,7 +152,7 @@ void PipelineState::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inType, boo
 	wirePipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	wirePipelineStateStream.PrimitiveTopologyType = inType;
 
-	wirePipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_vertexName).ShaderBlob.Get());
+	wirePipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_computeName).ShaderBlob.Get());
 	wirePipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(shader->GetShader(m_pixelName).ShaderBlob.Get());
 	wirePipelineStateStream.HS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.hull").ShaderBlob.Get());
 	wirePipelineStateStream.DS = CD3DX12_SHADER_BYTECODE(shader->GetShader("basic.domain").ShaderBlob.Get());

@@ -268,8 +268,6 @@ void PipelineStateSky::SetupMesh()
 		screenVertex.push_back(VertexData(vertices[i], normals[i], texCoords[i]));
 	}
 
-
-
 	// -- Creating the actual mesh
 	m_meshScreen = new Mesh(screenVertex, screenIndices);
 	m_meshScreen->m_textureData.insert({"Sky", AssetManager::LoadTexture("assets/textures/sky.hdr")});

@@ -9,14 +9,6 @@
 		DOWN
 	};
 
-	struct CameraData
-	{
-		CameraData() = default;
-		CameraData(glm::mat4 const& view, glm::vec3 const& position);
-		float ViewProjectMatrix[4][4];
-		float Eye[4];
-	};
-
 	struct Plane {
 		glm::vec3 normal;
 		float distance;
@@ -101,7 +93,6 @@
 			return m_planes;
 		}
 	};
-
 
 	class Camera
 	{
