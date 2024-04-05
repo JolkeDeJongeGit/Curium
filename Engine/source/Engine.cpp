@@ -28,6 +28,7 @@ void Engine::Init()
 	Scene::Init();
 	Debug::Init();
 	ImGuiLayer::Init();
+
 }
 
 void Engine::Update(const float inDt)
@@ -50,6 +51,7 @@ void Engine::Shutdown()
 {
 	ImGuiLayer::Shutdown();
 	Debug::Shutdown();
+	Editor::Shutdown();
 	Renderer::Shutdown();
 }
 
@@ -82,7 +84,6 @@ void Engine::UpdateInput(const float inDt)
 			glfwSetInputMode(window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 			normal_mouse = false;
-
 		}
 	}
 	else if(!normal_mouse)

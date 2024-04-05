@@ -18,11 +18,12 @@ public:
 
     inline static float MouseXOffset = 0.f;
     inline static float MouseYOffset = 0.f;
+    inline static float ScrollYOffset = 0.f;
 private:
 #pragma warning( push )
 #pragma warning( disable : 4100 )
     static void MouseCallback(GLFWwindow* inWindow, double inXPos, double inYPos);
-
+    static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 #pragma warning( pop )
     GLFWwindow* m_window = nullptr;
     GLFWimage* m_windowIconImage = nullptr;

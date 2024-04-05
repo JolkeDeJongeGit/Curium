@@ -17,6 +17,8 @@ namespace Editor
 {
 	bool show_profiler = true;
 	bool show_hierarchy = true;
+	bool show_camera = true;
+	bool show_property = true;
 
     bool viewport_hovered = false;
 
@@ -45,6 +47,7 @@ void Editor::MainMenu()
         {
             ImGui::MenuItem("Hierarchy", "", &show_hierarchy);
             ImGui::MenuItem("Profiler", "", &show_profiler);
+            ImGui::MenuItem("Camera Propertie", "", &show_camera);
             ImGui::Separator();
             ImGui::EndMenu();
         }
@@ -61,9 +64,9 @@ void Editor::Viewport()
 
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
     auto value = WinUtil::GetSwapchain()->m_renderTextureSrvID;
-
-    if((viewportSize.x / viewportSize.y) != Renderer::GetCamera()->GetAspectRatio())
-        Renderer::GetCamera()->UpdateProjection(viewportSize.x / viewportSize.y);
+    auto aspectRatio = viewportSize.x / viewportSize.y;
+    if((aspectRatio) != Renderer::GetCamera()->GetAspectRatio())
+        Renderer::GetCamera()->UpdateProjection(aspectRatio);
 
     viewport_hovered = ImGui::IsWindowHovered();
 
@@ -85,23 +88,35 @@ void Editor::SplitEditor()
         ImGui::DockBuilderAddNode(dockspace_id);
         ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
 
-        auto dock_id_up = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Up, 0.8f, nullptr, &dockspace_id);
-        auto dock_id_down = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Down, 0.2f, nullptr, &dockspace_id);
-        auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.5f, nullptr, &dockspace_id);
-
-        if (ImGui::DockBuilderGetNode(ImGui::GetID("Hierarchy")) == NULL)
-        {
-            ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
-        }
+        auto dock_id_up = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.8f, nullptr, &dockspace_id);
+        auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
+        auto dock_id_right = ImGui::DockBuilderSplitNode(dock_id_up, ImGuiDir_Right, 0.3f, nullptr, &dock_id_up);
+        auto dock_id_down = ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Down, 0.2f, nullptr, &dock_id_left);
+        auto Hierarchy_down = ImGui::DockBuilderSplitNode(dock_id_up, ImGuiDir_Down, 0.2f, nullptr, &dock_id_up);
 
         if (ImGui::DockBuilderGetNode(ImGui::GetID("Viewport")) == NULL)
         {
             ImGui::DockBuilderDockWindow("Viewport", dock_id_up);
         }
 
+        if (ImGui::DockBuilderGetNode(ImGui::GetID("Property Window")) == NULL)
+        {
+            ImGui::DockBuilderDockWindow("Property Window", dock_id_right);
+        }
+
+        if (ImGui::DockBuilderGetNode(ImGui::GetID("Hierarchy")) == NULL)
+        {
+            ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
+        }
+
+        if (ImGui::DockBuilderGetNode(ImGui::GetID("Camera Properties")) == NULL)
+        {
+            ImGui::DockBuilderDockWindow("Camera Properties", dock_id_down);
+        }
+
         if (ImGui::DockBuilderGetNode(ImGui::GetID("Profiler")) == NULL)
         {
-            ImGui::DockBuilderDockWindow("Profiler", dock_id_down);
+            ImGui::DockBuilderDockWindow("Profiler", Hierarchy_down);
         }
 
 
@@ -116,7 +131,7 @@ void Editor::Init()
 void Editor::Update()
 {
     PROFILE_FUNCTION();
-
+    SplitEditor();
     MainMenu();
 
     Viewport();
@@ -126,10 +141,17 @@ void Editor::Update()
 
     if (show_hierarchy)
         Scene::HierarchyWindow(show_hierarchy);
+
+    if (show_camera)
+        Renderer::DrawCameraPropertyWindow();
+
+    if (show_property)
+        Scene::PropertyWindow(show_property);
 }
 
 void Editor::Shutdown()
 {
+    Scene::Shutdown();
 }
 
 bool Editor::ViewportHovered()

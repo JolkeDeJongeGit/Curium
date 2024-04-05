@@ -12,6 +12,8 @@ CommandQueue::CommandQueue()
 
 	ThrowIfFailed(device->CreateCommandQueue(&description, IID_PPV_ARGS(&m_commandQueue)));
 
+	ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+
 	ThrowIfFailed(m_commandList.GetList()->Close());
 }
 
@@ -39,7 +41,9 @@ void CommandQueue::CloseCommandList()
 	list->Close();
 
 	ExecuteCommandList();
-	WinUtil::GetSwapchain()->WaitForFenceValue(m_commandQueue);
+
+	Signal();
+	WaitForFence(m_fenceValue);
 
 	m_intermediateResources.clear();
 }
@@ -48,7 +52,6 @@ void CommandQueue::ExecuteCommandList()
 {
 	ID3D12CommandList* const commandLists[] = { m_commandList.GetList().Get()};
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	WinUtil::GetSwapchain()->UpdateFenceValue();
 }
 
 void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOURCE_DATA inSubresource, D3D12_RESOURCE_STATES inInitialState, std::optional<D3D12_RESOURCE_STATES> inFinaState)
@@ -57,7 +60,6 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOUR
 	ComPtr<ID3D12Device2> device = WinUtil::GetDevice()->GetDevice();
 	CD3DX12_RESOURCE_BARRIER copyBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), inInitialState, D3D12_RESOURCE_STATE_COPY_DEST);
 	CD3DX12_RESOURCE_BARRIER finalBarrier = CD3DX12_RESOURCE_BARRIER::Transition(inResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, inFinaState.value_or(inInitialState));
-
 	list->ResourceBarrier(1, &copyBarrier);
 
 	const UINT64 size = GetRequiredIntermediateSize(inResource.Get(), 0, 1);
@@ -78,6 +80,33 @@ void CommandQueue::UploadData(ComPtr<ID3D12Resource> inResource, D3D12_SUBRESOUR
 	UpdateSubresources(list.Get(), inResource.Get(), intermediate.Get(), 0, 0, 1, &inSubresource);
 	list->ResourceBarrier(1, &finalBarrier);
 	m_intermediateResources.push_back(intermediate);
+}
+
+uint64_t CommandQueue::Signal()
+{
+	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), ++m_fenceValue));
+	return m_fenceValue;
+}
+
+void CommandQueue::WaitForFence(uint64_t inFenceValue)
+{
+	if (!IsFenceComplete(m_fenceValue))
+	{
+		auto event = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+		if (event)
+		{
+			// Is this function thread safe?
+			m_fence->SetEventOnCompletion(m_fenceValue, event);
+			::WaitForSingleObject(event, DWORD_MAX);
+
+			::CloseHandle(event);
+		}
+	}
+}
+
+bool CommandQueue::IsFenceComplete(uint64_t fenceValue)
+{
+	return m_fence->GetCompletedValue() >= fenceValue;
 }
 
 

@@ -10,18 +10,13 @@ class ShaderManager
 public:
 	ShaderManager() = default;
 
-	static ShaderManager& Get()
-	{
-		static ShaderManager instance;
-		return instance;
-	}
 	void Init();
 
-	uint32_t LoadShader(const char* inName, const char* inPath);
-	uint32_t UseShader(const char* inName);
-	Shader& GetShader(const char* inName);
+	uint32_t LoadShader(std::string inName, std::string inPath);
+	uint32_t UseShader(std::string inName);
+	Shader& GetShader(std::string inName);
 
 private:
-	std::unordered_map<const char*, Shader> m_shaderMap;
+	std::unordered_map<std::string, Shader> m_shaderMap;
 	std::string m_basePath;
 };

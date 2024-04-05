@@ -134,7 +134,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="source\components\gameobjects\Terrain.cpp" />
+    <ClInclude Include="include\components\gameobjects\Light.h" />
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateCompute.h" />
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateSky.h" />
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateScreen.h" />
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateCompute.cpp" />
+    <ClCompile Include="source\components\gameobjects\Planet.cpp" />
+    <ClCompile Include="source\components\gameobjects\PlanetTerrain.cpp" />
     <ClCompile Include="source\core\Editor.cpp" />
     <ClCompile Include="source\core\ImGuiLayer.cpp" />
     <ClCompile Include="source\common\Util.cpp" />
@@ -151,6 +157,8 @@
     <ClCompile Include="source\components\Transform.cpp" />
     <ClCompile Include="source\core\Scene.cpp" />
     <ClCompile Include="source\graphics\Camera.cpp" />
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateScreen.cpp" />
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateSky.cpp" />
     <ClCompile Include="source\graphics\win32\WinBuffer.cpp" />
     <ClCompile Include="source\graphics\win32\WinDebugManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
@@ -212,7 +220,8 @@
     <ClInclude Include="include\common\PerformanceManager.h" />
     <ClInclude Include="include\common\Util.h" />
     <ClInclude Include="include\components\GameObject.h" />
-    <ClInclude Include="include\components\gameobjects\Terrain.h" />
+    <ClInclude Include="include\components\gameobjects\Planet.h" />
+    <ClInclude Include="include\components\gameobjects\PlanetTerrain.h" />
     <ClInclude Include="include\components\terrain\TerrainQuadTree.h" />
     <ClInclude Include="include\components\Transform.h" />
     <ClInclude Include="include\core\Editor.h" />
@@ -237,6 +246,10 @@
     <ClInclude Include="include\precomp.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="resources\shaders\basic.compute.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+    </FxCompile>
     <FxCompile Include="resources\shaders\basic.domain.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Domain</ShaderType>
@@ -256,6 +269,22 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\screen.pixel.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\screen.vertex.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\sky.pixel.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\sky.vertex.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

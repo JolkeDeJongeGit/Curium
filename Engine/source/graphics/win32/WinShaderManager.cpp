@@ -12,8 +12,11 @@ void ShaderManager::Init()
 	m_basePath = std::filesystem::path(path).parent_path().string();
 }
 
-uint32_t ShaderManager::LoadShader(const char* inName, const char* inPath)
+uint32_t ShaderManager::LoadShader(std::string inName, std::string inPath)
 {
+	if (m_shaderMap.find(inName) != m_shaderMap.end())
+		return 1;
+
 	Shader temp;
 	auto value = m_basePath + "/" + std::string(inName) + ".cso";
 	const std::wstring wsTmp(value.begin(), value.end());
@@ -22,20 +25,20 @@ uint32_t ShaderManager::LoadShader(const char* inName, const char* inPath)
 
 	if (!temp.ShaderBlob)
 	{
-		printf("Failed in to load Shader %s, %s", inName, inPath);
+		printf("Failed in to load Shader %s, %s", inName.c_str(), inPath.c_str());
 		return 0;
 	}
 
-	m_shaderMap.insert(std::pair<const char*, Shader>(inName, temp));
+	m_shaderMap.insert(std::pair<std::string, Shader>(inName, temp));
 	return 1;
 }
 
-uint32_t ShaderManager::UseShader(const char* inName)
+uint32_t ShaderManager::UseShader(std::string inName)
 {
 	return 1;
 }
 
-Shader& ShaderManager::GetShader(const char* inName)
+Shader& ShaderManager::GetShader(std::string inName)
 {
 	return m_shaderMap.at(inName);
 }

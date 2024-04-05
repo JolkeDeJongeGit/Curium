@@ -15,6 +15,9 @@ Camera::Camera(const Transform& inTransform, const float inAspectRatio, const fl
 void Camera::UpdateView()
 {
     m_view = glm::lookAt(m_objectTransform.GetPosition(), m_objectTransform.GetPosition() + m_objectTransform.GetForwardVector(), m_objectTransform.GetUpVector());
+
+    if(m_updateFrustum)
+        m_frustum.Update(m_projection * m_view);
 }
 
 void Camera::UpdateProjection(const float inAspectRatio)
@@ -80,32 +83,4 @@ void Camera::ProcessKeyMovement(Direction inDirection, const float inDeltaTime)
     
     m_objectTransform.SetPosition(position);
     UpdateView();
-}
-
-CameraData::CameraData(glm::mat4 const& view, glm::vec3 const& position)
-{
-    ViewProjectMatrix[0][0] = view[0][0];
-    ViewProjectMatrix[0][1] = view[0][1];
-    ViewProjectMatrix[0][2] = view[0][2];
-    ViewProjectMatrix[0][3] = view[0][3];
-
-    ViewProjectMatrix[1][0] = view[1][0];
-    ViewProjectMatrix[1][1] = view[1][1];
-    ViewProjectMatrix[1][2] = view[1][2];
-    ViewProjectMatrix[1][3] = view[1][3];
-
-    ViewProjectMatrix[2][0] = view[2][0];
-    ViewProjectMatrix[2][1] = view[2][1];
-    ViewProjectMatrix[2][2] = view[2][2];
-    ViewProjectMatrix[2][3] = view[2][3];
-
-    ViewProjectMatrix[3][0] = view[3][0];
-    ViewProjectMatrix[3][1] = view[3][1];
-    ViewProjectMatrix[3][2] = view[3][2];
-    ViewProjectMatrix[3][3] = view[3][3];
-
-    Eye[0] = position.x;
-    Eye[1] = position.y;
-    Eye[2] = position.z;
-
 }

@@ -156,7 +156,19 @@
     <ClCompile Include="source\core\Editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\components\gameobjects\Terrain.cpp">
+    <ClCompile Include="source\components\gameobjects\PlanetTerrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\gameobjects\Planet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateScreen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateSky.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\graphics\win32\Pipeline\WinPipelineStateCompute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -236,10 +248,25 @@
     <ClInclude Include="include\core\Editor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\components\gameobjects\Terrain.h">
+    <ClInclude Include="include\components\gameobjects\PlanetTerrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\components\terrain\TerrainQuadTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\components\gameobjects\Planet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateScreen.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\components\gameobjects\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateSky.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics\win32\Pipeline\WinPipelineStateCompute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -252,5 +279,10 @@
     </FxCompile>
     <FxCompile Include="resources\shaders\basic.hull.hlsl" />
     <FxCompile Include="resources\shaders\basic.domain.hlsl" />
+    <FxCompile Include="resources\shaders\basic.compute.hlsl" />
+    <FxCompile Include="resources\shaders\screen.pixel.hlsl" />
+    <FxCompile Include="resources\shaders\screen.vertex.hlsl" />
+    <FxCompile Include="resources\shaders\sky.vertex.hlsl" />
+    <FxCompile Include="resources\shaders\sky.pixel.hlsl" />
   </ItemGroup>
 </Project>

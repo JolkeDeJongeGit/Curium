@@ -19,13 +19,6 @@ void Swapchain::Init(const int inWidth, const int inHeight)
 	SetupSwapchain(inWidth, inHeight);
 	SetupDepthBuffer(inWidth, inHeight);
 	SetupRenderTextureBuffer(inWidth, inHeight);
-
-	ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-
-	m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-
-	if (m_fenceEvent == nullptr)
-		ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 }
 
 Swapchain::Swapchain() = default;
@@ -33,7 +26,6 @@ Swapchain::Swapchain() = default;
 
 Swapchain::~Swapchain()
 {
-	CloseHandle(m_fenceEvent);
 }
 
 uint32_t Swapchain::GetCurrentBuffer() const
@@ -54,23 +46,15 @@ void Swapchain::ResizeBuffer(int _width, int _height) const
 
 void Swapchain::Present()
 {
+	auto commandqueue = WinUtil::GetCommandQueue();
 	m_swapchain->Present(1, 0);
-}
 
-void Swapchain::UpdateFenceValue()
-{
-	m_fenceValue++;
-}
+	m_fenceValues[m_currentBuffer] = commandqueue->Signal();
 
-void Swapchain::WaitForFenceValue(const ComPtr<ID3D12CommandQueue>& inCommandQueue) const
-{
-	ThrowIfFailed(inCommandQueue->Signal(m_fence.Get(), m_fenceValue));
+	m_currentBuffer = m_swapchain->GetCurrentBackBufferIndex();
 
-	if (m_fence->GetCompletedValue() < m_fenceValue)
-	{
-		ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
-		WaitForSingleObject(m_fenceEvent, INFINITE);
-	}
+	auto fenceValue = m_fenceValues[m_currentBuffer];
+	commandqueue->WaitForFence(fenceValue);
 }
 
 void Swapchain::SetupSwapchain(const int inWidth, const int inHeight)
@@ -143,6 +127,7 @@ void Swapchain::SetupDepthBuffer(const int inWidth, const int inHeight)
 {
 	const ComPtr<ID3D12Device2>& devices = WinUtil::GetDevice()->GetDevice();
 	const DescriptorHeap* heap =  WinUtil::GetDescriptorHeap(HeapType::DSV);
+	DescriptorHeap* srvHeap =  WinUtil::GetDescriptorHeap(HeapType::CBV_SRV_UAV);
 
 	D3D12_CLEAR_VALUE optimizedClearValue = {};
 	optimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
@@ -167,6 +152,16 @@ void Swapchain::SetupDepthBuffer(const int inWidth, const int inHeight)
 	dsv.Flags = D3D12_DSV_FLAG_NONE;
 	devices.Get()->CreateDepthStencilView(m_depthBuffer.Get(), &dsv,
 		heap->GetCpuHandleAt(0));
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = 1;
+	m_depthTextureSrvID = srvHeap->GetNextIndex();
+	m_depthBuffer->SetName(L"DepthBuffer");
+
+	devices.Get()->CreateShaderResourceView(m_depthBuffer.Get(), &srvDesc, srvHeap->GetCpuHandleAt(m_depthTextureSrvID));
 }
 
 void Swapchain::SetupRenderTextureBuffer(int inWidth, int inHeight)
@@ -214,6 +209,8 @@ void Swapchain::SetupRenderTextureBuffer(int inWidth, int inHeight)
 	m_renderTextureHeapID = heap->GetNextIndex();
 	const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap->GetCpuHandleAt(m_renderTextureHeapID);
 	devices.Get()->CreateRenderTargetView(m_renderTextureBuffer.Get(), &rtvDesc, rtvHandle);
+
+	m_renderTextureBuffer->SetName(L"RenderTextureBuffer");
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = textureDesc.Format;

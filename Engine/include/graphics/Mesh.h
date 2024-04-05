@@ -33,18 +33,6 @@ class Mesh
 {
 public:
 	Mesh() = default; 
-	explicit Mesh(const bool inIsSphere)
-	{
-		if(inIsSphere)
-		{
-			SetupSphere();
-		}
-		else
-		{
-			SetupCube();
-		}
-	}
-
 	Mesh(const std::vector<VertexData>& inVertexData, const std::vector<uint16_t>& inIndexData)
 		: m_vertexData(inVertexData), m_indexData(inIndexData)
 	{
@@ -53,20 +41,25 @@ public:
 		CreateTexturesBuffer();
 	}
 
+	void Shutdown();
+
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
 	void CreateTexturesBuffer();
 	
-	void SetupCube();
-	void SetupSphere();
 	void Draw(const ComPtr<ID3D12GraphicsCommandList>& inCommandList) const;
+
+	inline D3D12_VERTEX_BUFFER_VIEW& GetVertexView() { return m_vertexView;  }
+	inline D3D12_INDEX_BUFFER_VIEW& GetIndexView() { return m_indexView;  }
 
 	std::vector<VertexData> m_vertexData;
 	std::vector<uint16_t>   m_indexData;
 	std::unordered_map<std::string, Texture>  m_textureData;
-private:
 	ComPtr<ID3D12Resource> m_vertexBuffer;
 	ComPtr<ID3D12Resource> m_indexBuffer;
+
+	bool m_cull = false;
+private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexView{};
 	D3D12_INDEX_BUFFER_VIEW m_indexView{};
 };

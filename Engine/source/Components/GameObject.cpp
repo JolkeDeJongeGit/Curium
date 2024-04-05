@@ -11,3 +11,11 @@ Material::Material(const glm::vec4& inAmbientColor, const glm::vec4& inDiffuseCo
 		SpecularColor[i] = inSpecularColor[j];
 	}
 }
+
+GameObject::~GameObject()
+{
+	for (Mesh mesh : m_meshes)
+	{
+		mesh.Shutdown();
+	}
+}

@@ -17,15 +17,15 @@ class GameObject
 {
 public:
   GameObject() = default;
-  virtual ~GameObject() = default;
+  virtual ~GameObject();
 
   GameObject(const Transform& inTransform, const std::vector<Mesh>& inMeshes)
     : m_meshes(inMeshes), m_transform(inTransform)
   {
   }
   
-  Transform& GetTransform() { return m_transform; }
-  const std::vector<Mesh>& GetMeshes() const { return m_meshes; }
+  const Transform& GetTransform() const { return m_transform; }
+  std::vector<Mesh>& GetMeshes() { return m_meshes; }
   
   void SetTransform(const Transform& inTransform) { m_transform = inTransform; }
   void SetMeshes(const std::vector<Mesh>& inMeshes) { m_meshes = inMeshes; }
@@ -36,5 +36,5 @@ public:
 protected:
   std::vector<Mesh> m_meshes;
   Transform m_transform;
-  Material m_material;
+  //Material m_material;
 };

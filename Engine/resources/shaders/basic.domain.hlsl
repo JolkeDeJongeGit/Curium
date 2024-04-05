@@ -1,14 +1,11 @@
 #define NUM_CONTROL_POINTS 4
 
-struct Data
+struct TransformData
 {
-    float4x4 ViewProjection;
-    float4 eye;
-    //float4 frustum[6];
-    //float dummy;
-}; // 48 bytes
-ConstantBuffer<Data> DataCB : register(b0, space1);
-//ConstantBuffer<Data> DataCB : register(b0);
+    matrix ViewProjection;
+    matrix Model;
+};
+ConstantBuffer<TransformData> Transform : register(b0, space1);
 
 struct PatchConstantData
 {
@@ -27,10 +24,11 @@ struct DomainToPixel
 {
     float4 Position : SV_POSITION;
     float4 Normal : NORMAL;
+    float4 FragPosition : FRAGPOSITION;
     float2 TextureCoord : TEXCOORD;
 };
 
-Texture2D HeightMap : register(t0);
+Texture2D<float4> heightmap : register(t1);
 SamplerState LinearSampler : register(s0);
 
 [domain("quad")]
@@ -67,16 +65,20 @@ DomainToPixel main(PatchConstantData input, float2 domain : SV_DomainLocation, c
     float4 nor =leftNor + u * (rightNor - leftNor);
     
     DomainToPixel output;
+    //output.Normal = nor;
     
-    float height = HeightMap.SampleLevel(LinearSampler, texCoord, 0.0f).x;
+    float4 normal = nor;
+    
 
-    float3 worldPos = pos.xyz + float3(0, height/29.f, 0); // Displace the vertex along the y-axis
-    output.Position = float4(worldPos,1.f);
-    
-    output.Position = mul(DataCB.ViewProjection, output.Position);
-    
-    output.Normal = nor;
-    
+    float displacement = heightmap.SampleLevel(LinearSampler, texCoord, 0.0f).r;
+
+// Displace the vertex along the normal direction
+    float3 worldPos = pos.xyz + normal.xyz * displacement * 10000;
+    //float3 worldPos = pos.xyz ; // Displace the vertex along the y-axis
+
+    output.Position = mul(mul(Transform.ViewProjection, Transform.Model), float4(worldPos, 1.f)) ;
+    output.Normal = normal;
+    output.FragPosition = mul(Transform.Model, float4(worldPos, 1.f));
     output.TextureCoord = texCoord;
 
     return output;
