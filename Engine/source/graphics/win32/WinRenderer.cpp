@@ -191,6 +191,9 @@ void Renderer::Render()
 	pipeline_sky->Render(commandlist);
 	pipeline_screen->Render(commandlist);
 
+	const CD3DX12_RESOURCE_BARRIER RTToShaderResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandlist->ResourceBarrier(1, &RTToShaderResourceBarrier);
+
 	ImGuiLayer::NewFrame();
 
 	RenderImGui();

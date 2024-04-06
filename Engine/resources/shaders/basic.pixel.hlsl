@@ -44,7 +44,7 @@ PixelOutput main(PixelInput Input)
             
         alpha = Diffuse.Sample(LinearSampler, Input.TextureCoord).a;
             
-        ambient = albedo * 0.2;
+        ambient = albedo * 0.5;
     }
     
     // Light

@@ -125,9 +125,6 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	commandList->IASetIndexBuffer(&m_meshScreen->GetIndexView());
 	commandList->DrawIndexedInstanced(static_cast<UINT>(m_meshScreen->m_indexData.size()), 1, 0, 0, 0);
 
-	const CD3DX12_RESOURCE_BARRIER RTToShaderResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &RTToShaderResourceBarrier);
-
 	const CD3DX12_RESOURCE_BARRIER depthTargetBarrierWrite = CD3DX12_RESOURCE_BARRIER::Transition(depthTarget, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	commandList->ResourceBarrier(1, &depthTargetBarrierWrite);
 }

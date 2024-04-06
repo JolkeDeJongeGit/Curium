@@ -111,7 +111,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float2 uv = dispatchThreadID.xy / float2(2048, 2048);
     uint seed = 0x578437adU;
     
-    float value = perlinNoise(uv, 20, 10, 0.5, 2.0, seed); // multiple octaves
+    float value = perlinNoise(uv, 20, 4, 0.7, 2.0, seed); // multiple octaves
     value = (value + 1.0) * 0.5; // convert from range [-1, 1] to range [0, 1]
     // Write the noise value to the output texture
     g_sharedTexture[dispatchThreadID.xy] = value;

@@ -71,13 +71,13 @@ DomainToPixel main(PatchConstantData input, float2 domain : SV_DomainLocation, c
     
 
     float displacement = heightmap.SampleLevel(LinearSampler, texCoord, 0.0f).r;
-
+    float4 normaldisplacement = normal * displacement;
 // Displace the vertex along the normal direction
-    float3 worldPos = pos.xyz + normal.xyz * displacement * 10000;
+    float3 worldPos = pos.xyz + normaldisplacement.xyz * 1500.f;
     //float3 worldPos = pos.xyz ; // Displace the vertex along the y-axis
 
     output.Position = mul(mul(Transform.ViewProjection, Transform.Model), float4(worldPos, 1.f)) ;
-    output.Normal = normal;
+    output.Normal =  normaldisplacement;
     output.FragPosition = mul(Transform.Model, float4(worldPos, 1.f));
     output.TextureCoord = texCoord;
 

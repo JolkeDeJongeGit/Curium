@@ -120,10 +120,10 @@ inline void TerrainQuadTree::Init(float inSize, glm::vec3 inNormal)
     glm::vec3 forward = glm::cross(right, inNormal);
 
     // Define vertices of the terrain plane using the calculated vectors
-    glm::vec3 v0 = -inSize * right - inSize * forward ;
-    glm::vec3 v1 = -inSize * right + inSize * forward ;
-    glm::vec3 v2 = inSize * right + inSize * forward ;
-    glm::vec3 v3 = inSize * right - inSize * forward;
+    glm::vec3 v0 = m_terrain->m_origin + -inSize * right - inSize * forward ;
+    glm::vec3 v1 = m_terrain->m_origin + -inSize * right + inSize * forward ;
+    glm::vec3 v2 = m_terrain->m_origin + inSize * right + inSize * forward ;
+    glm::vec3 v3 = m_terrain->m_origin + inSize * right - inSize * forward;
 
     // Set the point of the root node (assuming it's at the center for simplicity)
     m_rootNode->m_point = m_terrain->m_origin;
