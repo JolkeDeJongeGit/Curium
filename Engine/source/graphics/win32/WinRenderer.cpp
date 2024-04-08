@@ -178,8 +178,8 @@ void Renderer::Update()
 
 		for (auto& mesh : gameobject->GetMeshes())
 		{
-			//if(!mesh.m_cull)
-			mesh.Draw(commandList);
+			if(!mesh.m_cull)
+				mesh.Draw(commandList);
 		}
 	}
 }
@@ -189,7 +189,7 @@ void Renderer::Render()
 	const ComPtr<ID3D12GraphicsCommandList> commandlist = command_queue->GetCommandList().GetList();
 	ID3D12Resource* renderTarget = swapchain->GetRenderTextureBuffer().Get();
 	pipeline_sky->Render(commandlist);
-	pipeline_screen->Render(commandlist);
+	//pipeline_screen->Render(commandlist);
 
 	const CD3DX12_RESOURCE_BARRIER RTToShaderResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	commandlist->ResourceBarrier(1, &RTToShaderResourceBarrier);

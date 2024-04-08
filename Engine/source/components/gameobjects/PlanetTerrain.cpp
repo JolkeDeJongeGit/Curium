@@ -46,7 +46,7 @@ void PlanetTerrain::FixMeshIndex(uint16_t inIndex)
 	m_planet->FixMeshIndex(inIndex);
 }
 
-uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, glm::vec3 inPoint3, glm::vec3 inPoint4)
+uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, glm::vec3 inPoint3, glm::vec3 inPoint4, glm::vec3& outMin, glm::vec3& outMax)
 {
 	int div = m_detail;
 	m_inverseDetail = 1.f / m_detail;
@@ -64,6 +64,34 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 	glm::vec3 v1 = inPoint2;
 	glm::vec3 v2 = inPoint3;
 	glm::vec3 v3 = inPoint4;
+
+	outMin.x = min(v0.x, v3.x);
+	outMin.y = min(v0.y, v3.y);
+	outMin.z = min(v0.z, v3.z);
+
+	outMin.x = min(outMin.x, v1.x);
+	outMin.y = min(outMin.y, v1.y);
+	outMin.z = min(outMin.z, v1.z);
+
+	outMin.x = min(outMin.x, v2.x);
+	outMin.y = min(outMin.y, v2.y);
+	outMin.z = min(outMin.z, v2.z);
+
+	// Update maximum coordinates
+	outMax.x = max(v0.x, v3.x);
+	outMax.y = max(v0.y, v3.y);
+	outMax.z = max(v0.z, v3.z);
+
+	// Update maximum coordinates
+	outMax.x = max(outMax.x, v1.x);
+	outMax.y = max(outMax.y, v1.y);
+	outMax.z = max(outMax.z, v1.z);
+
+	// Update maximum coordinates
+	outMax.x = max(outMax.x, v2.x);
+	outMax.y = max(outMax.y, v2.y);
+	outMax.z = max(outMax.z, v2.z);
+
 	glm::vec3 dir03 = (v3 - v0) * m_inverseDetail;
 	glm::vec3 dir12 = (v2 - v1) * m_inverseDetail;
 	std::vector<glm::vec3> vertices;
@@ -76,17 +104,18 @@ uint16_t PlanetTerrain::GenerateTerrain(glm::vec3 inPoint1, glm::vec3 inPoint2, 
 		{
 			glm::vec3 crntVec = v0 + i * dir03 + j * acrossj;
 			glm::vec3 normVec = glm::normalize(glm::vec3(crntVec.x, crntVec.y, crntVec.z));
+			glm::vec3 vertex = normVec * m_planet->m_planetRadius;
 
-			vertices.emplace_back(normVec * m_planet->m_planetRadius);
+			vertices.emplace_back(crntVec);
 
 			float u = 0.5f + std::atan2(normVec.z, normVec.x) * inverse2Pi;
 			float v = 0.5f - std::asin(normVec.y) * inversePi;
 
 			textureCoords.emplace_back(u, v);
 
-			glm::vec3 normal = (vertices[vertices.size() - 1] - m_planet->GetTransform().GetPosition()) * inverseSize;
+			glm::vec3 normal = (vertex - m_planet->GetTransform().GetPosition()) * inverseSize;
 
-			mesh.m_vertexData.emplace_back(VertexData(vertices[vertices.size() - 1], normal, textureCoords[textureCoords.size() - 1]));
+			mesh.m_vertexData.emplace_back(VertexData(vertex, normal, textureCoords[textureCoords.size() - 1]));
 		}
 	}
 	

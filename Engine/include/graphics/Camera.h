@@ -28,64 +28,66 @@
 			}
 		}
 
+		// Check if a point is inside the frustum
+		bool isInside(const glm::vec3& min ,const glm::vec3& max) const {
+			for (const auto& plane : m_planes) {
+				glm::vec3 pVertex = glm::vec3(
+					plane.normal.x > 0 ? max.x : min.x,
+					plane.normal.y > 0 ? max.y : min.y,
+					plane.normal.z > 0 ? max.z : min.z
+				);
+
+				if (glm::dot(plane.normal, pVertex) + plane.distance <= 0) {
+					return false;
+				}
+			}
+			return true;
+		}
+
 		void Update(const glm::mat4& viewProjectionMatrix) {
 			// Extract frustum planes from the view-projection matrix
 
-			glm::mat4 viewProjTranspose = glm::transpose(viewProjectionMatrix);
+			glm::mat4 vp = viewProjectionMatrix;
+			m_planes[0].normal.x = vp[0][3] + vp[0][0];
+			m_planes[0].normal.y = vp[1][3] + vp[1][0];
+			m_planes[0].normal.z = vp[2][3] + vp[2][0];
+			m_planes[0].distance = vp[3][3] + vp[3][0];
 
-			// Right plane
-			m_planes[0] = {
-				glm::vec3(viewProjTranspose[3][0] - viewProjTranspose[0][0],
-						  viewProjTranspose[3][1] - viewProjTranspose[0][1],
-						  viewProjTranspose[3][2] - viewProjTranspose[0][2]),
-				viewProjTranspose[3][3] - viewProjTranspose[0][3]
-				};
+			// Right clipping plane
+			m_planes[1].normal.x = vp[0][3] - vp[0][0];
+			m_planes[1].normal.y = vp[1][3] - vp[1][0];
+			m_planes[1].normal.z = vp[2][3] - vp[2][0];
+			m_planes[1].distance = vp[3][3] - vp[3][0];
 
-			// Left plane
-			m_planes[1] = {
-				glm::vec3(viewProjTranspose[3][0] + viewProjTranspose[0][0],
-						  viewProjTranspose[3][1] + viewProjTranspose[0][1],
-						  viewProjTranspose[3][2] + viewProjTranspose[0][2]),
-				viewProjTranspose[3][3] + viewProjTranspose[0][3]
-				};
+			// Top clipping plane
+			m_planes[2].normal.x = vp[0][3] - vp[0][1];
+			m_planes[2].normal.y = vp[1][3] - vp[1][1];
+			m_planes[2].normal.z = vp[2][3] - vp[2][1];
+			m_planes[2].distance = vp[3][3] - vp[3][1];
 
-			// Bottom plane
-			m_planes[2] = {
-				glm::vec3(viewProjTranspose[3][0] + viewProjTranspose[1][0],
-						  viewProjTranspose[3][1] + viewProjTranspose[1][1],
-						  viewProjTranspose[3][2] + viewProjTranspose[1][2]),
-				viewProjTranspose[3][3] + viewProjTranspose[1][3]
-				};
+			// Bottom clipping plane
+			m_planes[3].normal.x = vp[0][3] + vp[0][1];
+			m_planes[3].normal.y = vp[1][3] + vp[1][1];
+			m_planes[3].normal.z = vp[2][3] + vp[2][1];
+			m_planes[3].distance = vp[3][3] + vp[3][1];
 
-			// Top plane
-			m_planes[3] = {
-				glm::vec3(viewProjTranspose[3][0] - viewProjTranspose[1][0],
-						  viewProjTranspose[3][1] - viewProjTranspose[1][1],
-						  viewProjTranspose[3][2] - viewProjTranspose[1][2]),
-				viewProjTranspose[3][3] - viewProjTranspose[1][3]
-				};
+			// Near clipping plane
+			m_planes[4].normal.x = vp[0][3] + vp[0][2];
+			m_planes[4].normal.y = vp[1][3] + vp[1][2];
+			m_planes[4].normal.z = vp[2][3] + vp[2][2];
+			m_planes[4].distance = vp[3][3] + vp[3][2];
 
-			// Far plane
-			m_planes[4] = {
-				glm::vec3(viewProjTranspose[3][0] - viewProjTranspose[2][0],
-						  viewProjTranspose[3][1] - viewProjTranspose[2][1],
-						  viewProjTranspose[3][2] - viewProjTranspose[2][2]),
-				viewProjTranspose[3][3] - viewProjTranspose[2][3]
-				};
+			// Far clipping plane
+			m_planes[5].normal.x = vp[0][3] - vp[0][2];
+			m_planes[5].normal.y = vp[1][3] - vp[1][2];
+			m_planes[5].normal.z = vp[2][3] - vp[2][2];
+			m_planes[5].distance = vp[3][3] - vp[3][2];
 
-			// Near plane
-			m_planes[5] = {
-				glm::vec3(viewProjTranspose[3][0] + viewProjTranspose[2][0],
-						  viewProjTranspose[3][1] + viewProjTranspose[2][1],
-						  viewProjTranspose[3][2] + viewProjTranspose[2][2]),
-				viewProjTranspose[3][3] + viewProjTranspose[2][3]
-				};
 
-			// Normalize the planes
-			for (auto& plane : m_planes) {
-				float length = 1.f / glm::length(plane.normal);
-				plane.normal *= length;
-				plane.distance *= length;
+			for (int i = 0; i < 6; i++) {
+				float mag = 1.f / glm::length(m_planes[i].normal);
+				m_planes[i].normal = m_planes[i].normal * mag;
+				m_planes[i].distance = m_planes[i].distance * mag;
 			}
 		}
 
