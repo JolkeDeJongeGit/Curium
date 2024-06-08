@@ -20,6 +20,7 @@ ConstantBuffer<CameraData> Camera : register(b0);
 
 struct Planet
 {
+    float4 scatteringCoefficients;
     float3 position;
     float planetRadius;
     float atmosphereRadius;
@@ -63,12 +64,11 @@ float2 RaySphere(float3 centerWorld, float atmosphereRadius, float3 rayOrigin, f
     return float2(FLT_MAX, 0); // No intersection, return maximum float value
 }
 
-float3 ScreenToWorld(float3 pos)
+float3 ScreenToWorld(float2 pos)
 {
-    float4 posP = float4(pos.x * 2.0 - 1.0, (1.0f - pos.y) * 2.0f - 1.0f, pos.z * 2.0 - 1.0, 1.0); // Don't forget to invert Y.
-    float4 posVS = mul(Camera.inverseProjectionMatrix, posP); // Clip to view space
-    posVS /= posVS.w; // Perspective divide
-    float4 posWS = mul(Camera.viewMatrix, posVS); // View to world space
+    float4 posP = float4(pos.x * 2.0 - 1.0, (1.0f - pos.y) * 2.0f - 1.0f, 0, 1.0); // Don't forget to invert Y.
+    float3 posVS = mul(Camera.inverseProjectionMatrix, posP); // Clip to view space
+    float4 posWS = mul(Camera.viewMatrix, float4(posVS, 0)); // View to world space
     return posWS.xyz;
 }
 
@@ -101,25 +101,60 @@ float OpticalDepth(float3 rayOrigin, float3 rayDir, float rayLength)
     return opticalDepth;
 }
 
-float CalculateLight(float3 rayOrigin, float3 rayDir, float rayLength)
+float OpticalDepth2(float3 rayOrigin, float3 rayDir, float rayLength)
+{
+    float3 endPoint = rayOrigin + rayDir * rayLength;
+    float d = dot(rayDir, normalize(rayOrigin - World.position));
+    float opticalDepth = 0;
+
+    const float blendStrength = 1.5;
+    float w = saturate(d * blendStrength + .5);
+				
+    float d1 = OpticalDepth(rayOrigin, rayDir, rayLength) - OpticalDepth(endPoint, rayDir, rayLength);
+    float d2 = OpticalDepth(endPoint, -rayDir, rayLength) - OpticalDepth(rayOrigin, -rayDir, rayLength);
+
+    opticalDepth = lerp(d2, d1, w);
+    return opticalDepth;
+}
+
+float CalculateLight(float3 rayOrigin, float3 rayDir, float rayLength, float4 originalCol)
 {
     float3 inScatteredPoint = rayOrigin;
     float stepSize = rayLength / (NUM_SCATTERING_POINTS - 1);
     float inScatteredLight = 0;
-    
+    float viewRayOpticalDepth = 0;
+    float intensity = 1.f;
+    float3 dirToSun = normalize(Sun.position - World.position);
     for (int i = 0; i < NUM_SCATTERING_POINTS; i++)
     {
-        float3 dirToSun = normalize(Sun.position - World.position);
 
         float sunRayLength = RaySphere(World.position, World.atmosphereRadius, Camera.position, dirToSun).y;
-        float sunRayOpticalDepth = OpticalDepth(inScatteredPoint, dirToSun, sunRayLength);
-        float viewRayOpticalDepth = OpticalDepth(inScatteredPoint, rayDir, stepSize * i);
-        float transmittance = exp(-(sunRayOpticalDepth + viewRayOpticalDepth));
+        float sunRayOpticalDepth = OpticalDepth(inScatteredPoint + dirToSun * 0.8f, dirToSun, sunRayLength);
         float localDensity = DensityAtPoint(inScatteredPoint);
+        viewRayOpticalDepth = OpticalDepth2(inScatteredPoint, rayDir, stepSize * i);
+        float transmittance = exp(-(sunRayOpticalDepth + viewRayOpticalDepth) * World.scatteringCoefficients);
         
-        inScatteredLight += localDensity * transmittance * stepSize;
+        inScatteredLight += localDensity * transmittance;
         inScatteredPoint += rayDir * stepSize;
     }
+    
+    inScatteredLight *= World.scatteringCoefficients * intensity * stepSize / World.planetRadius;
+
+	// Attenuate brightness of original col (i.e light reflected from planet surfaces)
+	// This is a hacky mess, TODO: figure out a proper way to do this
+    const float brightnessAdaptionStrength = 0.15;
+    const float reflectedLightOutScatterStrength = 3;
+    float brightnessAdaption = dot(inScatteredLight, 1) * brightnessAdaptionStrength;
+    float brightnessSum = viewRayOpticalDepth * intensity * reflectedLightOutScatterStrength + brightnessAdaption;
+    float reflectedLightStrength = exp(-brightnessSum);
+    float hdrStrength = saturate(dot(originalCol, 1) / 3 - 1);
+    reflectedLightStrength = lerp(reflectedLightStrength, 1, hdrStrength);
+    float3 reflectedLight = originalCol * reflectedLightStrength;
+
+    float3 finalCol = reflectedLight + inScatteredLight;
+
+				
+    return finalCol;
     
     return inScatteredLight;
 }
@@ -129,7 +164,7 @@ float4 main(PixelIn pixelIn) : SV_TARGET
     float4 screen = screenTexture.Sample(LinearSampler, pixelIn.TexCoord);
     float depth = depthTexture.Sample(LinearSampler, pixelIn.TexCoord);
     
-    float3 viewVector = ScreenToWorld(float3(pixelIn.TexCoord, 0));
+    float3 viewVector = ScreenToWorld(pixelIn.TexCoord);
     float sceneDepth = LinearEyeDepth(depth) * length(viewVector);
     
     float3 rayDir = normalize(viewVector);
@@ -143,11 +178,9 @@ float4 main(PixelIn pixelIn) : SV_TARGET
     {
         const float epsilon = 0.0001;
         float3 pointInAtmosphere = Camera.position + rayDir * (dstToAtmosphere + epsilon);
-        float3 light = CalculateLight(pointInAtmosphere, rayDir, dstThroughAtmosphere - epsilon * 2);
-        return screen * float4(1 - light, 1) + float4(light, 1);
+        float3 light = CalculateLight(pointInAtmosphere, rayDir, dstThroughAtmosphere - epsilon * 2, screen);
+        return float4(light, 1);
     }
-    
-    
-    
+
     return screen;
 }

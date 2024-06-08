@@ -30,11 +30,15 @@ PipelineStateScreen::PipelineStateScreen(const std::string& inVertexName, const 
 	m_cameraConstant->CreateConstantBuffer(37 * sizeof(float));
 
 	m_planetConstant = new Buffer();
-	m_planetConstant->CreateConstantBuffer(6 * sizeof(float));
+	m_planetConstant->CreateConstantBuffer(10 * sizeof(float));
 
 	m_sunConstant = new Buffer();
 	m_sunConstant->CreateConstantBuffer(8 * sizeof(float));
 }
+
+float scatterX = pow(400 / 700, 4);
+float scatterY = pow(400 / 530, 4);
+float scatterZ = pow(400 / 460, 4);
 
 void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 {
@@ -74,12 +78,12 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 	struct camData
 	{
 		glm::mat4 viewMatrix;
-		glm::mat4 inverseviewMatrix;
+		glm::mat4 inverseProjectionMatrix;
 		glm::vec3 worldCam;
 		float _near;
 		float _far;
 	};
-	camData cameraData{ glm::transpose(camera->GetView()), glm::inverse(camera->GetProjection()), camera->GetTransform().GetPosition() };
+	camData cameraData{ glm::inverse(camera->GetView()), glm::inverse(camera->GetProjection()), camera->GetTransform().GetPosition(), camera->GetNearPlane(), camera->GetFarPlane() };
 
 	// -- Update Camera data
 	m_cameraConstant->UpdateBuffer(&cameraData);
@@ -87,7 +91,8 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 
 	struct PlanetData
 	{
-		glm::vec3 position;
+		glm::vec4 scatteringCoefficients;
+		glm::vec3 planetCenter;
 		float planetRadius;
 		float atmosphereRadius;
 		float atmosphereFalloff;
@@ -95,7 +100,7 @@ void PipelineStateScreen::Render(ComPtr<ID3D12GraphicsCommandList> commandList)
 
 	// I love Hard coding :(
 	Planet* gameObject = static_cast<Planet*>(Scene::AllSceneObjects()["World"]);
-	PlanetData worldData { gameObject->GetTransform().GetPosition(), gameObject->m_planetRadius, gameObject->m_atmosphereRadius, gameObject->m_fallOff };
+	PlanetData worldData {glm::vec4(scatterX * 20.f, scatterY * 20.f, scatterZ * 20.f, 1) , gameObject->GetTransform().GetPosition(), gameObject->m_planetRadius, gameObject->m_atmosphereRadius, gameObject->m_fallOff};
 
 	// -- Update Camera data
 	m_planetConstant->UpdateBuffer(&worldData);
@@ -152,13 +157,13 @@ void PipelineStateScreen::SetupRootSignature()
 	ZeroMemory(&constantBufferCam, sizeof(constantBufferCam));
 	constantBufferCam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
 	constantBufferCam.Descriptor = { 0, 0 }; // first register (b0) in first register space
-	constantBufferCam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // only used in _PIXEL shader
+	constantBufferCam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // only used in _PIXEL shader
 
 	CD3DX12_ROOT_PARAMETER1 constantPlanet;
 	ZeroMemory(&constantPlanet, sizeof(constantPlanet));
 	constantPlanet.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // constant buffer
 	constantPlanet.Descriptor = { 1, 0 }; // first register (b1) in first register space
-	constantPlanet.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // only used in _PIXEL shader
+	constantPlanet.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // only used in _PIXEL shader
 
 	CD3DX12_ROOT_PARAMETER1 constantLight;
 	ZeroMemory(&constantLight, sizeof(constantLight));
@@ -204,7 +209,7 @@ void PipelineStateScreen::SetupPipelineState(D3D12_PRIMITIVE_TOPOLOGY_TYPE inTyp
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 
 	struct PipelineStateStream
