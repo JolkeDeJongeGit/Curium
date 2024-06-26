@@ -161,6 +161,18 @@ void Renderer::Update()
 	commandList->SetGraphicsRoot32BitConstants(1, 4, &light_dir, 4);
 	commandList->SetGraphicsRoot32BitConstants(1, 4, &light_color, 8);
 
+
+	float distanceToPlanetSurface = glm::length(camera.GetTransform().GetPosition() - Scene::AllSceneObjects()["World"]->GetTransform().GetPosition()) - 100000;
+
+	float nearPlane = 0.1f;
+	float farPlane = glm::clamp(distanceToPlanetSurface + distanceToPlanetSurface, 1000.f, 500000.0f);
+
+
+	// If far from the planet, set a more distant far plane
+
+	camera.SetNearPlane(0.1f);
+	camera.SetFarPlane(farPlane);
+
 	for(auto& [name, gameobject] : Scene::AllSceneObjects())
 	{
 		commandList->SetGraphicsRoot32BitConstants(0, 16, &gameobject->GetTransform().GetModelMatrix(), 16);

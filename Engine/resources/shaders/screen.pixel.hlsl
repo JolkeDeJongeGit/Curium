@@ -42,31 +42,34 @@ Texture2D depthTexture : register(t1);
 SamplerState LinearSampler : register(s0);
 
 
-float2 RaySphere(float3 centerWorld, float atmosphereRadius, float3 rayOrigin, float3 rayDir)
+
+float2 RaySphere(float3 sphereCentre, float sphereRadius, float3 rayOrigin, float3 rayDir)
 {
-    float3 directionSphere = rayOrigin - centerWorld; // Distance from the sphere center to the ray origin
-    float a = dot(rayDir, rayDir); // The length of the ray direction squared (should be 1 if normalized)
-    float b = dot(directionSphere, rayDir); // The projection length of the ray vector
-    float c = dot(directionSphere, directionSphere) - atmosphereRadius * atmosphereRadius; // Distance from the ray to the sphere center squared minus the sphere radius squared
-    float discriminant = b * b - a * c; // Calculate the discriminant b*b - a*c
+    float3 offset = rayOrigin - sphereCentre;
+    float a = 1; // Set to dot(rayDir, rayDir) if rayDir might not be normalized
+    float b = 2 * dot(offset, rayDir);
+    float c = dot(offset, offset) - sphereRadius * sphereRadius;
+    float d = b * b - 4 * a * c; // Discriminant from quadratic formula
 
-    if (discriminant > 0.0f) // If the discriminant is positive, the ray intersects the sphere
+		// Number of intersections: 0 when d < 0; 1 when d = 0; 2 when d > 0
+    if (d > 0)
     {
-        float sqrtDiscriminant = sqrt(discriminant);
-        float inverseA = 1.0f / a;
+        float s = sqrt(d);
+        float dstToSphereNear = max(0, (-b - s) / (2 * a));
+        float dstToSphereFar = (-b + s) / (2 * a);
 
-        float near = max(0.0f, (-b - sqrtDiscriminant) * inverseA); // Calculate the first intersection point
-        float far = (-b + sqrtDiscriminant) * inverseA; // Calculate the second intersection point
-
-        return float2(near, far - near); // Return the intersection points' distances from the ray origin and the length of the intersection segment
+			// Ignore intersections that occur behind the ray
+        if (dstToSphereFar >= 0)
+        {
+            return float2(dstToSphereNear, dstToSphereFar - dstToSphereNear);
+        }
     }
-
-    return float2(FLT_MAX, 0); // No intersection, return maximum float value
+		// Ray did not intersect sphere
+    return float2(0, 0);
 }
-
 float3 ScreenToWorld(float2 pos)
 {
-    float4 posP = float4(pos.x * 2.0 - 1.0, (1.0f - pos.y) * 2.0f - 1.0f, 0, 1.0); // Don't forget to invert Y.
+    float4 posP = float4(pos.x * 2.0 - 1.0, (1. - pos.y) * 2.0f - 1.0f, 0, 1.0); // Don't forget to invert Y.
     float3 posVS = mul(Camera.inverseProjectionMatrix, posP); // Clip to view space
     float4 posWS = mul(Camera.viewMatrix, float4(posVS, 0)); // View to world space
     return posWS.xyz;
@@ -171,9 +174,11 @@ float4 main(PixelIn pixelIn) : SV_TARGET
 
     float2 hitData = RaySphere(World.position, World.atmosphereRadius, Camera.position, rayDir);
     
-    float dstToAtmosphere = hitData.x;
+    float dstToAtmosphere = hitData.x ;
+    return float4(viewVector, 1);
+    //return hitData.x;
     float dstThroughAtmosphere = min(hitData.y, sceneDepth - dstToAtmosphere);
-  
+    //return dstThroughAtmosphere / (World.atmosphereRadius * 2);
     if (dstThroughAtmosphere > 0)
     {
         const float epsilon = 0.0001;

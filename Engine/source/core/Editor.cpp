@@ -65,7 +65,7 @@ void Editor::Viewport()
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
     auto value = WinUtil::GetSwapchain()->m_renderTextureSrvID;
     auto aspectRatio = viewportSize.x / viewportSize.y;
-    if((aspectRatio) != Renderer::GetCamera()->GetAspectRatio())
+    //if((aspectRatio) != Renderer::GetCamera()->GetAspectRatio())
         Renderer::GetCamera()->UpdateProjection(aspectRatio);
 
     viewport_hovered = ImGui::IsWindowHovered();
